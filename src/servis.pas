@@ -945,6 +945,7 @@ begin
 end;
 
 begin MarsBind(@bdvect, @bderrn);
+  MarsCreate := true;  (* servis makes the database *)
   MarsBegin;  (* the whole run is one transaction *)
   Init;
   InitLayout;

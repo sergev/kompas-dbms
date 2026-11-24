@@ -19,7 +19,7 @@ python3 tests/run.py SKLMON   # one Severov program
 
 - A case is `tests/<case>/` with a `steps` file; each step of a case runs on one database, `build/test/<case>/kompas.db`, made fresh for the case and output is compared with `expected.txt`. Step forms: `servis|ttc|gen|mad FILE` (FILE on stdin), `prog FILE.pas [INPUT]` (via `kpc`), `native FILE.pas` (plain fpc against `kdb`).
 - Severov programs (`tests/severov/*.pas`) compile and run against the database left by the matching `gold-*` case in `build/test/` (`PROGRAMS` map in `tests/run.py`), so run the gold case first or together. `SETUP` there lists sessions that must run first to create data.
-- A database is one file named by `MARS_DB` (fallback `$MARS_DIR/mars.db`, then `./mars.db`; `MarsPath` in `mars.pas`). Tests run with `MARS_SYNC=0` (no fsync).
+- A database is one file named by `MARS_DB` (fallback `$MARS_DIR/mars.db`, then `./mars.db`; `MarsPath` in `mars.pas`). Only `servis` creates a missing file (`MarsCreate`); other tools get error 8 and make nothing. Tests run with `MARS_SYNC=0` (no fsync).
 
 ## Architecture
 

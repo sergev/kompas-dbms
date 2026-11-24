@@ -70,7 +70,7 @@ make
 export PATH=$PWD/build/bin:$PATH
 ```
 
-The database is one file, given by `MARS_DB` (without it: `mars.db` in the current directory). The first tool that opens it creates it. All tools work on the same database, also at the same time:
+The database is one file, given by `MARS_DB` (without it: `mars.db` in the current directory). `servis` creates it (step 1); the other tools do not create a missing file, they report `НЕТ СХЕМЫ` (no schema) with its name. All tools work on the same database, also at the same time:
 
 ```sh
 export MARS_DB=~/store/store.db
@@ -737,7 +737,7 @@ ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.Б
 | `СОСТ` is not 0 | 1 end of set, 2 no such record, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema |
 | `ГЕН: ОШИБКА ДУБЛИКАТ КЛЮЧА` | the key is already in an ordered set without `ДУБЛИК РАЗРЕШ` |
 | `ГЕН: ОШИБКА НЕТ ТЕКУЩЕЙ` | no current owner for an automatic set: load the owner first |
-| `НЕТ СХЕМЫ` | no `ttc` run on this `MARS_DB` |
+| `НЕТ СХЕМЫ` | no `servis` and `ttc` run on this `MARS_DB`: the file printed does not exist, or has no schema |
 | `ОШИБКА ПАМЯТИ` | the area named in the schema was not made by `servis` (step 1) |
 | `predt: нет набора X` | the name is not in the schema; a name is cut to 6 characters |
 | `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |

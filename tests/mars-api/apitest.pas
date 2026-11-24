@@ -107,6 +107,7 @@ var
 begin
   v := PV(MarsVec);
   e := MarsErr;
+  MarsCreate := true;
 
   writeln('== catalogue');
   cat := &270000; PASACD(cat);

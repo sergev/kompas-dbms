@@ -36,6 +36,11 @@ function MarsCheck: string;
 { the database file: $MARS_DB, else $MARS_DIR/mars.db, else mars.db }
 function MarsPath: string;
 
+var
+  { a missing database file is made only when this is set (servis);
+    otherwise every call fails with error 8 }
+  MarsCreate: boolean = false;
+
 procedure PASACD(var i: int64);
 procedure PASSETAR(i: int64);
 procedure pasbdi;
@@ -136,9 +141,10 @@ begin
   if dir <> '' then Result := dir + '/mars.db' else Result := 'mars.db';
 end;
 
-procedure Open;
+function Open: boolean;
 var dir: string; sr: TSearchRec;
 begin
+  Result := true;
   if PgIsOpen then exit;
   dir := GetEnvironmentVariable('MARS_DIR');
   if not warned and (GetEnvironmentVariable('MARS_DB') = '') and (dir <> '') and
@@ -148,39 +154,47 @@ begin
       'they are not used: rebuild the database');
     FindClose(sr);
   end;
+  if not MarsCreate and not FileExists(MarsPath) then begin
+    err^ := 8;               { eNoName }
+    exit(false);
+  end;
   PgOpen(MarsPath);
 end;
 
-procedure WBegin;
+function WBegin: boolean;
 begin
-  Open;
-  TxnBegin(true);
+  Result := Open;
+  if Result then TxnBegin(true);
 end;
 
-procedure RBegin;
+function RBegin: boolean;
 begin
-  Open;
-  TxnBegin(false);
+  Result := Open;
+  if Result then TxnBegin(false);
 end;
+
+var
+  idle: integer = 0;        { MarsBegin calls without a database }
 
 procedure MarsBegin;
 begin
-  WBegin;
+  if not WBegin then inc(idle);
 end;
 
 procedure MarsCommit;
 begin
-  TxnCommit;
+  if idle > 0 then dec(idle) else TxnCommit;
 end;
 
 procedure MarsAbort;
 begin
+  if idle > 0 then begin dec(idle); exit; end;
   TxnAbort;
 end;
 
 function MarsCheck: string;
 begin
-  Open;
+  if not Open then exit('no database ' + MarsPath);
   Result := TCheck;
 end;
 
@@ -400,7 +414,7 @@ end;
 procedure Store(const k: TKey; p: pointer; n, words: int64; replace: boolean);
 var e: TEntry;
 begin
-  WBegin;
+  if not WBegin then exit;
   try
     if Intact then begin
       if GetEnt(k.b, e) then begin
@@ -424,7 +438,7 @@ end;
 procedure Fetch(const k: TKey; p: pointer; n: int64);
 var e: TEntry; m: int64;
 begin
-  RBegin;
+  if not RBegin then exit;
   try
     if Intact then begin
       if not GetEnt(k.b, e) then SetErr(eNoRec)
@@ -463,7 +477,7 @@ var pre, k, v, fk: RawByteString; id: longword; info, nexth: int64;
 begin
   { fresh KOBLA at this LU and zone: forget its areas }
   Select(i);
-  WBegin;
+  if not WBegin then exit;
   try
     pre := AreaKey('');
     k := pre;
@@ -612,7 +626,7 @@ end;
 
 procedure pasbd;
 begin
-  WBegin;
+  if not WBegin then exit;
   try
     Micro;
     TxnCommit;
@@ -625,7 +639,7 @@ end;
 procedure newd(const name: TKey; info: int64);
 var id: longword; i, n: int64; v: RawByteString;
 begin
-  WBegin;
+  if not WBegin then exit;
   try
     if GetArea(name.b, id, i, n) then SetErr(eExists)
     else begin
@@ -645,7 +659,7 @@ end;
 procedure opend(const name: TKey);
 var i: integer; id: longword; info, nexth: int64; found: boolean;
 begin
-  RBegin;
+  if not RBegin then exit;
   try
     found := GetArea(name.b, id, info, nexth);
   finally
@@ -682,7 +696,7 @@ begin Store(key, @d, n, (n + 7) div 8, true); end;
 procedure deld(const key: TKey);
 var e: TEntry;
 begin
-  WBegin;
+  if not WBegin then exit;
   try
     if Intact then begin
       if not GetEnt(key.b, e) then SetErr(eNoRec)

@@ -33,6 +33,7 @@ begin
   n := StrToIntDef(ParamStr(1), 10000);
   batch := ParamStr(2) = 'batch';
   v := MarsVec;
+  {$ifdef NEWMARS} MarsCreate := true; {$endif}
   cat := &270000;
   PASACD(cat);
   newd(NameKey('BENCH'), 1);

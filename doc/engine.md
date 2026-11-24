@@ -77,7 +77,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
 ## 4. The tools
 
-- **`servis`.** It creates areas in `$MARS_DB`. A run is one transaction.
+- **`servis`.** It creates areas in `$MARS_DB`, and the file if it is missing; the other tools do not create it (`MarsCreate`). A run is one transaction.
 - **`ttc`.** It reads a schema in DDL and stores it. A run is one transaction.
 - **`gen`.** It works as the original GEN: it builds a loader program (formats become procedures; `kgenrt` reads the data), passes it through `predt` and `fpc`, and runs it.
   - Job cards (`*…`) and editor labels (`? …`) are skipped.

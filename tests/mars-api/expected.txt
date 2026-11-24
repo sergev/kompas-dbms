@@ -1,3 +1,12 @@
+== native nodb.pas
+opend: err=8
+getd: err=8
+putd: err=8
+newd: err=8
+PASACD: err=8
+deld in MarsBegin: err=8
+check: TRUE
+file made: FALSE
 == native apitest.pas
 == catalogue
 PASACD: err=0 info=94208
