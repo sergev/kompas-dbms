@@ -1128,7 +1128,7 @@ begin
   Journal('E', k, nil);
 end;
 
-procedure KSTORE(r: int64);
+procedure IKSTORE(r: int64);
 var w: TWords; k, o: int64; s, st, j: integer; done: array of integer;
 begin
   if Bad(r, false) then exit;
@@ -1180,7 +1180,7 @@ begin
   end;
 end;
 
-procedure KMODIFY(r: int64);
+procedure IKMODIFY(r: int64);
 var w: TWords; s, st: integer; o: int64; t: integer;
 begin
   if not Ready then exit;
@@ -1275,7 +1275,7 @@ begin
   SetSt(kOk);
 end;
 
-procedure KERASE(r: int64);
+procedure IKERASE(r: int64);
 var k: int64;
 begin
   if not Ready then exit;
@@ -1288,7 +1288,7 @@ begin
   EraseKey(k);
 end;
 
-procedure KERASEMEMBERS(s: int64);
+procedure IKERASEMEMBERS(s: int64);
 var o, m: int64; ow: TWords;
 begin
   if Bad(s, true) then exit;
@@ -1317,7 +1317,7 @@ begin
   SetSt(kOk);
 end;
 
-procedure KCONNECT(s: int64);
+procedure IKCONNECT(s: int64);
 var o, k: int64; w: TWords;
 begin
   if Bad(s, true) then exit;
@@ -1363,7 +1363,7 @@ begin
   Result := Probe(sets[s].selset, kw, f);
 end;
 
-procedure KCONNECTKEY(s: int64; v: int64);
+procedure IKCONNECTKEY(s: int64; v: int64);
 var kw: TWords; f: TField;
 begin
   if not SelProbe(s, kw, f) then exit;
@@ -1375,7 +1375,7 @@ begin
   ConnectSel(s, kw);
 end;
 
-procedure KCONNECTKEY(s: int64; v: double);
+procedure IKCONNECTKEY(s: int64; v: double);
 var kw: TWords; f: TField;
 begin
   if not SelProbe(s, kw, f) then exit;
@@ -1387,7 +1387,7 @@ begin
   ConnectSel(s, kw);
 end;
 
-procedure KCONNECTKEY(s: int64; const v: array of WideChar);
+procedure IKCONNECTKEY(s: int64; const v: array of WideChar);
 var kw: TWords; f: TField;
 begin
   if not SelProbe(s, kw, f) then exit;
@@ -1395,7 +1395,7 @@ begin
   ConnectSel(s, kw);
 end;
 
-procedure KCONNECTKEY(s: int64; const v: UnicodeString);
+procedure IKCONNECTKEY(s: int64; const v: UnicodeString);
 var kw: TWords; f: TField;
 begin
   if not SelProbe(s, kw, f) then exit;
@@ -1403,7 +1403,7 @@ begin
   ConnectSel(s, kw);
 end;
 
-procedure KDISCONNECT(s: int64);
+procedure IKDISCONNECT(s: int64);
 var k: int64; w: TWords;
 begin
   if Bad(s, true) then exit;
@@ -1513,6 +1513,79 @@ begin
     end;
     if aw[TypeFirstOff(r) + 1] <> p then exit(Format('type %d: last', [r]));
   end;
+end;
+
+
+{ --- each changing statement is one MARS transaction: all or nothing --- }
+
+procedure KSTORE(r: int64);
+begin
+  MarsBegin;
+  try IKSTORE(r) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KMODIFY(r: int64);
+begin
+  MarsBegin;
+  try IKMODIFY(r) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KERASE(r: int64);
+begin
+  MarsBegin;
+  try IKERASE(r) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KCONNECT(s: int64);
+begin
+  MarsBegin;
+  try IKCONNECT(s) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KCONNECTKEY(s: int64; v: int64);
+begin
+  MarsBegin;
+  try IKCONNECTKEY(s, v) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KCONNECTKEY(s: int64; v: double);
+begin
+  MarsBegin;
+  try IKCONNECTKEY(s, v) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KCONNECTKEY(s: int64; const v: array of WideChar);
+begin
+  MarsBegin;
+  try IKCONNECTKEY(s, v) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KCONNECTKEY(s: int64; const v: UnicodeString);
+begin
+  MarsBegin;
+  try IKCONNECTKEY(s, v) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KDISCONNECT(s: int64);
+begin
+  MarsBegin;
+  try IKDISCONNECT(s) except MarsAbort; raise end;
+  MarsCommit;
+end;
+
+procedure KERASEMEMBERS(s: int64);
+begin
+  MarsBegin;
+  try IKERASEMEMBERS(s) except MarsAbort; raise end;
+  MarsCommit;
 end;
 
 end.

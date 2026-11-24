@@ -70,7 +70,7 @@ make
 export PATH=$PWD/build/bin:$PATH
 ```
 
-The database is a directory, given by `MARS_DIR`. Each area is a file inside it. All tools work on the same database:
+The database is a directory, given by `MARS_DIR`. All its areas are in one file there, `mars.db`. All tools work on the same database, also at the same time:
 
 ```sh
 export MARS_DIR=~/store/db
@@ -616,7 +616,7 @@ The disc found by key is the current owner, so the new track joins its `ДИ-Т�
 
 ### Step 6. Maintenance
 
-The database is the directory `MARS_DIR`. Back up and restore it as files, when no tool is running:
+The database is the file `mars.db` in `MARS_DIR`. Each statement that changes data is committed whole, so a crash or a power failure leaves the database as after the last statement (a `gen` load: its last 1000 records). Back up and restore it as files, when no tool is running:
 
 ```sh
 tar czf ~/cd-$(date +%F).tgz -C ~/cd db                 # back up
@@ -633,7 +633,7 @@ A simple routine:
 |---|---|
 | after each load or big change | `mad < discs.mad` to check |
 | weekly | back up the directory |
-| after a failure | restore the last backup, repeat the changes since |
+| after a failure of the disk (`page N damaged`) | restore the last backup, repeat the changes since |
 
 ### Step 7. Typical tasks
 
@@ -661,7 +661,7 @@ A simple routine:
 | Find who owns a record | `НАЙТИ ВЛАДЕЛ В <set>` |
 | Change a field | `ВЗЯТЬ`, change the field, `ЗАМЕНИ` |
 | Delete a record | `НАЙТИ ...`, then `УБРАТЬ` |
-| Data damaged after a failure | restore the backup of `MARS_DIR` (section 6, step 6) |
+| `mars.db: page N damaged` | the disk spoiled the file: restore the backup of `MARS_DIR` (section 6, step 6) |
 
 ## 8. Text: UTF-8 and mixed case
 
@@ -743,6 +743,8 @@ ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.Б
 | `predt: нет набора X` | the name is not in the schema; a name is cut to 6 characters |
 | `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |
 | The database is empty in a later step | `MARS_DIR` points to another directory |
+| `mars: ... areas of the old format` | the database was made by an older version (one file per area): rebuild it with steps 1-3 |
+| Loading is slow | each commit waits for the disk twice; for a scratch database `export MARS_SYNC=0` (safe if a program is killed, not on power failure) |
 
 See section 8 on letters and case.
 

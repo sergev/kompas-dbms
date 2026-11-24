@@ -10,7 +10,9 @@ No historical outputs survive. So the check is consistency and review by hand, n
 |---|---|
 | `src/kdb.pas` | the engine: schema, records, sets, currency, DML |
 | `src/kutf.pas` | text: UTF-8 outside, WideChar inside; folding of names |
-| `src/rt/mars.pas` | MARS: keyed storage of areas, one file per area in `$MARS_DIR` |
+| `src/rt/mars.pas` | MARS: keyed storage of areas, all in one file `$MARS_DIR/mars.db` |
+| `src/rt/mtree.pas` | the B+tree under MARS: byte keys, cursors, structural check |
+| `src/rt/mpage.pas` | pages of `mars.db`: copy-on-write transactions, freelist, locking |
 | `src/rt/krt.pas` | runtime of KOMPAS Pascal programs: `integer` = 64 bits, `alfa`, write formats |
 | `src/rt/kio.pas` | standard output of KOMPAS Pascal programs past its buffer (`sevlib`) |
 | `src/servis.pas` | `servis`: areas, journals |
@@ -66,7 +68,8 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 - **Currency.** It is kept for the run unit, for each record type and for each set.
   - `НАЙТИ ПЕРВУЮ` takes the occurrence the current record owns, if that record is of the owner type.
   - `НАЙТИ СЛЕДУЮ` goes to the next member. This is how a tree is walked in `tests/gold-zt0/deck9.mad`.
-- **Journal.** Every change is written to the area named by `ЖУРНАЛ`. There is no recovery from the journal.
+- **Journal.** Every change is written to the area named by `ЖУРНАЛ`, in the same transaction as the change. There is no recovery from the journal.
+- **Transactions.** Each changing statement (`ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`, erasing the members of an occurrence) is one MARS transaction: after a crash the record, its owners, its neighbours in the chains and the journal entry are all changed or none.
 - **Status.** `СОСТ` (`KSTAT`) codes are a hypothesis (`doc/open-questions.md`):
   - 0 ok, 1 end of set, 2 not found, 3 duplicate key;
   - 4 no current record, 5 membership error, 6 bad name, 7 storage error, 8 no schema.
@@ -74,12 +77,13 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
 ## 4. The tools
 
-- **`servis`.** It creates areas in `$MARS_DIR`.
-- **`ttc`.** It reads a schema in DDL and stores it.
+- **`servis`.** It creates areas in `$MARS_DIR/mars.db`. A run is one transaction.
+- **`ttc`.** It reads a schema in DDL and stores it. A run is one transaction.
 - **`gen`.** It works as the original GEN: it builds a loader program (formats become procedures; `kgenrt` reads the data), passes it through `predt` and `fpc`, and runs it.
   - Job cards (`*…`) and editor labels (`? …`) are skipped.
   - Inside a block a line may start with `*`.
   - `-k` keeps the work directory.
+  - The loader commits every 1000 data records and at the end: after a crash, a load is kept up to its last commit.
 - **`mad`.** It runs a query text: labels, `ЕСЛИ … ТО_( … _)ИНАЧЕ`, `ВЫДАТЬ`/`ВВ`. `ВЫДАТЬ` prints a line in the data format of GEN, so an unload can be fed back to `gen`.
 - **`predt` and `kpc`.** They make programs (section 2).
 
@@ -92,6 +96,12 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 | `gold-ck0` | schema CX-CK0, loader deck 6, query deck 3 | 23 records, 0 errors; the unload equals the data of deck 6 |
 | `gold-am0` | schema CX-AM0, loader deck 7 | 38 records, 0 errors |
 | `gold-zt0` | schema CX-ЗТ0, loader deck 11, query deck 9 | 108 records, 0 errors; topics and co-executors equal the data of deck 11 |
+| `mars-api` | every MARS call and every `pasbd` operation; recorded on the old MARS, so it fixes its behaviour | as recorded, plus `ADDKEY` of an existing key |
+| `mars-tree` | the B+tree against a sorted-array model: 135 000 random puts, deletes, gets and seeks; sequential, reverse, random, long-prefix and 255-byte keys; values up to 6 KB (overflow pages); emptying the tree; repeated fill and empty | `TCheck` sound after every 20 commits; the file stops growing |
+| `mars-txn` | nesting, abort, empty transactions, writes refused in a read transaction, a reader waiting for a writer and the other way, another process's commit, reopen | as expected |
+| `mars-crash` | a commit killed before each of its writes and syncs, or with each page write torn in half, with fsync on and off; a damaged newest meta page, root page, both meta pages | always exactly the old or the new state; damage reported |
+| `mars-lock` | 4 writer and 2 reader processes on one file | no update lost, no reader sees a half transaction |
+| `engine-crash` | six DML statements killed at each write of their commit | `KCheck` sound; the old or the new data |
 | `utf8` | lower case, `Ё`, Latin, German, Greek data through `gen`, `mad` and a program; names written with Latin look-alikes | data as written, sets in code order, exact keys |
 
 The decks and the Severov programs are transcriptions of 1988 texts in the GOST code, where Latin `A` and Cyrillic `А` were one letter. The transcriptions mix the two alphabets at random. Since data are now kept as written, their data and string literals were folded once into one form (Cyrillic look-alikes, upper case), the form the old system saw.
@@ -139,6 +149,29 @@ All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a
 | `ZATTAB` | report for the last month | table: total salary 2300 = 2000+300, insurance 322 = 0.14×2300, cost 4542 |
 
 `ZATTAB` prints a trace of its calculation: the 1988 source sets `PRINTCALC:=TRUE` in `INITTAB`.
+
+## 6a. MARS storage
+
+The original MARS is lost; this one keeps its interface (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `pasbd` microprograms, the `BDVECT` slots, the handles) on a design like LMDB, cut down:
+
+- **One file**, `$MARS_DIR/mars.db`, pages of 4 KB. All catalogues and areas are key ranges of one B+tree: `#0 catalogue name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
+- **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
+- **Freelist.** Pages freed by a commit are reused by the next transactions, so the file stops growing when the data stop growing.
+- **Locking.** `flock` on the file, per transaction: shared for reading, exclusive for writing. Readers and the writer exclude each other, so freed pages can be reused at once; a reader re-reads the meta pages and drops its cache when another process has committed.
+- **Transactions.** Each MARS call is one, unless `MarsBegin` … `MarsCommit` (or `MarsAbort`) opens a longer one; nested ones join the outermost. `MARS_SYNC=0` leaves out the `fsync`s: a killed process still loses nothing committed, a power failure may lose the last commits. The tests run so.
+- **Check.** `MarsCheck` (`TCheck`) reads the whole file and checks key order, separators, fill, leaf depth, overflow lengths, and that every page is used exactly once (tree, overflow, freelist).
+
+Timing (`tests/bench/marsbench.pas`, 8-byte keys, 80-byte data, `MARS_SYNC=0`):
+
+| | old MARS | new MARS |
+|---|---|---|
+| 5 000 `putd` | 34 s | 0.35 s |
+| 100 000 `putd`, a transaction each | — | 6.1 s |
+| 100 000 `putd` in one transaction | — | 0.50 s |
+| 100 000 random `getd` | — | 0.21 s |
+| scan of 100 000 (`pasbd` NEXT) | — | 0.27 s |
+
+With `fsync`, a commit costs what the disk takes for two `fsync`s (60 ms on the machine of these numbers), so batch work belongs in one transaction: `servis`, `ttc` and the `gen` loader do so.
 
 ## 7. Not done
 

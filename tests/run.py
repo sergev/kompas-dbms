@@ -45,7 +45,9 @@ SETUP = {'ZATZAT': ['ZATRTE'], 'ZATTAB': ['ZATNAK', 'ZATRTE', 'ZATZAT'],
 
 
 def env(db):
-    return dict(os.environ, MARS_DIR=str(db), PATH=f'{BIN}:{os.environ["PATH"]}')
+    # no fsync: tests need no durability against power loss (mars-crash sets its own)
+    return dict(os.environ, MARS_DIR=str(db), MARS_SYNC='0',
+                PATH=f'{BIN}:{os.environ["PATH"]}')
 
 
 def sh(cmd, cwd, e, stdin=None, timeout=600):

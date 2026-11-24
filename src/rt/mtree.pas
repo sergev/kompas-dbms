@@ -128,6 +128,12 @@ begin
   if c = 0 then Result := Get32(b, 12) else Result := Get32(b, Off(b, c - 1) + 1);
 end;
 
+{ bytes in use: header, slots, cells (cells are packed from the end) }
+function Used(b: PByte): integer; inline;
+begin
+  Result := HdrSize + 2 * Cnt(b) + PageSize - Get16(b, 16);
+end;
+
 function CellLen(b: PByte; o: integer): integer;
 begin
   if IsLeaf(b) then begin
@@ -277,6 +283,7 @@ begin
     Move(nd.c[i][1], b[o], length(nd.c[i]));
     Put16(b, HdrSize + 2 * i, o);
   end;
+  Put16(b, 16, o);
 end;
 
 procedure InsCell(var nd: TNode; i: integer; const c: RawByteString);
@@ -381,12 +388,44 @@ begin
 end;
 
 function Under(p: TPgno): boolean;
-var b: PByte; i, used: integer;
 begin
-  b := PgGet(p);
-  used := HdrSize;
-  for i := 0 to Cnt(b) - 1 do inc(used, 2 + CellLen(b, Off(b, i)));
-  Result := used < MinFill;
+  Result := Used(PgGet(p)) < MinFill;
+end;
+
+{ a leaf change made in place: an insert that fits, or a replace by a
+  cell of the same length; false if the page must be rebuilt }
+function InPlace(pg: TPgno; const k, v: RawByteString; out res: TRes): boolean;
+var b: PByte; i, n, o, klen: integer; found: boolean; cell: RawByteString;
+begin
+  Result := false;
+  b := PgGet(pg);
+  n := Cnt(b);
+  i := Bound(b, k, false);
+  found := (i < n) and (CmpAt(b, i, k) = 0);
+  if found then begin
+    o := Off(b, i);
+    if b[o + 1] = 1 then exit;           { an overflow value: the slow way }
+    if 6 + length(k) + length(v) <> CellLen(b, o) then exit;
+    res.pg := PgTouch(pg);
+    b := PgBuf(res.pg);
+    Move(v[1], b[o + 6 + length(k)], length(v));
+  end else begin
+    klen := length(k);
+    if length(v) > MaxInline then exit;
+    if 6 + klen + length(v) + 2 > Get16(b, 16) - (HdrSize + 2 * n) then exit;
+    cell := LeafCell(k, v);
+    res.pg := PgTouch(pg);
+    b := PgBuf(res.pg);
+    o := Get16(b, 16) - length(cell);
+    Move(cell[1], b[o], length(cell));
+    if i < n then Move(b[HdrSize + 2 * i], b[HdrSize + 2 * i + 2], 2 * (n - i));
+    Put16(b, HdrSize + 2 * i, o);
+    Put16(b, 6, n + 1);
+    Put16(b, 16, o);
+  end;
+  res.right := 0;
+  res.sep := '';
+  Result := true;
 end;
 
 { child c of nd is underfull: merge it with a neighbour or share }
@@ -429,8 +468,35 @@ begin
 end;
 
 function Modify(pg: TPgno; const k, v: RawByteString; del: boolean): TRes;
-var nd: TNode; i, c: integer; r: TRes;
+var nd: TNode; i, c: integer; r: TRes; b: PByte; child: TPgno;
 begin
+  b := PgGet(pg);
+  if IsLeaf(b) then begin
+    if not del and InPlace(pg, k, v, Result) then exit;
+  end else begin
+    c := Bound(b, k, true);
+    child := Kid(b, c);
+    r := Modify(child, k, v, del);
+    if (r.right = 0) and not Under(r.pg) then begin
+      { the child was a copy already: this page is too }
+      if r.pg = child then begin
+        Result := r;
+        Result.pg := pg;
+        exit;
+      end;
+      Result.pg := PgTouch(pg);
+      Result.right := 0;
+      Result.sep := '';
+      b := PgBuf(Result.pg);
+      if c = 0 then Put32(b, 12, r.pg) else Put32(b, Off(b, c - 1) + 1, r.pg);
+      exit;
+    end;
+    Decode(pg, nd);
+    SetKid(nd, c, r.pg);
+    if r.right <> 0 then InsCell(nd, c, BranchCell(r.sep, r.right))
+    else Rebalance(nd, c);
+    exit(Store(nd, pg));
+  end;
   Decode(pg, nd);
   if nd.leaf then begin
     i := NodeBound(nd, k, false);
@@ -439,12 +505,6 @@ begin
       if del then DelCell(nd, i) else nd.c[i] := LeafCell(k, v);
     end else if not del then
       InsCell(nd, i, LeafCell(k, v));
-  end else begin
-    c := NodeBound(nd, k, true);
-    r := Modify(NodeKid(nd, c), k, v, del);
-    SetKid(nd, c, r.pg);
-    if r.right <> 0 then InsCell(nd, c, BranchCell(r.sep, r.right))
-    else if Under(r.pg) then Rebalance(nd, c);
   end;
   Result := Store(nd, pg);
 end;
@@ -625,6 +685,7 @@ begin
     end;
   end;
   if used > PageSize then Bad(Format('page %d: overfull', [pg]));
+  if used <> mtree.Used(b) then Bad(Format('page %d: cells not packed (%d, header %d)', [pg, used, mtree.Used(b)]));
   if not root and (used < MinFill) then Bad(Format('page %d: underfull (%d)', [pg, used]));
   if IsLeaf(b) then begin
     inc(TStatEntries, n);

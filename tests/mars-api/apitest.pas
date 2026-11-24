@@ -176,6 +176,9 @@ begin
   Get('F', 16);
   SetKey('F'); Run('find F match? get', [oFIND, oMATCH, 0, oGET, 0, 0]);
   SetKey('G'); Run('find G match? get (absent)', [oFIND, oMATCH, 0, oGET, 0, 0, oNEXT]);
+  buf[0] := 77;
+  SetKey('F'); Run('alloc addkey F (exists)', [oALLOC, oADDKEY, oNEXT]);
+  Get('F', 16);
   SetKey('F'); Run('find F delkey', [oFIND, oDELKEY]);
   Get('F', 16);
   SetKey('F'); Run('find F free stop next', [oFIND, oFREE, oSTOP, oNEXT]);

@@ -25,7 +25,14 @@ procedure GDONE;
 
 implementation
 
-uses SysUtils, Classes, kutf, kdb;
+uses SysUtils, Classes, kutf, kdb, mars;
+
+const
+  Batch = 1000;           { records per commit of a load }
+
+var
+  inTxn: boolean = false;
+  nrec: integer = 0;
 
 type
   TRecd = record
@@ -155,6 +162,11 @@ begin
     hard0 := KHARD;
   end;
   Report;
+  if not inTxn then begin MarsBegin; inTxn := true; end
+  else begin
+    inc(nrec);
+    if nrec mod Batch = 0 then begin MarsCommit; MarsBegin; end;
+  end;
   inc(cur);
   Result := cur <= high(data);
   if not Result then exit;
@@ -236,6 +248,7 @@ procedure GDONE;
 var j: integer;
 begin
   Report;
+  if inTxn then begin MarsCommit; inTxn := false; end;
   if counts = nil then counts := TStringList.Create;
   for j := 0 to counts.Count - 1 do
     writeln(counts.Names[j], ' ', counts.ValueFromIndex[j]:6);

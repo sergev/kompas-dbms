@@ -74,6 +74,8 @@ find F nomatch? alloc addkey (exists): err=0 key=46 len=2 h=3648
 getd 46 16: err=0 55 550 len=2
 find F match? get: err=0 key=46 len=2 h=3648
 find G match? get (absent): err=0 key=D096 len=2 h=3264
+alloc addkey F (exists): err=9 key=D096 len=2 h=3264
+getd 46 16: err=0 55 550 len=2
 find F delkey: err=0 key=45 len=0 h=3584
 getd 46 16: err=3 0 0 len=0
 find F free stop next: err=0 key=45 len=0 h=3584

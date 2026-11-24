@@ -945,6 +945,7 @@ begin
 end;
 
 begin MarsBind(@bdvect, @bderrn);
+  MarsBegin;  (* the whole run is one transaction *)
   Init;
   InitLayout;
   ncode := 0;
@@ -965,5 +966,6 @@ begin MarsBind(@bdvect, @bderrn);
       end
     until p > 72
   end;
-  writeln('EXN=',RT_W( EXN))
+  writeln('EXN=',RT_W( EXN));
+  MarsCommit
 end.

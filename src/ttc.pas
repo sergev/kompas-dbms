@@ -298,6 +298,7 @@ begin
   end
 end;
 begin MarsBind(@bdvect, @bderrn);
+  MarsBegin;  (* the whole run is one transaction *)
   InitMars;
   tcnt := 0; rnum := 0; snum := 0; cur := 0; nerr := 0;
   done := false; pol := 'ПОЛЕ  '; Clr(curar);
@@ -330,5 +331,6 @@ begin MarsBind(@bdvect, @bderrn);
   StoreAll;
   PrintAll;
   writeln('SAVED=',RT_W( tcnt+rnum+snum), ' MARSERR=',RT_W( nerr));
-  writeln('EXN=',RT_W( BDERRN))
+  writeln('EXN=',RT_W( BDERRN));
+  MarsCommit
 end.

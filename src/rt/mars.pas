@@ -1,5 +1,10 @@
-{ MARS: the storage of KOMPAS (keyed data in areas) on a file store.
-  Areas live in $MARS_DIR (default ./mars), one file per area. }
+{ MARS: the storage of KOMPAS (keyed data in areas).
+  The whole database is one file, $MARS_DIR/mars.db (default ./mars), a
+  copy-on-write B+tree (mpage, mtree).  Tree keys:
+    #0 kobla(3) name       an area: id u32, info i64, next handle i64
+    #1 id(4, big-endian) key   an entry: words i64, handle i64, datum
+    #2                     the next area id
+  Every call is a transaction of its own unless MarsBegin opened one. }
 unit mars;
 
 {$mode objfpc}{$H+}
@@ -21,6 +26,13 @@ procedure MarsBind(vec, err: pointer);
 { COMMON BDVECT and BDERRN as bound by the main program }
 function MarsVec: pointer;
 function MarsErr: pointer;
+
+{ a transaction around several calls: all of them commit or none }
+procedure MarsBegin;
+procedure MarsCommit;
+procedure MarsAbort;
+{ structure of the database file: '' if sound }
+function MarsCheck: string;
 
 procedure PASACD(var i: int64);
 procedure PASSETAR(i: int64);
@@ -61,37 +73,39 @@ procedure deld(const key: UnicodeString);
 
 implementation
 
-uses SysUtils, Classes, kutf;
+uses SysUtils, kutf, mpage, mtree;
 
 type
-  TEntry = record
-    key: TKey;
-    words: int64;
-    handle: int64;           { datum handle: the bd-key }
-    data: TBytes;
-  end;
-  TArea = record
-    name: TKey;
-    info: int64;
-    nexth: int64;            { next datum handle }
-    ent: array of TEntry;
-  end;
   PVec = ^TVec;
   TVec = array[0..167] of int64;
+  TOpened = record
+    name: RawByteString;
+    id: longword;
+    info: int64;
+  end;
+  TEntry = record
+    words, handle: int64;
+    data: RawByteString;
+  end;
 
 var
   vec: PVec;
   err: ^int64;
   ownvec: TVec;
-  areas: array of TArea;
-  cur: integer = -1;       { current area }
-  pos: integer = -1;       { cursor, -1 = zero key }
-  { descriptor word of each area; BDVECT[24] points at the current one
-    (30 octal, DB file descriptor location).  A program that writes
-    through slot 24 spoils it. }
+  { areas opened in the current catalogue; desc[i] is the descriptor
+    word of opened[i], BDVECT[24] points at the current one (30 octal,
+    DB file descriptor location).  A program that writes through slot 24
+    spoils it. }
+  opened: array of TOpened;
   desc: array[0..255] of int64;
+  cur: integer = -1;       { current area }
+  { cursor: the key of the current entry, or before the first }
+  hasPos: boolean = false;
+  posKey: RawByteString;
+  serial: int64 = 0;       { changes when the cursor moves }
   aptr: pointer;           { datum allocated by ALLOC }
   alen, awords: int64;
+  warned: boolean = false;
 
 const
   eNoRec = 3; eNoName = 8; eExists = 9; eSys = 11; eNoPrev = 15; eNoNext = 16;
@@ -109,12 +123,116 @@ const
 var
   kobla: int64 = 0;          { current catalogue: LU and zone of its info word }
 
-function Dir: string;
+{ --- the file --- }
+
+procedure Open;
+var dir: string; sr: TSearchRec;
 begin
-  Result := GetEnvironmentVariable('MARS_DIR');
-  if Result = '' then Result := 'mars';
-  Result := Result + '/k' + OctStr(kobla, 6);
+  if PgIsOpen then exit;
+  dir := GetEnvironmentVariable('MARS_DIR');
+  if dir = '' then dir := 'mars';
+  if not warned and (FindFirst(dir + '/k*', faDirectory, sr) = 0) then begin
+    warned := true;
+    writeln(stderr, 'mars: ', dir, ' has areas of the old format (k*/*.area), ',
+      'they are not used: rebuild the database');
+    FindClose(sr);
+  end;
+  PgOpen(dir + '/mars.db');
 end;
+
+procedure WBegin;
+begin
+  Open;
+  TxnBegin(true);
+end;
+
+procedure RBegin;
+begin
+  Open;
+  TxnBegin(false);
+end;
+
+procedure MarsBegin;
+begin
+  WBegin;
+end;
+
+procedure MarsCommit;
+begin
+  TxnCommit;
+end;
+
+procedure MarsAbort;
+begin
+  TxnAbort;
+end;
+
+function MarsCheck: string;
+begin
+  Open;
+  Result := TCheck;
+end;
+
+{ --- keys and values --- }
+
+function BE32(x: longword): RawByteString;
+begin
+  SetLength(Result, 4);
+  Result[1] := chr(x shr 24); Result[2] := chr((x shr 16) and 255);
+  Result[3] := chr((x shr 8) and 255); Result[4] := chr(x and 255);
+end;
+
+function AreaKey(const name: RawByteString): RawByteString;
+begin
+  Result := #0 + chr((kobla shr 16) and 255) + chr((kobla shr 8) and 255) +
+    chr(kobla and 255) + name;
+end;
+
+function Prefix(id: longword): RawByteString;
+begin
+  Result := #1 + BE32(id);
+end;
+
+function I64(const s: RawByteString; at: integer): int64;
+begin
+  Move(s[at], Result, 8);
+end;
+
+function S64(x: int64): RawByteString;
+begin
+  SetLength(Result, 8);
+  Move(x, Result[1], 8);
+end;
+
+function AreaVal(id: longword; info, nexth: int64): RawByteString;
+begin
+  Result := BE32(id) + S64(info) + S64(nexth);
+end;
+
+function GetArea(const name: RawByteString; out id: longword; out info, nexth: int64): boolean;
+var v: RawByteString;
+begin
+  Result := TGet(AreaKey(name), v);
+  if not Result then exit;
+  id := (longword(ord(v[1])) shl 24) or (longword(ord(v[2])) shl 16) or
+    (longword(ord(v[3])) shl 8) or longword(ord(v[4]));
+  info := I64(v, 5);
+  nexth := I64(v, 13);
+end;
+
+function EntVal(const e: TEntry): RawByteString;
+begin
+  Result := S64(e.words) + S64(e.handle) + e.data;
+end;
+
+procedure DecEnt(const v: RawByteString; out e: TEntry);
+begin
+  e.words := I64(v, 1);
+  e.handle := I64(v, 9);
+  e.data := Copy(v, 17, length(v) - 16);
+end;
+
+{ --- catalogue and areas --- }
 
 { catalogue key of an info word MMMMZZNNNN: ZZNNNN with the two low
   octal digits of the zone cleared }
@@ -124,9 +242,9 @@ begin
   k := (i and &777777) and not int64(&77);
   if k <> kobla then begin
     kobla := k;
-    SetLength(areas, 0);
+    opened := nil;
     cur := -1;
-    pos := -1;
+    hasPos := false;
   end;
 end;
 
@@ -138,8 +256,57 @@ end;
 { the current area's descriptor is intact }
 function Intact: boolean;
 begin
-  Result := (cur >= 0) and (desc[cur] = areas[cur].info);
+  Result := (cur >= 0) and (desc[cur] = opened[cur].info);
   if not Result then SetErr(eNoName);
+end;
+
+function CurPrefix: RawByteString;
+begin
+  Result := Prefix(opened[cur].id);
+end;
+
+{ --- the cursor --- }
+
+procedure MoveTo(const k: RawByteString);
+begin
+  hasPos := true;
+  posKey := k;
+  inc(serial);
+end;
+
+procedure Unset;
+begin
+  hasPos := false;
+  inc(serial);
+end;
+
+{ an entry of the current area: mode from key k (without the prefix) }
+function Seek(mode: TSeek; const k: RawByteString; out fk: RawByteString; out e: TEntry): boolean;
+var p, full, v: RawByteString;
+begin
+  p := CurPrefix;
+  case mode of
+    skFirst: Result := TSeekKey(p, skGE, full, v);
+    skLast: Result := TSeekKey(Prefix(opened[cur].id + 1), skLT, full, v);
+  else Result := TSeekKey(p + k, mode, full, v);
+  end;
+  Result := Result and (Copy(full, 1, 5) = p);
+  if Result then begin
+    fk := Copy(full, 6, length(full) - 5);
+    DecEnt(v, e);
+  end;
+end;
+
+function GetEnt(const k: RawByteString; out e: TEntry): boolean;
+var v: RawByteString;
+begin
+  Result := TGet(CurPrefix + k, v);
+  if Result then DecEnt(v, e);
+end;
+
+procedure PutEnt(const k: RawByteString; const e: TEntry);
+begin
+  TPut(CurPrefix + k, EntVal(e));
 end;
 
 function ByteKey(const b: RawByteString): TKey;
@@ -163,189 +330,105 @@ begin
   else Result := NameKey(BufU(@s[0], length(s)));
 end;
 
-function KeyFile(const k: TKey): string;
-var i: integer;
+function Datum(p: pointer; n: int64): RawByteString;
 begin
-  Result := '';
-  for i := 1 to length(k.b) do Result := Result + IntToHex(ord(k.b[i]), 2);
-end;
-
-function Cmp(const a, b: TKey): integer;
-var i, n: integer;
-begin
-  n := length(a.b);
-  if length(b.b) < n then n := length(b.b);
-  for i := 1 to n do
-    if a.b[i] <> b.b[i] then exit(ord(a.b[i]) - ord(b.b[i]));
-  Result := length(a.b) - length(b.b);
-end;
-
-procedure WriteKey(f: TStream; const k: TKey);
-var n: int64;
-begin
-  n := length(k.b);
-  f.WriteBuffer(n, 8);
-  if n > 0 then f.WriteBuffer(k.b[1], n);
-end;
-
-procedure ReadKey(f: TStream; var k: TKey);
-var n: int64;
-begin
-  f.ReadBuffer(n, 8);
-  SetLength(k.b, n);
-  if n > 0 then f.ReadBuffer(k.b[1], n);
-end;
-
-procedure SaveArea(a: integer);
-var f: TFileStream; i: integer; n: int64;
-begin
-  ForceDirectories(Dir);
-  f := TFileStream.Create(Dir + '/' + KeyFile(areas[a].name) + '.area', fmCreate);
-  try
-    f.WriteBuffer(areas[a].info, 8);
-    f.WriteBuffer(areas[a].nexth, 8);
-    n := length(areas[a].ent);
-    f.WriteBuffer(n, 8);
-    for i := 0 to high(areas[a].ent) do
-      with areas[a].ent[i] do begin
-        WriteKey(f, key);
-        f.WriteBuffer(words, 8);
-        f.WriteBuffer(handle, 8);
-        n := length(data);
-        f.WriteBuffer(n, 8);
-        if n > 0 then f.WriteBuffer(data[0], n);
-      end;
-  finally
-    f.Free;
-  end;
-end;
-
-function FindArea(const k: TKey): integer;
-var i: integer; fn: string; f: TFileStream; n, m, j: int64;
-begin
-  for i := 0 to high(areas) do
-    if Cmp(areas[i].name, k) = 0 then exit(i);
-  fn := Dir + '/' + KeyFile(k) + '.area';
-  if not FileExists(fn) then exit(-1);
-  i := length(areas);
-  SetLength(areas, i + 1);
-  areas[i].name := k;
-  f := TFileStream.Create(fn, fmOpenRead);
-  try
-    f.ReadBuffer(areas[i].info, 8);
-    f.ReadBuffer(areas[i].nexth, 8);
-    f.ReadBuffer(n, 8);
-    SetLength(areas[i].ent, n);
-    for j := 0 to n - 1 do
-      with areas[i].ent[j] do begin
-        ReadKey(f, key);
-        f.ReadBuffer(words, 8);
-        f.ReadBuffer(handle, 8);
-        f.ReadBuffer(m, 8);
-        SetLength(data, m);
-        if m > 0 then f.ReadBuffer(data[0], m);
-      end;
-  finally
-    f.Free;
-  end;
-  Result := i;
-end;
-
-{ greatest key <= k, or -1 }
-function Floor(const k: TKey): integer;
-var i: integer;
-begin
-  Result := -1;
-  if cur < 0 then exit;
-  for i := 0 to high(areas[cur].ent) do
-    if Cmp(areas[cur].ent[i].key, k) <= 0 then Result := i else break;
+  SetLength(Result, n);
+  if n > 0 then Move(p^, Result[1], n);
 end;
 
 { cursor state into BDVECT }
 procedure ShowCursor;
+var e: TEntry; k: RawByteString;
 begin
   if cur < 0 then exit;
   vec^[sCurKey] := 0;
-  if (cur < 0) or (pos < 0) then exit;
-  with areas[cur].ent[pos] do begin
-    { the first 8 bytes of the key }
-    if length(key.b) > 0 then
-      if length(key.b) < 8 then Move(key.b[1], vec^[sCurKey], length(key.b))
-      else Move(key.b[1], vec^[sCurKey], 8);
-    vec^[sCurLen] := words;
-    vec^[sHandle] := handle;
-  end;
-  vec^[sEntAdr] := EntTag + pos * 2;
+  if not hasPos then exit;
+  k := posKey;
+  if not GetEnt(k, e) then exit;
+  { the first 8 bytes of the key }
+  if length(k) > 0 then
+    if length(k) < 8 then Move(k[1], vec^[sCurKey], length(k))
+    else Move(k[1], vec^[sCurKey], 8);
+  vec^[sCurLen] := e.words;
+  vec^[sHandle] := e.handle;
+  vec^[sEntAdr] := EntTag + serial * 2;
 end;
 
-{ insert key k with datum p/n at the floor position }
-procedure Insert(const k: TKey; p: pointer; n, words: int64);
-var i, j: integer;
+{ a new entry with the next handle of the area }
+procedure Insert(const k: RawByteString; p: pointer; n, words: int64);
+var e: TEntry; id: longword; info, nexth: int64;
 begin
-  i := Floor(k) + 1;
-  with areas[cur] do begin
-    SetLength(ent, length(ent) + 1);
-    for j := high(ent) downto i + 1 do ent[j] := ent[j - 1];
-    ent[i].key := k;
-    ent[i].words := words;
-    if nexth = 0 then nexth := FirstHandle;
-    ent[i].handle := nexth;
-    inc(nexth, HandleStep);
-    SetLength(ent[i].data, n);
-    if n > 0 then Move(p^, ent[i].data[0], n);
-  end;
-  pos := i;
-  SaveArea(cur);
+  GetArea(opened[cur].name, id, info, nexth);
+  if nexth = 0 then nexth := FirstHandle;
+  e.words := words;
+  e.handle := nexth;
+  e.data := Datum(p, n);
+  PutEnt(k, e);
+  TPut(AreaKey(opened[cur].name), AreaVal(id, info, nexth + HandleStep));
+  MoveTo(k);
 end;
 
-procedure Replace(i: integer; p: pointer; n, words: int64);
+procedure Replace(const k: RawByteString; const old: TEntry; p: pointer; n, words: int64);
+var e: TEntry;
 begin
-  with areas[cur].ent[i] do begin
-    SetLength(data, n);
-    if n > 0 then Move(p^, data[0], n);
-  end;
-  areas[cur].ent[i].words := words;
-  pos := i;
-  SaveArea(cur);
+  e := old;
+  e.data := Datum(p, n);
+  e.words := words;
+  PutEnt(k, e);
+  MoveTo(k);
+end;
+
+procedure Remove(const k: RawByteString);
+var fk: RawByteString; e: TEntry;
+begin
+  TDel(CurPrefix + k);
+  { the cursor goes to the entry before }
+  if Seek(skLT, k, fk, e) then MoveTo(fk) else Unset;
 end;
 
 procedure Store(const k: TKey; p: pointer; n, words: int64; replace: boolean);
-var i: integer;
+var e: TEntry;
 begin
-  if not Intact then exit;
-  i := Floor(k);
-  if (i >= 0) and (Cmp(areas[cur].ent[i].key, k) = 0) then begin
-    if not replace then begin SetErr(eExists); exit; end;
-    mars.Replace(i, p, n, words);
-  end else
-    Insert(k, p, n, words);
-  SetErr(0);
+  WBegin;
+  try
+    if Intact then begin
+      if GetEnt(k.b, e) then begin
+        if replace then begin
+          mars.Replace(k.b, e, p, n, words);
+          SetErr(0);
+        end else
+          SetErr(eExists);
+      end else begin
+        Insert(k.b, p, n, words);
+        SetErr(0);
+      end;
+    end;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
+  end;
 end;
 
 procedure Fetch(const k: TKey; p: pointer; n: int64);
-var i: integer; m: int64;
+var e: TEntry; m: int64;
 begin
-  if not Intact then exit;
-  i := Floor(k);
-  if (i < 0) or (Cmp(areas[cur].ent[i].key, k) <> 0) then begin
-    SetErr(eNoRec); exit;
+  RBegin;
+  try
+    if Intact then begin
+      if not GetEnt(k.b, e) then SetErr(eNoRec)
+      else begin
+        m := length(e.data);
+        if m > n then m := n;
+        if m > 0 then Move(e.data[1], p^, m);
+        MoveTo(k.b);
+        vec^[sCurLen] := e.words;
+        SetErr(0);
+      end;
+    end;
+  finally
+    TxnCommit;
   end;
-  m := length(areas[cur].ent[i].data);
-  if m > n then m := n;
-  if m > 0 then Move(areas[cur].ent[i].data[0], p^, m);
-  pos := i;
-  vec^[sCurLen] := areas[cur].ent[i].words;
-  SetErr(0);
-end;
-
-procedure Remove(i: integer);
-var j: integer;
-begin
-  for j := i to high(areas[cur].ent) - 1 do
-    areas[cur].ent[j] := areas[cur].ent[j + 1];
-  SetLength(areas[cur].ent, length(areas[cur].ent) - 1);
-  pos := i - 1;
-  SaveArea(cur);
 end;
 
 procedure MarsBind(vec, err: pointer);
@@ -365,16 +448,28 @@ begin
 end;
 
 procedure PASACD(var i: int64);
-var sr: TSearchRec;
+var pre, k, v, fk: RawByteString; id: longword; info, nexth: int64;
 begin
   { fresh KOBLA at this LU and zone: forget its areas }
   Select(i);
-  if FindFirst(Dir + '/*.area', faAnyFile, sr) = 0 then begin
-    repeat DeleteFile(Dir + '/' + sr.Name) until FindNext(sr) <> 0;
-    FindClose(sr);
+  WBegin;
+  try
+    pre := AreaKey('');
+    k := pre;
+    while TSeekKey(k, skGE, fk, v) and (Copy(fk, 1, 4) = pre) do begin
+      GetArea(Copy(fk, 5, length(fk) - 4), id, info, nexth);
+      while TSeekKey(Prefix(id), skGE, k, v) and (Copy(k, 1, 5) = Prefix(id)) do TDel(k);
+      TDel(fk);
+      k := pre;
+    end;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
   end;
-  SetLength(areas, 0);
+  opened := nil;
   cur := -1;
+  hasPos := false;
   vec^[sInfo] := i;
   SetErr(0);
 end;
@@ -405,15 +500,13 @@ begin
 end;
 
 function Matches: boolean;
-var k: TKey;
 begin
-  k := KeyArg;
-  Result := (pos >= 0) and (Cmp(areas[cur].ent[pos].key, k) = 0);
+  Result := hasPos and (posKey = KeyArg.b);
 end;
 
 { microprogram in vec[3], 6-bit ops from the low bits (MARS README) }
-procedure pasbd;
-var w, op, a, b, n: int64; ok: boolean;
+procedure Micro;
+var w, op, a, b, n: int64; ok: boolean; fk: RawByteString; e: TEntry;
 
   function Next: int64;
   begin
@@ -429,16 +522,25 @@ begin
     if not (op in [0, 43, 44]) and not Intact then break;
     case op of
       0: ;
-      1: pos := -1;                                       { BEGIN }
-      2: pos := high(areas[cur].ent);                     { LAST }
-      3: if pos < 0 then begin SetErr(eNoPrev); break; end   { PREV }
-         else dec(pos);
-      4: if pos >= high(areas[cur].ent) then begin SetErr(eNoNext); break; end
-         else inc(pos);                                   { NEXT }
+      1: Unset;                                           { BEGIN }
+      2: if Seek(skLast, '', fk, e) then MoveTo(fk)       { LAST }
+         else Unset;
+      3: if not hasPos then begin SetErr(eNoPrev); break; end   { PREV }
+         else if Seek(skLT, posKey, fk, e) then MoveTo(fk)
+         else Unset;
+      4: begin                                            { NEXT }
+           if hasPos then ok := Seek(skGT, posKey, fk, e)
+           else ok := Seek(skFirst, '', fk, e);
+           if not ok then begin SetErr(eNoNext); break; end;
+           MoveTo(fk);
+         end;
       9: begin                                            { FIND }
-           pos := Floor(KeyArg);
-           { the handle operated upon: kept after DELKEY }
-           if pos >= 0 then vec^[sHandle] := areas[cur].ent[pos].handle;
+           if Seek(skLE, KeyArg.b, fk, e) then begin
+             MoveTo(fk);
+             { the handle operated upon: kept after DELKEY }
+             vec^[sHandle] := e.handle;
+           end else
+             Unset;
          end;
       12, 13: begin                                       { MATCH, NOMATCH }
             ok := Matches = (op = 12);
@@ -451,37 +553,43 @@ begin
               break;
             end;
           end;
-      16: if pos >= 0 then begin                          { UPDATE }
+      16: if hasPos and GetEnt(posKey, e) then begin      { UPDATE }
             n := vec^[sLen];
-            Replace(pos, pointer(vec^[sData]), n * 8, n);
+            Replace(posKey, e, pointer(vec^[sData]), n * 8, n);
           end;
       17: begin                                           { ALLOC }
             aptr := pointer(vec^[sData]);
             awords := vec^[sLen];
             alen := awords * 8;
           end;
-      18: if pos >= 0 then begin                          { GET }
-            n := length(areas[cur].ent[pos].data);
+      18: if hasPos and GetEnt(posKey, e) then begin      { GET }
+            n := length(e.data);
             if n > vec^[sLen] * 8 then n := vec^[sLen] * 8;
-            if n > 0 then Move(areas[cur].ent[pos].data[0], pointer(vec^[sData])^, n);
+            if n > 0 then Move(e.data[1], pointer(vec^[sData])^, n);
           end;
       19: ;                                               { FREE }
-      22: Insert(KeyArg, aptr, alen, awords);             { ADDKEY }
-      23: if pos >= 0 then Remove(pos);                   { DELKEY }
+      22: if GetEnt(KeyArg.b, e) then begin               { ADDKEY }
+            SetErr(eExists); break;
+          end else
+            Insert(KeyArg.b, aptr, alen, awords);
+      23: if hasPos then Remove(posKey);                  { DELKEY }
       32: break;                                          { STOP }
       43: begin                                           { ASSIGN }
             a := Next; b := Next;
             vec^[a] := vec^[b];
-            if (a = sHandle) and (pos >= 0) then
-              areas[cur].ent[pos].handle := vec^[a];
+            if (a = sHandle) and hasPos and GetEnt(posKey, e) then begin
+              e.handle := vec^[a];
+              PutEnt(posKey, e);
+            end;
           end;
       44: begin                                           { STALLOC }
             a := Next;
             { mem[vec[a]] := vec[10]: writes the handle of the entry
               whose descriptor address is vec[30]+1 }
-            if (pos >= 0) and (vec^[a] = EntTag + pos * 2 + 1) then begin
-              areas[cur].ent[pos].handle := vec^[sStore];
-              SaveArea(cur);
+            if hasPos and (vec^[a] = EntTag + serial * 2 + 1) and
+               GetEnt(posKey, e) then begin
+              e.handle := vec^[sStore];
+              PutEnt(posKey, e);
             end;
           end;
     else
@@ -491,27 +599,58 @@ begin
   ShowCursor;
 end;
 
-procedure newd(const name: TKey; info: int64);
-var i: integer;
+procedure pasbd;
 begin
-  if FindArea(name) >= 0 then begin SetErr(eExists); exit; end;
-  i := length(areas);
-  SetLength(areas, i + 1);
-  areas[i].name := name;
-  areas[i].info := info;
-  areas[i].nexth := FirstHandle;
-  SaveArea(i);
-  SetErr(0);
+  WBegin;
+  try
+    Micro;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
+  end;
+end;
+
+procedure newd(const name: TKey; info: int64);
+var id: longword; i, n: int64; v: RawByteString;
+begin
+  WBegin;
+  try
+    if GetArea(name.b, id, i, n) then SetErr(eExists)
+    else begin
+      id := 1;
+      if TGet(#2, v) then id := I64(v, 1);
+      TPut(#2, S64(id + 1));
+      TPut(AreaKey(name.b), AreaVal(id, info, FirstHandle));
+      SetErr(0);
+    end;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
+  end;
 end;
 
 procedure opend(const name: TKey);
-var i: integer;
+var i: integer; id: longword; info, nexth: int64; found: boolean;
 begin
-  i := FindArea(name);
-  if i < 0 then begin SetErr(eNoName); exit; end;
+  RBegin;
+  try
+    found := GetArea(name.b, id, info, nexth);
+  finally
+    TxnCommit;
+  end;
+  if not found then begin SetErr(eNoName); exit; end;
+  i := 0;
+  while (i < length(opened)) and (opened[i].name <> name.b) do inc(i);
+  if i > high(desc) then raise EMars.Create('mars: too many areas');
+  if i = length(opened) then SetLength(opened, i + 1);
+  opened[i].name := name.b;
+  opened[i].id := id;
+  opened[i].info := info;
   cur := i;
-  pos := -1;
-  desc[i] := areas[i].info;
+  hasPos := false;
+  desc[i] := info;
   vec^[sDesc] := PtrInt(@desc[i]);
   SetErr(0);
 end;
@@ -530,14 +669,22 @@ procedure modd(const key: TKey; const d; n: int64);
 begin Store(key, @d, n, (n + 7) div 8, true); end;
 
 procedure deld(const key: TKey);
-var i: integer;
+var e: TEntry;
 begin
-  i := Floor(key);
-  if (i < 0) or (Cmp(areas[cur].ent[i].key, key) <> 0) then begin
-    SetErr(eNoRec); exit;
+  WBegin;
+  try
+    if Intact then begin
+      if not GetEnt(key.b, e) then SetErr(eNoRec)
+      else begin
+        Remove(key.b);
+        SetErr(0);
+      end;
+    end;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
   end;
-  Remove(i);
-  SetErr(0);
 end;
 
 procedure newd(const name: array of WideChar; info: int64);

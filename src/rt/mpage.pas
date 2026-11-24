@@ -73,6 +73,7 @@ const
   Version = 1;
   FreePer = (PageSize - HdrSize) div 4;
   CacheMax = 16384;
+  MetaHead = 64;               { bytes of a meta page that hold its fields }
 
 var
   fd: cint = -1;
@@ -93,6 +94,8 @@ var
   pend: TPgnos; npend: integer;        { freed now, free after commit }
   oldFree: TPgnos;                     { pages of the committed freelist }
   crcTab: array[0..7, 0..255] of longword;
+  lastHead: array[0..1, 0..MetaHead - 1] of byte;
+  headOk: boolean = false;
 
 function Get16(p: PByte; off: integer): word; inline;
 begin Move(p[off], Result, 2); end;
@@ -234,19 +237,17 @@ end;
 
 { --- meta --- }
 
-function ReadMeta(slot: integer; out txn: qword; out root, free, np: TPgno): boolean;
-var buf: array[0..PageSize - 1] of byte;
+function ReadMeta(slot: integer; buf: PByte; out txn: qword; out root, free, np: TPgno): boolean;
 begin
   Result := false;
-  if fpPRead(fd, buf, PageSize, slot * PageSize) <> PageSize then exit;
-  if not Sealed(slot, @buf) or (Get16(@buf, 4) <> ptMeta) or
+  if not Sealed(slot, buf) or (Get16(buf, 4) <> ptMeta) or
      not CompareMem(@buf[HdrSize], @Magic, 8) then exit;
-  if (Get32(@buf, HdrSize + 8) <> Version) or (Get32(@buf, HdrSize + 12) <> PageSize) then
+  if (Get32(buf, HdrSize + 8) <> Version) or (Get32(buf, HdrSize + 12) <> PageSize) then
     Fail('unknown format version');
   Move(buf[HdrSize + 16], txn, 8);
-  root := Get32(@buf, HdrSize + 24);
-  free := Get32(@buf, HdrSize + 28);
-  np := Get32(@buf, HdrSize + 32);
+  root := Get32(buf, HdrSize + 24);
+  free := Get32(buf, HdrSize + 28);
+  np := Get32(buf, HdrSize + 32);
   Result := true;
 end;
 
@@ -267,17 +268,27 @@ begin
   WriteRaw(slot, @buf);
 end;
 
+{ both metas in one read; their CRCs are checked again only when their
+  heads (all their fields) differ from the last ones checked }
 procedure LoadMeta;
-var t0, t1: qword; r0, r1, f0, f1, n0, n1: TPgno; ok0, ok1: boolean;
+var buf: array[0..2 * PageSize - 1] of byte; t0, t1: qword;
+    r0, r1, f0, f1, n0, n1: TPgno; ok0, ok1: boolean;
 begin
-  ok0 := ReadMeta(0, t0, r0, f0, n0);
-  ok1 := ReadMeta(1, t1, r1, f1, n1);
+  if fpPRead(fd, buf, 2 * PageSize, 0) <> 2 * PageSize then Fail('no valid meta page');
+  if headOk and CompareMem(@buf[0], @lastHead[0], MetaHead) and
+     CompareMem(@buf[PageSize], @lastHead[1], MetaHead) then exit;
+  headOk := false;
+  ok0 := ReadMeta(0, @buf[0], t0, r0, f0, n0);
+  ok1 := ReadMeta(1, @buf[PageSize], t1, r1, f1, n1);
   if ok0 and (not ok1 or (t0 > t1)) then begin
     mTxn := t0; mRoot := r0; mFree := f0; mNpages := n0;
   end else if ok1 then begin
     mTxn := t1; mRoot := r1; mFree := f1; mNpages := n1;
   end else
     Fail('no valid meta page');
+  Move(buf[0], lastHead[0], MetaHead);
+  Move(buf[PageSize], lastHead[1], MetaHead);
+  headOk := true;
 end;
 
 procedure Lock(op: cint);
@@ -294,6 +305,7 @@ begin
     PgClose;
   end;
   fpath := path;
+  headOk := false;
   PgSync := GetEnvironmentVariable('MARS_SYNC') <> '0';
   ForceDirectories(ExtractFileDir(path));
   fd := fpOpen(path, O_RDWR or O_CREAT, &644);
