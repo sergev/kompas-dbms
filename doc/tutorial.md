@@ -244,7 +244,7 @@ These statements are also fed to `servis`.
 | `ЖУРНАЛ ЖУ-CK0 СБРОСИ.` | empty a journal and start it again |
 | `ВОССТА ИНД-CK,ДАН-CK;` | replay the journal into areas |
 
-In the 1988 decks these statements stand before the data of a GEN deck, to clear the areas before a reload: `ОСВОБО` and `ОЧИСТИ` of all areas, then `ЖУРНАЛ … СБРОСИ`. `gen` skips them; give them to `servis`. `servis` keeps the description of its areas in the database, so they work in any later run. See section 6, step 6.
+In the 1988 decks these statements stand before the data of a GEN deck, to clear the areas before a reload: `ОСВОБО` and `ОЧИСТИ` of all areas, then `ЖУРНАЛ … СБРОСИ`. `gen` gives them to `servis` before the load, as the 1988 job did. A deck that resets a journal (`ЖУРНАЛ … СБРОСИ`) also has its load written to that journal. `servis` keeps the description of its areas in the database, so they work in any later run. See section 6, step 6.
 
 ## 6. Example: a CD collection
 
@@ -633,7 +633,9 @@ The journal (`ЖУРНАЛ` in a program or query) keeps the new image of every 
 КОНЕЦ.
 ```
 
-This is exact only when the journal covers everything since the areas were empty: empty the journal (`ЖУРНАЛ ЖУ-ДИС СБРОСИ.`) right after `ОЧИСТИ`, before any change, and make all changes through programs or queries that name the journal. A `gen` load is not journaled: after a reload from a deck, a later `ВОССТА` would leave chains pointing to the loaded records, which are gone. For data loaded by `gen`, keep the deck and the backup instead.
+This is exact only when the journal covers everything since the areas were empty: empty the journal (`ЖУРНАЛ ЖУ-ДИС СБРОСИ.`) right after `ОЧИСТИ`, before any change, and make all changes through programs or queries that name the journal.
+
+A full reload is done that way by its deck: put `ОСВОБО` and `ОЧИСТИ` of all areas and `ЖУРНАЛ ЖУ-ДИС СБРОСИ.` before the data (as the 1988 decks do), and `gen` runs them and journals the load. A deck that only adds data (like `load.gen` here) is not journaled: after it, `ВОССТА` cannot restore the areas, so keep the decks and a backup.
 
 A simple routine:
 

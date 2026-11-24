@@ -77,4 +77,5 @@ A new guess goes here first and is checked afterwards.
 - **UNKNOWN**: how the original `servis` found the areas of an earlier run. Here their descriptions are kept in the MARS area `SERVIS`.
 - **HYPOTHESIS**: `ОСВОБО` releases an area (clears the flag `servis` requires before `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`); it does not erase data. Basis: the reload decks 6, 7, 11 give `ОСВОБО` of all areas, then `ОЧИСТИ` of the same areas, then `ЖУРНАЛ … СБРОСИ`.
 - **HYPOTHESIS**: `ОЧИСТИ` erases the data of an area; `ЖУРНАЛ … СБРОСИ` empties the journal. `ОЧИСТИ` does not require `ОСВОБО` before it, although the decks always give it.
+- **HYPOTHESIS**: the `servis` statements in a GEN deck (between the job cards `*С` and `*CALL`) were a job step of their own before the loader; `gen` runs them. A load after `ЖУРНАЛ x СБРОСИ` writes journal `x`, so that the journal covers the areas from empty.
 - **HYPOTHESIS**: `ВОССТА` rolls the areas forward from the journal. Here the journal holds after-images of records (not the 1988 format, which is not known), and `ВОССТА` replays those of the areas named.

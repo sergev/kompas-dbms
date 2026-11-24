@@ -88,6 +88,8 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
   - Inside a block a line may start with `*`.
   - `-k` keeps the work directory.
   - The loader commits every 1000 data records and at the end: after a crash, a load is kept up to its last commit.
+  - `servis` statements before the data (`ОСВОБО`, `ОЧИСТИ`, `ЖУРНАЛ`, `ВОССТА`; in the 1988 decks a job step between `*С` and `*CALL` the loader) are run by `servis` before the loader. Later ones are reported as skipped.
+  - If the deck resets a journal (`ЖУРНАЛ x СБРОСИ`), the loader writes that journal (`&&ЖУРНАЛ x&&`), so the load can be replayed by `ВОССТА`. Other loads are not journaled.
 - **`mad`.** It runs a query text: labels, `ЕСЛИ … ТО_( … _)ИНАЧЕ`, `ВЫДАТЬ`/`ВВ`. `ВЫДАТЬ` prints a line in the data format of GEN, so an unload can be fed back to `gen`.
 - **`predt` and `kpc`.** They make programs (section 2).
 
@@ -97,7 +99,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 |---|---|---|
 | `engine` | `kdbtest`: order, duplicates, owner, key, `ЗАМЕНИ` of a key, DB-key, `ИСКЛЮЧ`/`ВКЛЮЧИ`, erase | `ALL OK` |
 | `cd` | the example of `doc/tutorial.md`: `servis`, `ttc`, `gen`, three MAD queries, the program `cdtime` | as in the tutorial |
-| `gold-ck0` | schema CX-CK0, loader deck 6, query deck 3 | 23 records, 0 errors; the unload equals the data of deck 6 |
+| `gold-ck0` | schema CX-CK0, loader deck 6 (its `servis` statements run, the load journaled), query deck 3; then `ОСВОБО`/`ОЧИСТИ` of the data areas, query 3, `ВОССТА`, query 3 | 23 records, 0 errors; the unload equals the data of deck 6; empty after `ОЧИСТИ`; after `ВОССТА` equal to the first again |
 | `gold-am0` | schema CX-AM0, loader deck 7 | 38 records, 0 errors |
 | `gold-zt0` | schema CX-ЗТ0, loader deck 11, query deck 9 | 108 records, 0 errors; topics and co-executors equal the data of deck 11 |
 | `mars-api` | every MARS call and every `pasbd` operation; recorded on the old MARS, so it fixes its behaviour | as recorded, plus `ADDKEY` of an existing key |
@@ -182,5 +184,5 @@ With `fsync`, a commit costs what the disk takes for two `fsync`s (60 ms on the 
 
 - Deck 8 (MAD) is written for the subschema `CXE-AM`, which is not among the materials (the sets `ИМ-ПРИ`, `ПР-СТО` are not in CX-AM0).
 - The report format `X:9:22` prints 22 decimals. What it meant in 1988 is not known.
-- `gen` skips the `servis` statements of a deck (`ОСВОБО`, `ОЧИСТИ`, `ЖУРНАЛ … СБРОСИ`): give them to `servis`. A `gen` load is not journaled.
+- A `gen` load from a deck that does not reset a journal (an addition to a database) is not journaled, so `ВОССТА` cannot restore it.
 - Only Linux was tested. The build uses only `fpc`, `/bin/sh` and `TProcess`, so macOS is expected to work.

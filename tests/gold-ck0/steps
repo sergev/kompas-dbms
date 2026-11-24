@@ -2,3 +2,7 @@ servis areas.srv
 ttc ck0.ddl
 gen deck6.gen
 mad deck3.mad
+servis clear.srv
+mad deck3.mad
+servis restore.srv
+mad deck3.mad

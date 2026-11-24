@@ -7,7 +7,12 @@
   REC.FLD_…* and an action ПАСКАЛ "…" or &&…&&, КОНЕЦ, then the data.
   As in the original GEN, the result is a loader program: it goes
   through predt and fpc and is run on the data.  -k keeps the
-  work directory.  Job cards (*…) and labels (? …) are skipped. }
+  work directory.  Job cards (*…) and labels (? …) are skipped.
+
+  SERVIS statements before the data (ОСВОБО, ОЧИСТИ, ЖУРНАЛ, ВОССТА: in
+  the 1988 decks a job step of their own before the loader) are run by
+  servis before the loader.  If one resets a journal (ЖУРНАЛ x СБРОСИ),
+  the load writes that journal, so it can be replayed by ВОССТА. }
 program gen;
 
 {$mode objfpc}{$H+}
@@ -25,6 +30,8 @@ var
   text: string;
   i, n, line: integer;
   loader, schema, procs, vars, data: string;
+  svc: string = '';          { servis statements of the deck }
+  jrnl: string = '';         { the journal the deck resets }
   fmts: array of TFmt;
   errors: integer = 0;
   keep: boolean = false;
@@ -168,7 +175,7 @@ begin
 end;
 
 procedure Definitions;
-var w: string; f: TStringList; k, depth, base: integer; c: char;
+var w: string; f, ws: TStringList; k, depth, base: integer; c: char; seen: boolean;
 begin
   repeat
     w := Word;
@@ -189,12 +196,31 @@ begin
   { the rest without job cards and labels }
   f := TStringList.Create;
   f.Text := Copy(text, i, n - i + 1);
-  depth := 0; base := 0;
+  depth := 0; base := 0; seen := false;
   for k := 0 to f.Count - 1 do begin
     w := f[k];
     { labels (? …) are never data; a job card (*…) only outside a block,
       inside one a line may start with * as data }
     if (w <> '') and ((w[1] = '?') or ((w[1] = '*') and (depth <= base))) then continue;
+    { servis statements before the first block }
+    if not seen and (depth = 0) then begin
+      ws := TStringList.Create;
+      ws.Delimiter := ' ';
+      ws.StrictDelimiter := false;
+      ws.DelimitedText := StringReplace(StringReplace(StringReplace(w, ';', ' ', [rfReplaceAll]),
+        ',', ' ', [rfReplaceAll]), '.', ' ', [rfReplaceAll]);
+      if (ws.Count > 0) and ((KW(ws[0]) = KW('ОСВОБО')) or (KW(ws[0]) = KW('ОЧИСТИ')) or
+         (KW(ws[0]) = KW('ЖУРНАЛ')) or (KW(ws[0]) = KW('ВОССТА'))) then begin
+        svc := svc + w + #10;
+        if (KW(ws[0]) = KW('ЖУРНАЛ')) and (ws.Count > 2) and (KW(ws[2]) = KW('СБРОСИ')) then
+          jrnl := ws[1];
+        ws.Free;
+        data := data + #10;      { keep the line numbers of the data }
+        continue;
+      end;
+      ws.Free;
+    end;
+    if Pos('[', w) > 0 then seen := true;
     data := data + w + #10;
     if (base = 0) and (Pos('РЕЖИМ', FoldAll(w)) > 0) and (Pos('[[', w) > 0) then
       base := 1;
@@ -271,7 +297,9 @@ begin
       Result := Result + fmts[j].action;
     Result := Result + 'END;'#10;
   end;
-  Result := Result + 'BEGIN'#10'  WHILE GNEXT(ZZFMT) DO'#10;
+  Result := Result + 'BEGIN'#10;
+  if jrnl <> '' then Result := Result + '  &&ЖУРНАЛ ' + jrnl + '&&'#10;
+  Result := Result + '  WHILE GNEXT(ZZFMT) DO'#10;
   for j := 0 to high(fmts) do
     Result := Result + '    IF ZZFMT = ''' + Pad6(fmts[j].name) + ''' THEN ZZF' +
       IntToStr(j + 1) + ' ELSE'#10;
@@ -373,11 +401,17 @@ begin
     writeln('ГЕН: ЗАГРУЗЧИК НЕ СОБРАН, СМ. ', work);
     halt(1);
   end;
+  if svc <> '' then begin
+    Save(work + '/servis.srv', svc + 'КОНЕЦ.'#10);
+    Flush(output);
+    if not Step('/bin/sh', ['-c', '"' + home + '/bin/servis" < "' + work + '/servis.srv"']) then
+      writeln('ГЕН: SERVIS ЗАВЕРШИЛСЯ С ОШИБКОЙ');
+  end;
   RunLoader(work + '/loader', work + '/data.txt');
   if keep then writeln('ГЕН: ФАЙЛЫ В ', work)
   else begin
     for src in ['loader.pas', 'loader_fpc.pas', 'loader', 'loader.o', 'data.txt',
-                'fpc.log'] do
+                'fpc.log', 'servis.srv'] do
       DeleteFile(work + '/' + src);
     RemoveDir(work);
   end;
