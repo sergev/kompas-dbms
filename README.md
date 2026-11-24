@@ -17,6 +17,12 @@ The control languages stay Russian, as in the original: the schema language (DDL
 
 A database is a directory, given by `MARS_DIR`.
 
+## Text
+
+All text is UTF-8: decks, queries, programs, input and output, whatever the locale. The original worked in the 8-bit GOST code, with upper case only; here data are kept exactly as written, in any alphabet and case, and ordered sets go by Unicode code points. A `char` in a KOMPAS Pascal program holds one letter of any alphabet.
+
+Names and keywords are matched as in the original: case does not matter, and Latin and Cyrillic letters that look alike are one letter (`SY-АРТ` with a Latin or a Cyrillic `А`).
+
 ## Build and test
 
 Free Pascal 3.2 (`fpc`) is required; the tests also need Python 3.

@@ -421,19 +421,19 @@ File `load.gen` has formats, `КОНЕЦ`, then the data:
 ТРЕК.НОМЕР_ТРЕК.ДЛИТ_ТРЕК.НАЗВ*
 ПАСКАЛ "&&ПОСТАВ ТРЕК&&"
 КОНЕЦ
-АРТИСТ [КИНО_РОССИЯ*]
-ДИСК   [1001_1988_12.50_ГРУППА КРОВИ*]
-ТРЕК   [1_286_ГРУППА КРОВИ*
-        2_255_ЗАКРОЙ ЗА МНОЙ ДВЕРЬ*
-        3_245_ВОЙНА*]
-ДИСК   [1002_1989_14.00_ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ*]
-ТРЕК   [1_225_ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ*
-        2_230_ПЕСНЯ БЕЗ СЛОВ*
-        3_268_ПАЧКА СИГАРЕТ*]
-АРТИСТ [АКВАРИУМ_РОССИЯ*]
-ДИСК   [1003_1983_10.00_РАДИО АФРИКА*]
-ТРЕК   [1_240_РАДИО АФРИКА*
-        2_205_ТВЕРДЫЙ ЗНАК*]
+АРТИСТ [Кино_Россия*]
+ДИСК   [1001_1988_12.50_Группа крови*]
+ТРЕК   [1_286_Группа крови*
+        2_255_Закрой за мной дверь*
+        3_245_Война*]
+ДИСК   [1002_1989_14.00_Звезда по имени Солнце*]
+ТРЕК   [1_225_Звезда по имени Солнце*
+        2_230_Песня без слов*
+        3_268_Пачка сигарет*]
+АРТИСТ [Аквариум_Россия*]
+ДИСК   [1003_1983_10.00_Радио Африка*]
+ТРЕК   [1_240_Радио Африка*
+        2_205_Твердый знак*]
 ```
 
 How to read it:
@@ -481,9 +481,9 @@ mad < discs.mad
 Output:
 
 ```
-1001 1988 12.50 ГРУППА КРОВИ
-1002 1989 14.00 ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ
-1003 1983 10.00 РАДИО АФРИКА
+1001 1988 12.50 Группа крови
+1002 1989 14.00 Звезда по имени Солнце
+1003 1983 10.00 Радио Африка
 ```
 
 - `ВЫДАТЬ` prints one line: `'text'`, `.FIELD` of the current record, `REC.FIELD` of the current record of type `REC`, and `/` for a line break.
@@ -508,11 +508,11 @@ One disc with its artist and tracks. File `tracks.mad`:
 Output of `mad < tracks.mad`:
 
 ```
-ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ
-КИНО
-1 225 ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ
-2 230 ПЕСНЯ БЕЗ СЛОВ
-3 268 ПАЧКА СИГАРЕТ
+Звезда по имени Солнце
+Кино
+1 225 Звезда по имени Солнце
+2 230 Песня без слов
+3 268 Пачка сигарет
 ```
 
 Nested walks and branches. File `artists.mad`:
@@ -533,11 +533,11 @@ Nested walks and branches. File `artists.mad`:
 Output:
 
 ```
-АКВАРИУМ                                 (РОССИЯ)
-   1983 РАДИО АФРИКА
-КИНО                                     (РОССИЯ)
-   1988 ГРУППА КРОВИ
-   1989 ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ
+Аквариум                                 (Россия)
+   1983 Радио Африка
+Кино                                     (Россия)
+   1988 Группа крови
+   1989 Звезда по имени Солнце
 ```
 
 `ЕСЛИ СОС=0 ТО_( ... _)ИНАЧЕ ...` - a branch; `СОС` is the status of the last `НАЙТИ`. A text field is printed at its full width. A mistake in the query is reported as `ОШИБКА В СТРОКЕ n: ...` and nothing is run.
@@ -595,8 +595,8 @@ fpc -Fu$KOMPAS/build/lib -ocdtime cdtime_fpc.pas
 `predt` reads the schema from `MARS_DIR`, so the database must exist. Output:
 
 ```
-КИНО
-ЗВЕЗДА ПО ИМЕНИ СОЛНЦЕ
+Кино
+Звезда по имени Солнце
 ВСЕГО 12 МИН 3 СЕК
 ```
 
@@ -607,7 +607,7 @@ Adding a track to disc 1002:
 ```
 ДИСК.НОМЕР := 1002;
 &&НАЙТИ ПО-КЛЮ В SY-ДИС&&
-ТРЕК.НОМЕР := 4; ТРЕК.ДЛИТ := 250; ТРЕК.НАЗВ := 'КИНО';
+ТРЕК.НОМЕР := 4; ТРЕК.ДЛИТ := 250; ТРЕК.НАЗВ := 'Кино';
 &&ПОСТАВ ТРЕК&&
 IF СОСТ <> 0 THEN WRITELN('ОШИБКА ', СОСТ:1);
 ```
@@ -641,7 +641,7 @@ A simple routine:
 |---|---|---|
 | Add an artist with discs | `gen` | a `load.gen` with the formats and only the new data blocks |
 | Add one track | program | `НАЙТИ ПО-КЛЮ` the disc, `ПОСТАВ ТРЕК` (step 5) |
-| List the discs of an artist | `mad` | `НАЙТИ ПО-КЛЮ 'КИНО' В SY-АРТ;`, then walk `АР-ДИС` |
+| List the discs of an artist | `mad` | `НАЙТИ ПО-КЛЮ 'Кино' В SY-АРТ;` (the case of a key matters), then walk `АР-ДИС` |
 | List all artists | `mad` | walk `SY-АРТ`: they come in order of `ИМЯ` |
 | Change a price | program | `НАЙТИ ПО-КЛЮ`, `ЗАМЕНИ ДИСК.ЦЕНА НА 15.00` |
 | Renumber a disc | program | `ВЗЯТЬ`, change `ДИСК.НОМЕР`, `ЗАМЕНИ ДИСК`: `SY-ДИС` is reordered |
@@ -663,7 +663,75 @@ A simple routine:
 | Delete a record | `НАЙТИ ...`, then `УБРАТЬ` |
 | Data damaged after a failure | restore the backup of `MARS_DIR` (section 6, step 6) |
 
-## 8. When something goes wrong
+## 8. Text: UTF-8 and mixed case
+
+All text of KOMPAS is UTF-8: schemas, decks, queries, programs, input and output. The terminal locale does not matter.
+
+The original KOMPAS worked in the 8-bit GOST code. It had upper case only, and a Latin `A` and a Cyrillic `А` were one code. Here the rules are split in two.
+
+**Names and keywords are folded, as in the original.** Case does not matter, `Ё` is `Е`, and Latin letters that look like Cyrillic ones (`A B C E H K M O P T X Y`) are those Cyrillic letters. So all these are the same name:
+
+```
+СЛОВО.ИМЯ    слово.имя    CЛOBO.ИMЯ
+```
+
+The last one is typed partly in Latin. Old texts often mix the two alphabets like this, and they still work. KOMPAS prints a name in one form: upper case, look-alikes as Cyrillic. A name is cut to 6 characters.
+
+**Data are kept exactly as written**, in any alphabet and case. The example `tests/utf8` loads these words with GEN:
+
+```
+ФОРМАТ CЛOBO
+CЛOBO.ИMЯ_cлoвo.ЗHAЧ_СЛОВО.БУКВА*
+ПАСКАЛ "&&ПОСТАВ CЛOBO&&"
+КОНЕЦ
+СЛОВО [ёлка_новогодняя ель_ё*
+        Ёж_колючий зверь_Ё*
+        ЕЖ_ПРОПИСНЫМИ_Е*
+        жук_насекомое_ж*
+        Жук_с прописной_Ж*
+        über_über alles_ü*
+        Zebra_латиница_Z*
+        apple_яблоко_a*
+        Ωμέγα_омега_Ω*
+        АБВ_кириллица_А*
+        ABB_латиница, похожая_A*]
+```
+
+A MAD query walks the set `SY-СЛО`, ordered by `ИМЯ`, and then looks for two keys:
+
+```
+ABB         |латиница, похожая       |A|
+Zebra       |латиница                |Z|
+apple       |яблоко                  |a|
+über        |über alles              |ü|
+Ωμέγα       |омега                   |Ω|
+Ёж          |колючий зверь           |Ё|
+АБВ         |кириллица               |А|
+ЕЖ          |ПРОПИСНЫМИ              |Е|
+Жук         |с прописной             |Ж|
+жук         |насекомое               |ж|
+ёлка        |новогодняя ель          |ё|
+НАЙДЕНО: колючий зверь
+НЕТ ёж
+```
+
+What it shows:
+
+- **Order.** A set is ordered by the codes of the letters (Unicode): Latin upper case, Latin lower case, other alphabets, then Cyrillic. In Cyrillic, upper case comes before lower case, `Ё` before `А`, and `ё` after `я`. `ABB` (Latin) and `АБВ` (Cyrillic) are different keys.
+- **Keys are exact.** `НАЙТИ ПО-КЛЮ 'Ёж'` finds the record, `'ёж'` does not. To find a key whatever its case, store it in one case.
+- **Length counts letters.** `СИМВОЛ 12` holds 12 letters of any alphabet, and the columns line up.
+
+**In a program**, a `CHAR` holds one letter of any alphabet, and so does each element of a `PACKED ARRAY OF CHAR`. Literals may be in any case. `READ` and `WRITELN` of such arrays work as usual:
+
+```
+IF СЛОВО.БУКВА = 'ж' THEN WRITELN('СТРОЧНАЯ ж')
+ELSE IF СЛОВО.БУКВА = 'Ж' THEN WRITELN('ПРОПИСНАЯ Ж')
+ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.БУКВА):1);
+```
+
+`ORD` gives the Unicode code of a letter: `ORD('ü')` is 252.
+
+## 9. When something goes wrong
 
 | Symptom | Cause |
 |---|---|
@@ -676,9 +744,9 @@ A simple routine:
 | `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |
 | The database is empty in a later step | `MARS_DIR` points to another directory |
 
-In names and keywords, Latin and Cyrillic letters that look alike (`A` and `А`, `C` and `С`) are the same for KOMPAS, and lower case is read as upper case. Data are kept exactly as written: `Ёж` and `ёж` are different keys, and sets are ordered by the codes of the letters.
+See section 8 on letters and case.
 
-## 9. Further reading
+## 10. Further reading
 
 - `doc/engine.md` - the engine and the tools; what is a guess.
 - `doc/open-questions.md` - hypotheses and open questions.
