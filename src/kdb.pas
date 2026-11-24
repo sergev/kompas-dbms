@@ -36,6 +36,10 @@ var
 { --- DML for programs (names are numbers given by predt) --- }
 procedure KOPEN(const journal: array of WideChar);
 procedure KCLOSE;
+{ replay the after-images of an area from a journal (ВОССТА): number of
+  entries applied, -1 if there is no such journal }
+function KREPLAY(const journal, area: array of WideChar): int64;
+function KREPLAY(const journal, area: string): int64;
 procedure KFINDFIRST(s: int64);
 procedure KFINDLAST(s: int64);
 procedure KFINDNEXT(s: int64);       { s = 0: the set of the last find }
@@ -157,6 +161,7 @@ var
   bufKey: int64 = 0;
   jname: string = '';
   jseq: int64 = 0;
+  jknown: boolean = false;   { jseq read from the journal }
 
 procedure SetSt(v: int64);
 begin
@@ -238,6 +243,61 @@ begin
   end;
 end;
 
+{ --- journal: after-images of record writes ---
+  Key 'J' + sequence (5 bytes, big-endian), so key order is write order.
+  Entry: op 'W' or 'D', area name (length byte, UTF-8), MARS key (length
+  byte, bytes), datum length (4 bytes), datum (the record words). }
+
+type
+  PVec = ^TVec;
+  TVec = array[0..167] of int64;
+
+const
+  vCode = 3; vData = 11; vLen = 13; vCurKey = 31; vCurLen = 39;
+  opBegin = 1; opLast = 2; opNext = 4; opGet = 18;
+
+{ the sequence of the last entry of the open journal area }
+function LastSeq: int64;
+var v: PVec; save: TVec; b: array[0..7] of byte; i: integer;
+begin
+  Result := 0;
+  v := MarsVec;
+  save := v^;
+  v^[vCode] := opLast;
+  pasbd;
+  if MErr = 0 then begin
+    Move(v^[vCurKey], b, 8);
+    if b[0] = ord('J') then
+      for i := 1 to 5 do Result := (Result shl 8) or b[i];
+  end;
+  v^ := save;
+  MClr;
+end;
+
+procedure Journal(op: char; ai: integer; const key: TKey; const w: TWords);
+var e, nm: RawByteString; n: longword;
+begin
+  if jname = '' then exit;
+  MClr;
+  opend(K6(jname));
+  if MErr <> 0 then exit;
+  if not jknown then begin
+    jseq := LastSeq;
+    jknown := true;
+  end;
+  inc(jseq);
+  nm := K6(areas[ai]).b;
+  n := length(w) * 8;
+  e := op + chr(length(nm)) + nm + chr(length(key.b)) + key.b + #0#0#0#0;
+  Move(n, e[length(e) - 3], 4);
+  if n > 0 then begin
+    SetLength(e, length(e) + n);
+    Move(w[0], e[length(e) - n + 1], n);
+  end;
+  MClr;
+  modd(BinKey(ord('J'), jseq), e[1], length(e));
+end;
+
 function WriteW(k: int64; const w: TWords; fresh: boolean): boolean;
 var ai: integer; key: TKey;
 begin
@@ -249,6 +309,7 @@ begin
   if fresh then putd(key, w[0], length(w) * 8)
   else modd(key, w[0], length(w) * 8);
   Result := MErr = 0;
+  if Result then Journal('W', ai, key, w);
 end;
 
 function DeleteW(k: int64): boolean;
@@ -260,20 +321,7 @@ begin
   MClr;
   deld(DbKeyName(k and $FFFFFFFFFF, ai));
   Result := MErr = 0;
-end;
-
-procedure Journal(op: char; k: int64; const w: TWords);
-var key: TKey;
-begin
-  if jname = '' then exit;
-  MClr;
-  opend(K6(jname));
-  if MErr <> 0 then exit;
-  inc(jseq);
-  key := BinKey(ord(op), jseq);
-  MClr;
-  if length(w) > 0 then modd(key, w[0], length(w) * 8)
-  else modd(key, k, 8);
+  if Result then Journal('D', ai, DbKeyName(k and $FFFFFFFFFF, ai), nil);
 end;
 
 { --- schema --- }
@@ -464,6 +512,7 @@ end;
 function KRecNo(const name: string): integer;
 var i: integer;
 begin
+  if not loaded then Load;      { a name may be the first call }
   for i := 1 to high(recs) do
     if recs[i].name = Name6(name) then exit(i);
   Result := 0;
@@ -472,6 +521,7 @@ end;
 function KSetNo(const name: string): integer;
 var i: integer;
 begin
+  if not loaded then Load;      { a name may be the first call }
   for i := 1 to high(sets) do
     if sets[i].name = Name6(name) then exit(i);
   Result := 0;
@@ -1107,7 +1157,6 @@ begin
   aw[off + 1] := k;
   if not WriteW(AnchorK, aw, false) then exit;
   if not WriteW(k, w, true) then exit;
-  Journal('S', k, w);
   st := kOk;
 end;
 
@@ -1125,7 +1174,6 @@ begin
   end else aw[off + 1] := pr;
   WriteW(AnchorK, aw, false);
   DeleteW(k);
-  Journal('E', k, nil);
 end;
 
 procedure IKSTORE(r: int64);
@@ -1225,7 +1273,6 @@ begin
     Move(buf[recs[t].fstart], w[recs[t].fstart],
       (recs[t].nwords - recs[t].fstart) * 8);
   if not WriteW(bufKey, w, false) then begin SetSt(kStorage); exit; end;
-  Journal('M', bufKey, w);
   buf := Copy(w);
   SetSt(kOk);
 end;
@@ -1449,7 +1496,65 @@ end;
 procedure KOPEN(const journal: array of WideChar);
 begin
   jname := FoldName(BufU(@journal[0], length(journal)));
+  jknown := false;
   if Ready then SetSt(kOk);
+end;
+
+function KREPLAY(const journal, area: string): int64;
+var v: PVec; save: TVec; d: TWords; ents: array of RawByteString;
+    e, nm, want, key: RawByteString; i, at, n: integer; len: longword;
+begin
+  Result := -1;
+  want := K6(FoldName(area)).b;
+  MClr;
+  opend(K6(FoldName(journal)));
+  if MErr <> 0 then exit;
+  { collect first: the MARS cursor is one }
+  v := MarsVec;
+  save := v^;
+  ents := nil;
+  v^[vCode] := opBegin;
+  pasbd;
+  repeat
+    v^[vCode] := opNext;
+    pasbd;
+    if MErr <> 0 then break;
+    n := v^[vCurLen];
+    SetLength(d, n + 1);
+    v^[vData] := PtrInt(@d[0]);
+    v^[vLen] := n;
+    v^[vCode] := opGet;
+    pasbd;
+    SetLength(e, n * 8);
+    if n > 0 then Move(d[0], e[1], n * 8);
+    nm := Copy(e, 3, ord(e[2]));
+    if (e <> '') and (e[1] in ['W', 'D']) and (nm = want) then begin
+      SetLength(ents, length(ents) + 1);
+      ents[high(ents)] := e;
+    end;
+  until false;
+  v^ := save;
+  Result := 0;
+  for i := 0 to high(ents) do begin
+    e := ents[i];
+    at := 3 + ord(e[2]);
+    key := Copy(e, at + 1, ord(e[at]));
+    at := at + 1 + ord(e[at]);
+    Move(e[at], len, 4);
+    MClr;
+    opend(K6(FoldName(area)));
+    if MErr <> 0 then exit(-1);
+    MClr;
+    if e[1] = 'W' then modd(ByteKey(key), e[at + 4], len)
+    else deld(ByteKey(key));
+    inc(Result);
+  end;
+  MClr;
+end;
+
+function KREPLAY(const journal, area: array of WideChar): int64;
+begin
+  Result := KREPLAY(BufU(@journal[0], length(journal)), BufU(@area[0], length(area)));
 end;
 
 procedure KCLOSE;

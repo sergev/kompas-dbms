@@ -29,7 +29,7 @@ python3 tests/run.py SKLMON   # one Severov program
 - `src/rt/krt.pas` — runtime for KOMPAS Pascal programs (`integer` is 64-bit, `alfa`, write formats).
 - `src/predt.pas` — front end of "KOMPAS Pascal": Free Pascal plus Russian identifiers and `&&…&&` DML. Translates to plain FPC: `&&ПОДСХЕ X&&` generates record types/vars from the schema in `$MARS_DB` (so the database must exist at compile time); non-ASCII names map to ASCII with Latin/Cyrillic homoglyphs and case folded together; `char` becomes `WideChar`, `string[n]` `UnicodeString`, literals stay UTF-8 under `{$codepage utf8}`; write/read of char arrays go through `RT_S`/`RT_Rd`; `packed array[1..N] of char` becomes named type `ZZC<N>`; default mode `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}` and `uses krt, kio, kdb`.
 - `src/kpc` — shell script: `predt` then `fpc` against `build/lib`.
-- `src/servis.pas`, `src/ttc.pas` are themselves KOMPAS Pascal: the Makefile builds them through `predt` (so `predt` and the units must build first).
+- `src/servis.pas`, `src/ttc.pas` are themselves KOMPAS Pascal: the Makefile builds them through `predt` (so `predt` and the units must build first). `servis` keeps its area descriptors in the MARS area `SERVIS`; `ОЧИСТИ` = `cleard`, `ВОССТА` = `KREPLAY` of the after-image journal that `kdb` writes in `WriteW`/`DeleteW` once `KOPEN` names a journal.
 - `src/gen.pas` + `src/kgenrt.pas` — `gen` generates a loader program from a deck (formats become procedures), runs it through `predt`/`fpc`, then executes it; `-k` keeps the work dir.
 - `src/mad.pas` — query interpreter; `ВЫДАТЬ` prints in GEN's data format so an unload can be reloaded (gold tests check loader/unload round-trips).
 - `src/sevlib.pas` — native stand-ins for the lost library used by Severov's programs.

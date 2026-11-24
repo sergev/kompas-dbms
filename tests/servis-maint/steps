@@ -1,0 +1,12 @@
+servis areas.srv
+ttc cd.ddl
+servis reset.srv
+native load.pas
+servis clear.srv
+native dump.pas
+servis restore.srv
+native dump.pas
+servis restore.srv
+native dump.pas
+servis drop.srv
+servis restore.srv

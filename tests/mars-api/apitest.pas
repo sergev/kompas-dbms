@@ -232,6 +232,26 @@ begin
   getd(name, d, 16); writeln('getd unicode key: err=', e^, ' ', d[0], ' ', d[1]);
   deld(name); writeln('deld unicode key: err=', e^);
 
+  writeln('== clear, drop');
+  newd(NameKey('CL'), 3); opend(NameKey('CL'));
+  Put('A', 1, 1); Put('B', 2, 2);
+  SetKey('B'); Run('find B', [oFIND]);
+  cleard(NameKey('CL')); writeln('cleard CL: err=', e^);
+  Get('A', 16);
+  Run('begin next', [oBEGIN, oNEXT]);
+  Put('C', 3, 3);
+  SetKey('C'); Run('find C (handles go on)', [oFIND]);
+  dropd(NameKey('CL')); writeln('dropd CL: err=', e^);
+  Run('next', [oNEXT]);
+  opend(NameKey('CL')); writeln('opend CL: err=', e^);
+  cleard(NameKey('CL')); writeln('cleard CL: err=', e^);
+  dropd(NameKey('CL')); writeln('dropd CL: err=', e^);
+  newd(NameKey('CL'), 3); writeln('newd CL: err=', e^);
+  opend(NameKey('CL'));
+  Put('C', 4, 4);
+  SetKey('C'); Run('find C (a new area)', [oFIND]);
+  Get('A', 16);
+
   writeln('== second catalogue');
   PASSETAR(&2210000);
   writeln('PASSETAR: err=', e^, ' info=', v^[36]);

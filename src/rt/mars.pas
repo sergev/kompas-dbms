@@ -58,6 +58,9 @@ procedure getd(const key: TKey; var d; n: int64);
 procedure modd(const key: TKey; const d: array of int64; n: int64);
 procedure modd(const key: TKey; const d; n: int64);
 procedure deld(const key: TKey);
+{ all entries of an area deleted, the area kept; the area deleted }
+procedure cleard(const name: TKey);
+procedure dropd(const name: TKey);
 { the same with a name of a program: alfa or a literal; d is n bytes }
 procedure newd(const name: array of WideChar; info: int64);
 procedure opend(const name: array of WideChar);
@@ -68,6 +71,8 @@ procedure getd(const key: array of WideChar; var d; n: int64);
 procedure modd(const key: array of WideChar; const d: array of int64; n: int64);
 procedure modd(const key: array of WideChar; const d; n: int64);
 procedure deld(const key: array of WideChar);
+procedure cleard(const name: array of WideChar);
+procedure dropd(const name: array of WideChar);
 procedure newd(const name: UnicodeString; info: int64);
 procedure opend(const name: UnicodeString);
 procedure putd(const key: UnicodeString; const d: array of int64; n: int64);
@@ -77,6 +82,8 @@ procedure getd(const key: UnicodeString; var d; n: int64);
 procedure modd(const key: UnicodeString; const d: array of int64; n: int64);
 procedure modd(const key: UnicodeString; const d; n: int64);
 procedure deld(const key: UnicodeString);
+procedure cleard(const name: UnicodeString);
+procedure dropd(const name: UnicodeString);
 
 implementation
 
@@ -472,6 +479,13 @@ begin
   Result := err;
 end;
 
+{ all entries of area id }
+procedure ClearId(id: longword);
+var k, v: RawByteString;
+begin
+  while TSeekKey(Prefix(id), skGE, k, v) and (Copy(k, 1, 5) = Prefix(id)) do TDel(k);
+end;
+
 procedure PASACD(var i: int64);
 var pre, k, v, fk: RawByteString; id: longword; info, nexth: int64;
 begin
@@ -483,7 +497,7 @@ begin
     k := pre;
     while TSeekKey(k, skGE, fk, v) and (Copy(fk, 1, 4) = pre) do begin
       GetArea(Copy(fk, 5, length(fk) - 4), id, info, nexth);
-      while TSeekKey(Prefix(id), skGE, k, v) and (Copy(k, 1, 5) = Prefix(id)) do TDel(k);
+      ClearId(id);
       TDel(fk);
       k := pre;
     end;
@@ -656,6 +670,39 @@ begin
   end;
 end;
 
+{ an area cleared (drop: and deleted) }
+procedure ClearArea(const name: TKey; drop: boolean);
+var id: longword; info, nexth: int64; i: integer;
+begin
+  if not WBegin then exit;
+  try
+    if not GetArea(name.b, id, info, nexth) then SetErr(eNoName)
+    else begin
+      ClearId(id);
+      if drop then TDel(AreaKey(name.b));
+      for i := 0 to high(opened) do
+        if opened[i].name = name.b then begin
+          if cur = i then hasPos := false;
+          if drop then begin
+            if cur = i then cur := -1;
+            opened[i].name := #0#0;      { the slot stays: BDVECT[24] may point at it }
+            opened[i].id := 0;
+          end;
+        end;
+      SetErr(0);
+    end;
+    TxnCommit;
+  except
+    TxnAbort;
+    raise;
+  end;
+end;
+
+procedure cleard(const name: TKey);
+begin ClearArea(name, false); end;
+procedure dropd(const name: TKey);
+begin ClearArea(name, true); end;
+
 procedure opend(const name: TKey);
 var i: integer; id: longword; info, nexth: int64; found: boolean;
 begin
@@ -730,6 +777,10 @@ procedure modd(const key: array of WideChar; const d; n: int64);
 begin modd(MkKey(key), d, n); end;
 procedure deld(const key: array of WideChar);
 begin deld(MkKey(key)); end;
+procedure cleard(const name: array of WideChar);
+begin cleard(MkKey(name)); end;
+procedure dropd(const name: array of WideChar);
+begin dropd(MkKey(name)); end;
 
 procedure newd(const name: UnicodeString; info: int64);
 begin newd(MkKey(name), info); end;
@@ -749,6 +800,10 @@ procedure modd(const key: UnicodeString; const d; n: int64);
 begin modd(MkKey(key), d, n); end;
 procedure deld(const key: UnicodeString);
 begin deld(MkKey(key)); end;
+procedure cleard(const name: UnicodeString);
+begin cleard(MkKey(name)); end;
+procedure dropd(const name: UnicodeString);
+begin dropd(MkKey(name)); end;
 
 initialization
   vec := @ownvec;

@@ -239,12 +239,12 @@ These statements are also fed to `servis`.
 
 | Statement | Meaning |
 |---|---|
-| `ОЧИСТИ ДА-CK0;` | clear the data of an area, keep the space |
-| `ОСВОБО ДА-CK0;` | release the space of an area |
-| `ЖУРНАЛ ЖУ-CK0 СБРОСИ.` | restart a journal |
-| `ВОССТА ИНД-CK,ДАН-CK;` | restore areas from the journal |
+| `ОСВОБО ДА-CK0;` | release an area for maintenance (needed before `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`) |
+| `ОЧИСТИ ДА-CK0;` | erase the data of an area, keep the area |
+| `ЖУРНАЛ ЖУ-CK0 СБРОСИ.` | empty a journal and start it again |
+| `ВОССТА ИНД-CK,ДАН-CK;` | replay the journal into areas |
 
-In the 1988 decks these statements stand before the data of a GEN deck, to clear the areas before a reload; `gen` skips them. Here they work only on areas made in the same `servis` run; see section 6, step 6.
+In the 1988 decks these statements stand before the data of a GEN deck, to clear the areas before a reload: `ОСВОБО` and `ОЧИСТИ` of all areas, then `ЖУРНАЛ … СБРОСИ`. `gen` skips them; give them to `servis`. `servis` keeps the description of its areas in the database, so they work in any later run. See section 6, step 6.
 
 ## 6. Example: a CD collection
 
@@ -624,7 +624,16 @@ cp ~/cd-2026-11-20.db ~/cd/cd.db      # restore
 
 To reload from scratch: remove the file and repeat steps 1-3. To change the schema (for example a new element `ЖАНР`): unload the data with a MAD query in GEN format (as `tests/gold-zt0/deck9.mad` does), fix `cd.ddl`, and reload.
 
-`servis` statements on areas made by an earlier run (`ОЧИСТИ`, `ОСВОБО`, `ВОССТА`) are not available yet: `servis` keeps its list of areas only while it runs, and answers `ОБЛАСТЬ НЕ ОПРЕДЕЛЕНА`. The database itself is not touched.
+The journal (`ЖУРНАЛ` in a program or query) keeps the new image of every record that a statement writes or erases. `ВОССТА` replays these images into the areas named, in the order written, so `ОЧИСТИ` then `ВОССТА` rebuilds an area as it was at the end of the journal:
+
+```
+ОСВОБО ИН-ДИС,ДА-ДИС;
+ОЧИСТИ ИН-ДИС,ДА-ДИС;
+ВОССТА ИН-ДИС,ДА-ДИС;
+КОНЕЦ.
+```
+
+This is exact only when the journal covers everything since the areas were empty: empty the journal (`ЖУРНАЛ ЖУ-ДИС СБРОСИ.`) right after `ОЧИСТИ`, before any change, and make all changes through programs or queries that name the journal. A `gen` load is not journaled: after a reload from a deck, a later `ВОССТА` would leave chains pointing to the loaded records, which are gone. For data loaded by `gen`, keep the deck and the backup instead.
 
 A simple routine:
 
@@ -633,6 +642,7 @@ A simple routine:
 | after each load or big change | `mad < discs.mad` to check |
 | weekly | back up the file |
 | after a failure of the disk (`page N damaged`) | restore the last backup, repeat the changes since |
+| data built only by journaled programs, an area spoiled | `ОСВОБО`, `ОЧИСТИ`, `ВОССТА` of the area |
 
 ### Step 7. Typical tasks
 

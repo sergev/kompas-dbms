@@ -68,7 +68,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 - **Currency.** It is kept for the run unit, for each record type and for each set.
   - `НАЙТИ ПЕРВУЮ` takes the occurrence the current record owns, if that record is of the owner type.
   - `НАЙТИ СЛЕДУЮ` goes to the next member. This is how a tree is walked in `tests/gold-zt0/deck9.mad`.
-- **Journal.** Every change is written to the area named by `ЖУРНАЛ`, in the same transaction as the change. There is no recovery from the journal.
+- **Journal.** Once a program or query names it (`ЖУРНАЛ`, `KOPEN`), every record written or erased is logged there as an after-image: area, MARS key, new words (or erased), under key `J` + sequence, in the same transaction as the change. The sequence goes on from the last entry, across runs. `KREPLAY(journal, area)` applies the images of one area in order; `servis` `ВОССТА` uses it. Replaying is idempotent.
 - **Transactions.** Each changing statement (`ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`, erasing the members of an occurrence) is one MARS transaction: after a crash the record, its owners, its neighbours in the chains and the journal entry are all changed or none.
 - **Status.** `СОСТ` (`KSTAT`) codes are a hypothesis (`doc/open-questions.md`):
   - 0 ok, 1 end of set, 2 not found, 3 duplicate key;
@@ -77,7 +77,11 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
 ## 4. The tools
 
-- **`servis`.** It creates areas in `$MARS_DB`, and the file if it is missing; the other tools do not create it (`MarsCreate`). A run is one transaction.
+- **`servis`.** It creates areas in `$MARS_DB`, and the file if it is missing; the other tools do not create it (`MarsCreate`). A run is one transaction. The descriptions of its areas are kept in the MARS area `SERVIS` (`#NCNT`, `#NMS`, one record per area), so every run knows the areas of the earlier ones.
+  - `ОСВОБО` releases an area (the flag that `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ` require).
+  - `ОЧИСТИ` erases the data of an area (`cleard`); `ЖУРНАЛ … СБРОСИ` empties the journal.
+  - `ВОССТА` replays the journals (areas `ВИД ЖУРНАЛ`) into the areas named.
+  - `УБРАТЬ ОБЛАСТЬ` deletes the MARS area too (`dropd`).
 - **`ttc`.** It reads a schema in DDL and stores it. A run is one transaction.
 - **`gen`.** It works as the original GEN: it builds a loader program (formats become procedures; `kgenrt` reads the data), passes it through `predt` and `fpc`, and runs it.
   - Job cards (`*…`) and editor labels (`? …`) are skipped.
@@ -102,6 +106,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 | `mars-crash` | a commit killed before each of its writes and syncs, or with each page write torn in half, with fsync on and off; a damaged newest meta page, root page, both meta pages | always exactly the old or the new state; damage reported |
 | `mars-lock` | 4 writer and 2 reader processes on one file | no update lost, no reader sees a half transaction |
 | `engine-crash` | six DML statements killed at each write of their commit | `KCheck` sound; the old or the new data |
+| `servis-maint` | a second `servis` run knows the areas; journaled stores, key change, move, erase; `ОСВОБО`/`ОЧИСТИ` empty the areas; `ВОССТА` (twice) rebuilds them; `УБРАТЬ ОБЛАСТЬ` needs `ОСВОБО`, no journal → error 70 | the dump after `ВОССТА` equals the dump after the load (MD5), `KCheck` sound |
 | `utf8` | lower case, `Ё`, Latin, German, Greek data through `gen`, `mad` and a program; names written with Latin look-alikes | data as written, sets in code order, exact keys |
 
 The decks and the Severov programs are transcriptions of 1988 texts in the GOST code, where Latin `A` and Cyrillic `А` were one letter. The transcriptions mix the two alphabets at random. Since data are now kept as written, their data and string literals were folded once into one form (Cyrillic look-alikes, upper case), the form the old system saw.
@@ -177,5 +182,5 @@ With `fsync`, a commit costs what the disk takes for two `fsync`s (60 ms on the 
 
 - Deck 8 (MAD) is written for the subschema `CXE-AM`, which is not among the materials (the sets `ИМ-ПРИ`, `ПР-СТО` are not in CX-AM0).
 - The report format `X:9:22` prints 22 decimals. What it meant in 1988 is not known.
-- `servis` does not see areas made by an earlier run (its list of areas is only in memory). So `ОЧИСТИ`/`ОСВОБО`/`ВОССТА` do not work on an existing database; the database is not erased either.
+- `gen` skips the `servis` statements of a deck (`ОСВОБО`, `ОЧИСТИ`, `ЖУРНАЛ … СБРОСИ`): give them to `servis`. A `gen` load is not journaled.
 - Only Linux was tested. The build uses only `fpc`, `/bin/sh` and `TProcess`, so macOS is expected to work.

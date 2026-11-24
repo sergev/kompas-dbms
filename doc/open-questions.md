@@ -74,4 +74,7 @@ A new guess goes here first and is checked afterwards.
 ## Tools
 
 - **FACT**: the original `servis` and `ttc` erased the catalogue at start (`PASACD`). Here they do not, otherwise each tool would destroy the work of the one before.
-- **UNKNOWN**: `servis` keeps its list of areas only in memory, so `ОЧИСТИ`/`ОСВОБО`/`ВОССТА` on areas of an earlier run answer `ОБЛАСТЬ НЕ ОПРЕДЕЛЕНА`. How the original found existing areas is not known.
+- **UNKNOWN**: how the original `servis` found the areas of an earlier run. Here their descriptions are kept in the MARS area `SERVIS`.
+- **HYPOTHESIS**: `ОСВОБО` releases an area (clears the flag `servis` requires before `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`); it does not erase data. Basis: the reload decks 6, 7, 11 give `ОСВОБО` of all areas, then `ОЧИСТИ` of the same areas, then `ЖУРНАЛ … СБРОСИ`.
+- **HYPOTHESIS**: `ОЧИСТИ` erases the data of an area; `ЖУРНАЛ … СБРОСИ` empties the journal. `ОЧИСТИ` does not require `ОСВОБО` before it, although the decks always give it.
+- **HYPOTHESIS**: `ВОССТА` rolls the areas forward from the journal. Here the journal holds after-images of records (not the 1988 format, which is not known), and `ВОССТА` replays those of the areas named.

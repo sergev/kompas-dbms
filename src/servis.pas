@@ -1,5 +1,5 @@
 {$mode tp}{$H-}{$R-}{$Z4}
-program servis; uses krt, kio, mars; type XT0 = array[1..72] of integer; XT1 = array[1..64] of alfa; XT2 = array[0..7] of integer; XT3 = array[1..24] of integer; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer; XT6 = array[1..4] of alfa; XT7 = array[1..1] of integer;
+program servis; uses krt, kio, mars, kdb; type XT0 = array[1..72] of integer; XT1 = array[1..64] of alfa; XT2 = array[0..7] of integer; XT3 = array[1..24] of integer; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer; XT6 = array[1..4] of alfa; XT7 = array[1..1] of integer;
 (* SERVIS: allocation and maintenance of the database areas.
    Each SERVIS area is a separate MARS area named after the object.
    Descriptor: [1] code, [2] length, [3] capture, [4] kind,
@@ -34,6 +34,7 @@ var
   cnm: XT6;
   gi: integer;
   mw: XT7;
+  nn: XT5;
 
 
 
@@ -85,6 +86,7 @@ begin
     67: writeln('ОБЛАСТЬ НЕ ОБЪЯВЛЕНА ЖУРНАЛОМ');
     68: writeln('ЖУРНАЛ ЗАХВАЧЕН ПРОЦЕССОМ');
     69: writeln('СБРОС ПОСЛЕ ЗАКРЕПЛЕНИЯ');
+    70: writeln('НЕТ ОБЛАСТИ ЖУРНАЛА');
     71: writeln('НЕТ ПАРАМЕТРОВ ЗАМЕНЫ');
     72: writeln('ЗАМЕНЯЕМЫЙ ОБЪЕКТ НЕ НАЙДЕН');
     74: writeln('НЕ АДМИНИСТРАТОР');
@@ -228,7 +230,10 @@ begin
    begin 
   for j := 1 to ncnt do
     if nms[j] = nm then begin
-      for t := j to ncnt-1 do nms[t] := nms[t+1];
+      for t := j to ncnt-1 do begin
+        nms[t] := nms[t+1];
+        ades[t] := ades[t+1]
+      end;
       ncnt := ncnt - 1
     end
    end ;
@@ -339,6 +344,9 @@ begin
     if r[2] > 61 then lim := 61 else lim := r[2];
     for j := lim downto 1 do r[11+j] := 2040;
     PutRec(nm, r);
+    PASSETAR(94208);
+    cleard(nm);
+    ClrErr;
     write(RT_W(nm), ' ');
     writeln('ОЧИЩЕНА')
   end else Err(3)
@@ -357,16 +365,31 @@ begin
    end ;
 end;
 
+(* ВОССТА: the after-images of the area from every journal area
+   (ВИД ЖУРНАЛ), in the order written *)
 procedure Bocct(nm:alfa);
-var j,lim:integer;
+var j,n,t:integer; found:boolean;
 begin
    begin 
   if GetRec(nm, r) then begin
     writeln('ВОССТАНОВЛЕНИЕ ',RT_W( nm));
-    if r[2] > 61 then lim := 61 else lim := r[2];
-    for j := 1 to lim do writeln(RT_W(j), ':',RT_W( r[11+j]));
-    if r[2] > 61 then writeln('... ВСЕГО СТРАНИЦ ',RT_W( r[2]));
-    writeln('ВОССТАНОВЛЕНО')
+    PASSETAR(94208);
+    found := false;
+    t := 0;
+    for j := 1 to ncnt do
+      if ades[j][4] = 2 then begin
+        n := KREPLAY(nms[j], nm);
+        if n >= 0 then begin
+          found := true;
+          t := t + n
+        end
+      end;
+    ClrErr;
+    if not found then Err(70)
+    else begin
+      writeln('ЗАПИСЕЙ ',RT_W( t));
+      writeln('ВОССТАНОВЛЕНО')
+    end
   end else Err(3)
    end ;
 end;
@@ -473,6 +496,9 @@ begin
         else begin
           r[6] := 1;
           PutRec(nm, r);
+          PASSETAR(94208);
+          cleard(nm);
+          ClrErr;
           writeln('ЖУРНАЛ ',RT_W( nm), ' СБРОШЕН')
         end
       end else if kw2 = 'ЗАКРЕП' then begin
@@ -507,6 +533,9 @@ begin
       else if r[3] <> 0 then Err(50)
       else begin
         Kdel(nm);
+        PASSETAR(94208);
+        dropd(nm);
+        ClrErr;
         writeln('ОБЛАСТЬ ',RT_W( nm), ' УБРАНА')
       end
     end
@@ -912,6 +941,43 @@ begin
    end ;
 end;
 
+(* The descriptors of the areas live in the MARS area SERVIS:
+   #NCNT = count and last code, #NMS = the names, <name> = its RecT. *)
+procedure LoadAreas;
+var i,j:integer;
+begin
+   begin 
+  PASSETAR(94208);
+  i := 618497;
+  newd('SERVIS', i);
+  ClrErr;
+  opend('SERVIS');
+  getd('#NCNT ', nn, sizeof(nn));
+  if BDERRN = 0 then begin
+    ncnt := nn[1];
+    ncode := nn[2];
+    getd('#NMS  ', nms, sizeof(nms));
+    for j := 1 to ncnt do getd(nms[j], ades[j], sizeof(RecT))
+  end;
+  ClrErr
+   end ;
+end;
+
+procedure SaveAreas;
+var j:integer;
+begin
+   begin 
+  PASSETAR(94208);
+  cleard('SERVIS');
+  opend('SERVIS');
+  nn[1] := ncnt; nn[2] := ncode; nn[3] := 0; nn[4] := 0;
+  modd('#NCNT ', nn, sizeof(nn));
+  modd('#NMS  ', nms, sizeof(nms));
+  for j := 1 to ncnt do modd(nms[j], ades[j], sizeof(RecT));
+  ClrErr
+   end ;
+end;
+
 procedure Init;
 var i,j:integer;
 begin
@@ -951,6 +1017,7 @@ begin MarsBind(@bdvect, @bderrn);
   InitLayout;
   ncode := 0;
   ncnt := 0;
+  LoadAreas;
   writeln('SERVIS PROCESSOR 15.1');
   writeln('ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН');
   while not eof(input) do begin
@@ -968,5 +1035,6 @@ begin MarsBind(@bdvect, @bderrn);
     until p > 72
   end;
   writeln('EXN=',RT_W( EXN));
+  SaveAreas;
   MarsCommit
 end.
