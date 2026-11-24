@@ -9,19 +9,20 @@
   records of the schema in $MARS_DIR: types ZZ<rec>, variables <rec>,
   ZZBDKEY, СОСТ and transfer procedures.  A statement fragment becomes
   begin … СОСТ:=KSTAT end; НАБ s and ЗП r become the numbers of a set and
-  a record.  Then non-ASCII identifiers become ASCII names, string
-  literals the internal code (kgost), and the program gets default
-  directives (unless it has {$mode}) and uses krt, kio, kdb. }
+  a record.  Then non-ASCII identifiers become ASCII names, char becomes
+  WideChar and string[n] UnicodeString; string literals stay UTF-8 under
+  {$codepage utf8}.  The program gets default directives (unless it has
+  {$mode}) and uses krt, kio, kdb. }
 program predt;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, kdb, kgost;
+uses SysUtils, Classes, kdb, kutf;
 
 type
   TTok = record
     s: string;      { source text (UTF-8) }
-    k: string;      { folded internal code, words only }
+    k: string;      { words: the name folded, 6 characters }
     kind: char;     { w word, l literal, p punctuation }
     a, b: integer;  { span in the fragment }
   end;
@@ -37,7 +38,7 @@ var
 
 function KW(const s: string): string;
 begin
-  Result := Copy(Encode(s), 1, 6);
+  Result := Name6(s);
 end;
 
 procedure Error(const msg: string);
@@ -48,11 +49,11 @@ end;
 
 { --- names --- }
 
-function Ident(const internal: string): string;
+function Ident(const name: string): string;
 { a schema name as a Pascal identifier, or '' if it cannot be one }
 var i: integer;
 begin
-  Result := Decode(TrimRight(internal));
+  Result := TrimRight(name);
   for i := 1 to length(Result) do
     if Result[i] in ['-', ' ', '.', '*'] then exit('');
 end;
@@ -137,7 +138,7 @@ var i, n: integer; c: char;
     toks[high(toks)].kind := kind;
     toks[high(toks)].a := a;
     toks[high(toks)].b := b;
-    if kind = 'w' then toks[high(toks)].k := Encode(toks[high(toks)].s)
+    if kind = 'w' then toks[high(toks)].k := Name6(toks[high(toks)].s)
     else toks[high(toks)].k := toks[high(toks)].s;
   end;
 var a: integer;
@@ -177,7 +178,7 @@ end;
 
 function IsKw(const k: string): boolean;
 begin
-  Result := (tp <= high(toks)) and (toks[tp].kind = 'w') and (Copy(toks[tp].k, 1, 6) = KW(k));
+  Result := (tp <= high(toks)) and (toks[tp].kind = 'w') and (toks[tp].k = KW(k));
 end;
 
 function IsP(const p: string): boolean;
@@ -189,14 +190,14 @@ procedure Skip; begin inc(tp); end;
 
 function SetNo: integer;
 begin
-  Result := KSetNo(Copy(Tok.k, 1, 6));
+  Result := KSetNo(Tok.k);
   if Result = 0 then Error('нет набора ' + Tok.s);
   Skip;
 end;
 
 function RecNo: integer;
 begin
-  Result := KRecNo(Copy(Tok.k, 1, 6));
+  Result := KRecNo(Tok.k);
   if Result = 0 then Error('нет записи ' + Tok.s);
   Skip;
 end;
@@ -219,7 +220,7 @@ begin
   last := -1;
   j := tp;
   while (j <= high(toks)) and not ((toks[j].kind = 'p') and (toks[j].s = ';')) do begin
-    if (toks[j].kind = 'w') and (Copy(toks[j].k, 1, 6) = KW('В')) then last := j;
+    if (toks[j].kind = 'w') and (toks[j].k = KW('В')) then last := j;
     inc(j);
   end;
   if last < 0 then begin Error('нет В в НАЙТИ ПО-КЛЮ'); s := 0; exit(''); end;
@@ -232,7 +233,7 @@ end;
 
 function FieldRef(r: integer; const name: string; var fi: integer): boolean;
 begin
-  fi := KFieldNo(r, Copy(Encode(name), 1, 6));
+  fi := KFieldNo(r, name);
   Result := fi > 0;
   if not Result then Error('нет поля ' + name);
 end;
@@ -251,7 +252,7 @@ begin
       if e = '' then begin
         { the key from the record variable of the member }
         r := KSetMember(s);
-        if KSetKey(s) = 0 then begin Error('набор без ключа: ' + Decode(KSetName(s))); exit; end;
+        if KSetKey(s) = 0 then begin Error('набор без ключа: ' + KSetName(s)); exit; end;
         e := RecVar(r) + '.' + Ident(KFieldName(r, KSetKey(s)));
       end;
       Result := 'KFINDKEY(' + IntToStr(s) + ', ' + e + ')';
@@ -287,9 +288,9 @@ begin
       Skip; f := Tok.s; Skip;
       Result := 'case KCURTYPE of ';
       for r := 1 to KRecCount do
-        if (RecVar(r) <> '') and (KFieldNo(r, Copy(Encode(f), 1, 6)) > 0) then
+        if (RecVar(r) <> '') and (KFieldNo(r, f) > 0) then
           Result := Result + IntToStr(r) + ': begin KBEGINGET(0); KGETF(' +
-            IntToStr(KFieldNo(r, Copy(Encode(f), 1, 6))) + ', ' + RecVar(r) + '.' + f + ') end; ';
+            IntToStr(KFieldNo(r, f)) + ', ' + RecVar(r) + '.' + f + ') end; ';
       Result := Result + 'end';
     end else if AtEnd then
       Result := 'ZZGETRU'
@@ -353,7 +354,7 @@ begin
     else Result := 'KERASE(' + IntToStr(RecNo) + ')';
   end else if IsKw('ЖУРНАЛ') then begin
     Skip;
-    v := Decode(Copy(Encode(Tok.s) + '      ', 1, 6)); Skip;
+    v := W2U(Copy(U2W(Name6(Tok.s)) + '      ', 1, 6)); Skip;
     Result := 'begin ZZJNAME := ''' + v + '''; KOPEN(ZZJNAME) end';
   end else if IsKw('КОМПАС') or IsKw('РЕЖИМ') or IsKw('БЕЗ-SS') then begin
     while not AtEnd do Skip;
@@ -426,16 +427,24 @@ const
     'INLINE', 'ASM', 'INTERFACE', 'IMPLEMENTATION', 'CONSTRUCTOR', 'DESTRUCTOR',
     'INHERITED', 'OPERATOR', 'ABSOLUTE', 'RESULT', 'SHORTSTRING');
 
-{ a name with non-ASCII letters -> ASCII; homoglyphs give the same name }
+{ a name with non-ASCII letters -> ASCII: folded, Cyrillic look-alikes
+  as Latin, other letters Q<hex>_; homoglyphs give the same name }
 function AsciiName(const v: string): string;
-var e: string; i: integer; c: char;
+const
+  CYR8 = 'АВСЕНКМОРТХУ';    { UTF-8 bytes: decoded below }
+  LAT = 'ABCEHKMOPTXY';
+var e, cyr: UnicodeString; i, j: integer; c: WideChar;
 begin
-  e := Encode(v);
+  cyr := U2W(CYR8);
+  e := FoldW(U2W(v));
   Result := '';
   for i := 1 to length(e) do begin
     c := e[i];
-    if c in ['0'..'9', 'A'..'Z', 'a'..'z', '_'] then Result := Result + c
-    else Result := Result + 'Q' + OctStr(GostOf(ord(c)), 2) + '_';
+    j := Pos(c, cyr);
+    if j > 0 then Result := Result + LAT[j]
+    else if (ord(c) < 128) and (AnsiChar(ord(c)) in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
+      Result := Result + AnsiChar(ord(c))
+    else Result := Result + 'Q' + IntToHex(ord(c), 4) + '_';
   end;
   if (Result = '') or not (Result[1] in ['A'..'Z', 'a'..'z', '_']) then
     Result := '_' + Result;
@@ -443,23 +452,10 @@ begin
     if UpperCase(Result) = Taken[i] then exit('KN_' + Result);
 end;
 
-{ a string literal body -> FPC literal in the internal code }
+{ a string literal body -> FPC literal, UTF-8 as written }
 function CodeLit(const body: string): string;
-var e: string; i: integer; quoted: boolean;
 begin
-  e := Encode(body);
-  Result := '';
-  quoted := false;
-  for i := 1 to length(e) do
-    if (e[i] >= ' ') and (e[i] <= '~') then begin
-      if not quoted then begin Result := Result + ''''; quoted := true; end;
-      if e[i] = '''' then Result := Result + '''''' else Result := Result + e[i];
-    end else begin
-      if quoted then begin Result := Result + ''''; quoted := false; end;
-      Result := Result + '#' + IntToStr(ord(e[i]));
-    end;
-  if quoted then Result := Result + '''';
-  if Result = '' then Result := '''''';
+  Result := '''' + StringReplace(body, '''', '''''', [rfReplaceAll]) + '''';
 end;
 
 function HasUnit(const clause, u: string): boolean;
@@ -549,7 +545,19 @@ begin
       ascii := true;
       for k := 1 to length(w) do if ord(w[k]) >= 128 then ascii := false;
       if not ascii then w := AsciiName(w)
-      else if UpperCase(w) = 'SYSTEM' then w := 'KN_' + w;  { the KOMPAS record }
+      else if UpperCase(w) = 'SYSTEM' then w := 'KN_' + w   { the KOMPAS record }
+      else if UpperCase(w) = 'CHAR' then w := 'WideChar'
+      else if UpperCase(w) = 'CHR' then w := 'WideChar'
+      else if UpperCase(w) = 'STRING' then begin
+        { string[n]: Unicode, its length in characters }
+        w := 'UnicodeString';
+        k := j;
+        while (k <= n) and (s[k] in [' ', #9, #10, #13]) do inc(k);
+        if (k <= n) and (s[k] = '[') then begin
+          while (k <= n) and (s[k] <> ']') do inc(k);
+          j := k + 1;
+        end;
+      end;
       { one named type per shape: TP-mode arrays of the same shape are
         otherwise incompatible }
       if (UpperCase(w) = 'PACKED') and CharArr(s, j, len, e) then begin
@@ -594,10 +602,276 @@ begin
   decl := '';
   for k := 0 to high(shapes) do
     decl := decl + 'type ZZC' + IntToStr(shapes[k]) + ' = packed array[1..' +
-      IntToStr(shapes[k]) + '] of char;'#10;
+      IntToStr(shapes[k]) + '] of WideChar;'#10;
   Result := StringReplace(Result, #1, decl, []);
   if not hasMode then
     Result := '{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}'#10 + Result;
+  Result := '{$codepage utf8}' + Result;
+end;
+
+{ --- write and read of char arrays ---
+  FPC cannot write or read an array of WideChar: an argument of
+  write/writeln that names a char array becomes RT_S(…), and a read/readln
+  with one becomes begin RT_Rd(f, a); read(f, x); … end.  Char arrays are found by name
+  in the translated text: declared ALFA, ZZC<n>, array … of WideChar or a
+  type alias of them.  RT_S passes numbers and booleans through, so a
+  name taken for a char array elsewhere does no harm. }
+
+type
+  TPTok = record
+    u: string;       { upper case text; '' for a literal or comment }
+    a, b: integer;   { span in the text }
+  end;
+  TPToks = array of TPTok;
+
+function PTokens(const s: string): TPToks;
+var i, j, n, k: integer;
+  procedure Add(x, y: integer; const u: string);
+  begin
+    SetLength(Result, k + 1);
+    Result[k].u := u; Result[k].a := x; Result[k].b := y;
+    inc(k);
+  end;
+begin
+  k := 0;
+  SetLength(Result, 0);
+  i := 1; n := length(s);
+  while i <= n do begin
+    if s[i] in [' ', #9, #10, #13] then begin inc(i); continue; end;
+    if s[i] = '{' then begin
+      while (i <= n) and (s[i] <> '}') do inc(i);
+      inc(i); continue;
+    end;
+    if (s[i] = '(') and (i < n) and (s[i + 1] = '*') then begin
+      j := i + 2;
+      while (j < n) and not ((s[j] = '*') and (s[j + 1] = ')')) do inc(j);
+      i := j + 2; continue;
+    end;
+    if (s[i] = '/') and (i < n) and (s[i + 1] = '/') then begin
+      while (i <= n) and (s[i] <> #10) do inc(i);
+      continue;
+    end;
+    j := i;
+    if s[i] = '''' then begin
+      repeat
+        inc(j);
+        while (j <= n) and (s[j] <> '''') do inc(j);
+        inc(j);
+      until (j > n) or (s[j] <> '''');
+      Add(i, j, '');
+    end else if s[i] in ['A'..'Z', 'a'..'z', '_', '0'..'9', '#', '$'] then begin
+      while (j <= n) and (s[j] in ['A'..'Z', 'a'..'z', '_', '0'..'9', '#', '$']) do inc(j);
+      Add(i, j, UpperCase(Copy(s, i, j - i)));
+    end else if (s[i] in [':', '.']) and (i < n) and (s[i + 1] in ['=', '.']) then begin
+      j := i + 2;
+      Add(i, j, Copy(s, i, 2));
+    end else begin
+      j := i + 1;
+      Add(i, j, s[i]);
+    end;
+    i := j;
+  end;
+end;
+
+function FixWrites(const s: string): string;
+var t: TPToks;
+    types, names, files: TStringList;
+    ins: array of record p, del: integer; x: string; end;
+
+  function IsIdent(j: integer): boolean;
+  begin
+    Result := (j <= high(t)) and (t[j].u <> '') and (t[j].u[1] in ['A'..'Z', '_']);
+  end;
+
+  { a char array type at token j }
+  function CharType(j: integer): boolean;
+  var d: integer;
+  begin
+    Result := false;
+    if j > high(t) then exit;
+    if types.IndexOf(t[j].u) >= 0 then exit(true);
+    if t[j].u = 'PACKED' then inc(j);
+    if (j > high(t)) or (t[j].u <> 'ARRAY') then exit;
+    inc(j);
+    if (j > high(t)) or (t[j].u <> '[') then exit;
+    d := 0;
+    repeat
+      if t[j].u = '[' then inc(d) else if t[j].u = ']' then dec(d);
+      inc(j);
+    until (j > high(t)) or (d = 0);
+    Result := (j + 1 <= high(t)) and (t[j].u = 'OF') and (t[j + 1].u = 'WIDECHAR');
+  end;
+
+  procedure Collect;
+  var j, k: integer; again: boolean;
+  begin
+    repeat
+      again := false;
+      for j := 1 to high(t) - 1 do
+        if (t[j].u = '=') and IsIdent(j - 1) and CharType(j + 1) and
+           (types.IndexOf(t[j - 1].u) < 0) then begin
+          types.Add(t[j - 1].u); again := true;
+        end;
+    until not again;
+    for j := 1 to high(t) - 1 do
+      if (t[j].u = ':') and (CharType(j + 1) or (t[j + 1].u = 'TEXT') or
+         (t[j + 1].u = 'FILE')) then begin
+        k := j - 1;
+        while IsIdent(k) do begin
+          if CharType(j + 1) then begin
+            if names.IndexOf(t[k].u) < 0 then names.Add(t[k].u);
+          end else if files.IndexOf(t[k].u) < 0 then files.Add(t[k].u);
+          if (k > 0) and (t[k - 1].u = ',') then dec(k, 2) else break;
+        end;
+      end;
+  end;
+
+  procedure Replace(p, del: integer; const x: string);
+  begin
+    SetLength(ins, length(ins) + 1);
+    ins[high(ins)].p := p; ins[high(ins)].del := del; ins[high(ins)].x := x;
+  end;
+
+  procedure Insert(p: integer; const x: string);
+  begin
+    Replace(p, 0, x);
+  end;
+
+  { tokens a..e (e exclusive) are a designator; its last name in last }
+  function Desig(a, e: integer; var last: integer): boolean;
+  var j, d: integer;
+  begin
+    Result := false;
+    if (e <= a) or not IsIdent(a) then exit;
+    last := a; d := 0; j := a + 1;
+    while j < e do begin
+      if t[j].u = '[' then inc(d)
+      else if t[j].u = ']' then dec(d)
+      else if d = 0 then begin
+        if (t[j].u = '.') and IsIdent(j + 1) then begin inc(j); last := j; end
+        else if t[j].u <> '^' then exit;
+      end;
+      inc(j);
+    end;
+    Result := true;
+  end;
+
+  { arguments of the call whose ( is token j: spans [a, b); the ) in k }
+  procedure Args(j: integer; var as_, bs: array of integer; var n, k: integer);
+  var d, a: integer;
+  begin
+    k := j + 1; a := k; d := 0; n := 0;
+    while k <= high(t) do begin
+      if t[k].u = '' then
+      else if t[k].u[1] in ['(', '['] then inc(d)
+      else if (t[k].u[1] in [')', ']']) and (d > 0) then dec(d)
+      else if (d = 0) and ((t[k].u = ',') or (t[k].u = ')')) then begin
+        if (k > a) and (n <= high(as_)) then begin as_[n] := a; bs[n] := k; inc(n); end;
+        if t[k].u = ')' then break;
+        a := k + 1;
+      end;
+      inc(k);
+    end;
+  end;
+
+  procedure Reads;
+  var j, k, n, i, last, f0: integer; as_, bs: array[0..63] of integer;
+      fil, body: string; any: boolean;
+    function Txt(i: integer): string;
+    begin
+      Result := Copy(s, t[as_[i]].a, t[bs[i] - 1].b - t[as_[i]].a);
+    end;
+    function IsChar(i: integer): boolean;
+    begin
+      Result := Desig(as_[i], bs[i], last) and (names.IndexOf(t[last].u) >= 0);
+    end;
+  begin
+    for j := 0 to high(t) - 1 do
+      if ((t[j].u = 'READ') or (t[j].u = 'READLN')) and (t[j + 1].u = '(') then begin
+        Args(j + 1, as_, bs, n, k);
+        if (n = 0) or (k > high(t)) then continue;
+        f0 := 0; fil := 'INPUT';
+        if (bs[0] = as_[0] + 1) and (files.IndexOf(t[as_[0]].u) >= 0) then begin
+          fil := Txt(0); f0 := 1;
+        end;
+        any := false;
+        for i := f0 to n - 1 do if IsChar(i) then any := true;
+        if not any then continue;
+        body := 'begin ';
+        for i := f0 to n - 1 do
+          if IsChar(i) then body := body + 'RT_Rd(' + fil + ', ' + Txt(i) + '); '
+          else body := body + 'READ(' + fil + ', ' + Txt(i) + '); ';
+        if t[j].u = 'READLN' then body := body + 'READLN(' + fil + ') ';
+        Replace(t[j].a, t[k].b - t[j].a, body + 'end');
+      end;
+  end;
+
+  { argument tokens a..b (b exclusive): wrap the value if it names a char array }
+  procedure Arg(a, b: integer);
+  var j, d, e, last: integer;
+  begin
+    e := b; d := 0;
+    for j := a to b - 1 do begin
+      if t[j].u = '' then
+      else if t[j].u[1] in ['(', '['] then inc(d)
+      else if t[j].u[1] in [')', ']'] then dec(d)
+      else if (d = 0) and (t[j].u = ':') then begin e := j; break; end;
+    end;
+    if not Desig(a, e, last) or (names.IndexOf(t[last].u) < 0) then exit;
+    Insert(t[a].a, 'RT_S(');
+    Insert(t[e - 1].b, ')');
+  end;
+
+  procedure Writes;
+  var j, k, d, a: integer;
+  begin
+    for j := 0 to high(t) - 1 do
+      if ((t[j].u = 'WRITE') or (t[j].u = 'WRITELN')) and (t[j + 1].u = '(') then begin
+        k := j + 2; a := k; d := 0;
+        while k <= high(t) do begin
+          if t[k].u = '' then
+          else if t[k].u[1] in ['(', '['] then inc(d)
+          else if (t[k].u[1] in [')', ']']) and (d > 0) then dec(d)
+          else if (d = 0) and ((t[k].u = ',') or (t[k].u = ')')) then begin
+            if k > a then Arg(a, k);
+            if t[k].u = ')' then break;
+            a := k + 1;
+          end;
+          inc(k);
+        end;
+      end;
+  end;
+
+var i, j, d: integer; tmp: string;
+begin
+  Result := s;
+  t := PTokens(s);
+  types := TStringList.Create;
+  names := TStringList.Create;
+  files := TStringList.Create;
+  files.Add('INPUT');
+  types.Add('ALFA');
+  for i := 0 to high(t) do
+    if (Copy(t[i].u, 1, 3) = 'ZZC') and (types.IndexOf(t[i].u) < 0) then types.Add(t[i].u);
+  Collect;
+  SetLength(ins, 0);
+  Writes;
+  Reads;
+  { from the end, so that positions hold }
+  for i := 0 to high(ins) - 1 do
+    for j := i + 1 to high(ins) do
+      if ins[j].p > ins[i].p then begin
+        tmp := ins[i].x; ins[i].x := ins[j].x; ins[j].x := tmp;
+        d := ins[i].p; ins[i].p := ins[j].p; ins[j].p := d;
+        d := ins[i].del; ins[i].del := ins[j].del; ins[j].del := d;
+      end;
+  for i := 0 to high(ins) do begin
+    System.Delete(Result, ins[i].p, ins[i].del);
+    System.Insert(ins[i].x, Result, ins[i].p);
+  end;
+  types.Free;
+  names.Free;
+  files.Free;
 end;
 
 { --- driver --- }
@@ -608,7 +882,7 @@ var j: integer;
 begin
   j := i;
   while (j <= length(src)) and (src[j] in [' ', #9, #10, #13]) do inc(j);
-  Result := Copy(Encode(Copy(src, j, 8)), 1, 4);
+  Result := W2U(Copy(FoldW(U2W(Copy(src, j, 16))), 1, 4));
 end;
 
 var
@@ -661,14 +935,14 @@ begin
         outs := outs + e;
         { a statement carries its own terminator, except before ELSE }
         if not isExpr and (e <> '') and (Copy(NextWord(i), 1, 1) <> ';') and
-           (NextWord(i) <> Encode('ELSE')) then outs := outs + ';';
+           (NextWord(i) <> FoldName('ELSE')) then outs := outs + ';';
       end;
       continue;
     end;
     outs := outs + src[i];
     inc(i);
   end;
-  outs := Front(outs);
+  outs := FixWrites(Front(outs));
   if outName <> '' then begin
     fs := TFileStream.Create(outName, fmCreate);
     try

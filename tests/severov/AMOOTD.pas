@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -104,7 +104,7 @@ VAR I:INT;
 BEGIN
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'HET OTДEЛOB');PUTT;EXIT end ;
+  WRITE(OUTPUT,'НЕТ ОТДЕЛОВ');PUTT;EXIT end ;
 I:=0;ШAГ:=1;
 REPEAT
   I:=I+1;&&BЗЯTЬ&&;
@@ -118,14 +118,14 @@ END;
 PROCEDURE HOB;
 BEGIN
 REPEAT
-  WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');GETHAЧ;
+  WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');GETHAЧ;
   IF HAЧ THEN EXIT;
   begin RT_Read(OTДEЛ.HAЗB) end;
   &&HAЙTИ ПO-KЛЮ B SY-OTД&&;
   IF ПYCTO THEN begin 
     &&ПOCTABИTЬ OTДEЛ&&;YCTMOД end 
-  ELSE begin WRITE(OUTPUT,'TAKOЙ OTДEЛ YЖE ЗAPEГИCTPИPOBAH');PUTT end ;
-UNTIL NOT EЩE('EЩE!  ');
+  ELSE begin WRITE(OUTPUT,'ТАКОЙ ОТДЕЛ УЖЕ ЗАРЕГИСТРИРОВАН');PUTT end ;
+UNTIL NOT EЩE('ЕЩЕ!  ');
 END;
 
 
@@ -133,17 +133,17 @@ END;
 PROCEDURE ЗAM;
 VAR CTOT:ZZOTДEЛ;
 BEGIN
-WRITE(OUTPUT,'CTAPOE HAЗBAHИE OTДEЛA:');GETHAЧ;
+WRITE(OUTPUT,'СТАРОЕ НАЗВАНИЕ ОТДЕЛА:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(CTOT.HAЗB) end;
 &&HAЙTИ ПO-KЛЮ CTOT.HAЗB B SY-OTД&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'TAKOЙ OTДEЛ HE ЗAPEГИCTPИPOBAH');PUTT;EXIT end ;
-WRITE(OUTPUT,'HOBOE HAЗBAHИE OTДEЛA:');GETHAЧ;
+  WRITE(OUTPUT,'ТАКОЙ ОТДЕЛ НЕ ЗАРЕГИСТРИРОВАН');PUTT;EXIT end ;
+WRITE(OUTPUT,'НОВОЕ НАЗВАНИЕ ОТДЕЛА:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(OTДEЛ.HAЗB) end;
 &&HAЙTИ ПO-KЛЮ OTДEЛ.HAЗB B SY-OTД&&;IF COCT=0 THEN begin 
-  WRITE(OUTPUT,'TAKOЙ OTДEЛ YЖE ЗAPEГИCTPИPOBAH');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ТАКОЙ ОТДЕЛ УЖЕ ЗАРЕГИСТРИРОВАН');PUTT;EXIT end ;
 &&HAЙTИ ПO-KЛЮ CTOT.HAЗB B SY-OTД&&;
 &&ЗAMEHИTЬ&&;YCTMOД;ECTЬ;
 END;
@@ -152,34 +152,34 @@ END;
 
 PROCEDURE ИCK;
 BEGIN
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
 &&HAЙTИ ПEPBYЮ B OT-CTO&&;
 IF NOT ПYCTO THEN begin 
-  WRITE(OUTPUT,'ЗA ЭTИM OTДEЛOM ЗAKPEПЛEHO OБOPYДOBAHИE');
+  WRITE(OUTPUT,'ЗА ЭТИМ ОТДЕЛОМ ЗАКРЕПЛЕНО ОБОРУДОВАНИЕ');
   PUTT;EXIT end ;
-WRITE(OUTPUT,'ПOДTBEPДИTE ИCKЛЮЧEHИE');
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ИСКЛЮЧЕНИЕ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'ИCKЛЮЧEHИE OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ИСКЛЮЧЕНИЕ ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 &&YБPATЬ OTДEЛ&&;YCTMOД;ECTЬ;
 END;
 
 
 
 BEGIN
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ OTДEЛOB...');PUTT;
-KYДA:='HAPYЖY';
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ ОТДЕЛОВ...');PUTT;
+KYДA:='НАРУЖУ';
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP ЗAPEГИCTPИPOBAHHЫX OTДEЛOB/',
-          'HOB - PEГИCTPAЦИЯ HOBЫX OTДEЛOB/',
-          'ЗAM - ЗAMEHA HAЗBAHИЯ OTДEЛA/',
-          'ИCK - ИCKЛЮЧEHИE OTДEЛA/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ЗАРЕГИСТРИРОВАННЫХ ОТДЕЛОВ/',
+          'НОВ - РЕГИСТРАЦИЯ НОВЫХ ОТДЕЛОВ/',
+          'ЗАМ - ЗАМЕНА НАЗВАНИЯ ОТДЕЛА/',
+          'ИСК - ИСКЛЮЧЕНИЕ ОТДЕЛА/');
 MENU;
 
-  if 'ПPO'=ДИP then begin ПPO end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ЗAM'=ДИP then begin ЗAM end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'KOH'=ДИP then begin EXIT end else if 
-  'BЫX'=ДИP then begin EXIT  end  ;
+  if 'ПРО'=ДИP then begin ПPO end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ЗАМ'=ДИP then begin ЗAM end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'КОН'=ДИP then begin EXIT end else if 
+  'ВЫХ'=ДИP then begin EXIT  end  ;
  end ;
 END.

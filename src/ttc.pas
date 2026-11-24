@@ -6,12 +6,11 @@ program ttc15; uses krt, kio, mars; type XT0 = array[1..40] of alfa; XT1 = array
    NUM: counts; Tnnn: type; Rnnn: record; Frrrff: field; Snnn: set;
    Asssaa: set attribute.  Sizes keep all digits; CИMBOЛ n keeps n. *)
 type
-  word = record case integer of 0:(i:integer); 1:(a:alfa) end;
   Lint = packed array[1..72] of char;
   Dta  = packed array[1..48] of char;
   Num8 = packed array[1..10] of char;
 var
-  BDVECT: array [0..167] of word;
+  BDVECT: array [0..167] of integer;
   BDERRN: integer;
   PIC: integer;
   ln: Lint;
@@ -161,7 +160,7 @@ begin
     if (q[1] >= '0') and (q[1] <= '9') then begin
       tl[tcnt] := q; Tok(q)
     end;
-    if q = 'PAЗMEP' then begin
+    if q = 'РАЗМЕР' then begin
       GetNum(num); Copy6(num, w); ts[tcnt] := w; tz[tcnt] := num
     end
   end
@@ -198,12 +197,12 @@ begin
       if (q[1] >= '0') and (q[1] <= '9') then begin
         rl[(rnum-1)*25+k] := q; Tok(q)
       end;
-      if q = 'PAЗMEP' then begin
+      if q = 'РАЗМЕР' then begin
         GetNum(num); Copy6(num, w); rs[(rnum-1)*25+k] := w;
         rz[(rnum-1)*25+k] := num;
         Tok(q)
       end;
-      if q = 'KOHCИM' then rm[(rnum-1)*25+k] := q
+      if q = 'КОНСИМ' then rm[(rnum-1)*25+k] := q
     end
 end;
 procedure AddAtt(x,y:alfa);
@@ -215,20 +214,20 @@ begin
       sa[(snum-1)*25+k] := x; sv[(snum-1)*25+k] := y;
       for j:=1 to 10 do w8[j]:=' ';
       bv[(snum-1)*25+k] := w8;
-      if x = 'YПOPЯД' then sm[snum] := y;
-      if x = 'BЛAДEЛ' then so[snum] := y;
-      if x = 'ЧЛEH  ' then sm[snum] := y
+      if x = 'УПОРЯД' then sm[snum] := y;
+      if x = 'ВЛАДЕЛ' then so[snum] := y;
+      if x = 'ЧЛЕН  ' then sm[snum] := y
     end
 end;
 procedure DoAtt(x:alfa);
 var y:alfa; z:Num8;
 begin
-  if x = 'YПOPЯД' then begin
+  if x = 'УПОРЯД' then begin
     Tok(y);
     if not IsBlank(y) then AddAtt(x,y);
     Tok(y);
     if not IsBlank(y) then AddAtt(pol,y)
-  end else if x = 'BЫБOP ' then begin
+  end else if x = 'ВЫБОР ' then begin
     Tok(y);
     if not IsBlank(y) then AddAtt(x,y);
     Tok(y);
@@ -294,7 +293,7 @@ begin
       writeln('   ',RT_W( sa[(i-1)*25+j]), ' ',RT_W( sv[(i-1)*25+j]));
       z := bv[(i-1)*25+j];
       if z[1] <> ' ' then
-        writeln('      ИCПOЛЬЗ ',RT_W( z))
+        writeln('      ИСПОЛЬЗ ',RT_W( z))
     end
   end
 end;
@@ -306,23 +305,24 @@ begin MarsBind(@bdvect, @bderrn);
   while not eof(input) and not done do begin
     for j:=1 to 72 do ln[j] := ' ';
     RT_ReadLn(ln);
+    RT_Fold(ln);
     p := 1;
     while (p <= 72) and not done do begin
       SkipSep;
       if p <= 72 then begin
         Tok(kw);
         if IsBlank(kw) then p := 73 else
-        if (kw='KOHEЦ.') or (kw='KOHEЦ ') then done := true else
-        if kw = 'TИП   ' then AddType else
-        if kw = 'ЗAПИCЬ' then AddRec else
-        if kw = 'HAБOP ' then AddSet else
-        if kw = 'OБЛACT' then begin Tok(a); curar := a end else
+        if (kw='КОНЕЦ.') or (kw='КОНЕЦ ') then done := true else
+        if kw = 'ТИП   ' then AddType else
+        if kw = 'ЗАПИСЬ' then AddRec else
+        if kw = 'НАБОР ' then AddSet else
+        if kw = 'ОБЛАСТ' then begin Tok(a); curar := a end else
         if kw = 'ЭЛ    ' then AddFld else
-        if (kw='ЧЛEH  ') or (kw='BЛAДEЛ') or (kw='ПPИBЯЗ') or
-           (kw='YПOPЯД') or (kw='ИCKЛЮЧ') or (kw='BKЛЮЧE') or
-           (kw='ДYБЛИK') or (kw='KOHCИM') or (kw='BPYЧHY') or
-           (kw='ИEPAPX') or (kw='OДHOЗH') or
-           (kw='BЫБOP ') then DoAtt(kw)
+        if (kw='ЧЛЕН  ') or (kw='ВЛАДЕЛ') or (kw='ПРИВЯЗ') or
+           (kw='УПОРЯД') or (kw='ИСКЛЮЧ') or (kw='ВКЛЮЧЕ') or
+           (kw='ДУБЛИК') or (kw='КОНСИМ') or (kw='ВРУЧНУ') or
+           (kw='ИЕРАРХ') or (kw='ОДНОЗН') or
+           (kw='ВЫБОР ') then DoAtt(kw)
         else p := 73
       end
     end

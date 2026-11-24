@@ -12,7 +12,7 @@ program gen;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, Process, kdb, kgost;
+uses SysUtils, Classes, Process, kdb, kutf;
 
 type
   TFmt = record
@@ -37,7 +37,13 @@ end;
 
 function KW(const s: string): string;
 begin
-  Result := Copy(Encode(s), 1, 6);
+  Result := Name6(s);
+end;
+
+{ s folded as a name, blanks kept }
+function FoldAll(const s: string): string;
+begin
+  Result := W2U(FoldW(U2W(s)));
 end;
 
 function IsSep(c: char): boolean;
@@ -190,7 +196,7 @@ begin
       inside one a line may start with * as data }
     if (w <> '') and ((w[1] = '?') or ((w[1] = '*') and (depth <= base))) then continue;
     data := data + w + #10;
-    if (base = 0) and (Pos(Encode('РЕЖИМ'), Encode(w)) > 0) and (Pos('[[', w) > 0) then
+    if (base = 0) and (Pos('РЕЖИМ', FoldAll(w)) > 0) and (Pos('[[', w) > 0) then
       base := 1;
     for c in w do
       if c = '[' then inc(depth) else if c = ']' then dec(depth);
@@ -206,24 +212,24 @@ begin
   p := Pos('.', ref);
   if p = 0 then begin
     { a variable of ПЕРЕМЕННЫЕ: by its declared type }
-    if Pos(Encode(ref) + ': ', Encode(vars)) = 0 then begin
+    if Pos(FoldAll(ref + ': '), FoldAll(vars)) = 0 then begin
       Error('нет поля или переменной ' + ref); exit;
     end;
-    if Pos(Encode(ref) + ': INTEGER', Encode(vars)) > 0 then
+    if Pos(FoldAll(ref + ': INTEGER'), FoldAll(vars)) > 0 then
       Result := 'GVALI(' + IntToStr(v) + ', 0, ' + ref + ')'
-    else if Pos(Encode(ref) + ': REAL', Encode(vars)) > 0 then
+    else if Pos(FoldAll(ref + ': REAL'), FoldAll(vars)) > 0 then
       Result := 'GVALR(' + IntToStr(v) + ', ' + ref + ')'
-    else if Pos(Encode(ref) + ': BOOLEAN', Encode(vars)) > 0 then
+    else if Pos(FoldAll(ref + ': BOOLEAN'), FoldAll(vars)) > 0 then
       Result := 'GVALB(' + IntToStr(v) + ', ' + ref + ')'
-    else if Pos(Encode(ref) + ': CHAR', Encode(vars)) > 0 then
+    else if Pos(FoldAll(ref + ': CHAR;'), FoldAll(vars)) > 0 then
       Result := 'GVALC(' + IntToStr(v) + ', ' + ref + ')'
     else Result := 'GVALA(' + IntToStr(v) + ', ' + ref + ')';
     exit;
   end;
   rn := Copy(ref, 1, p - 1); fn := Copy(ref, p + 1, length(ref));
-  r := KRecNo(Copy(Encode(rn), 1, 6));
+  r := KRecNo(rn);
   if r = 0 then begin Error('нет записи ' + rn); exit; end;
-  f := KFieldNo(r, Copy(Encode(fn), 1, 6));
+  f := KFieldNo(r, fn);
   if f = 0 then begin Error('нет поля ' + ref); exit; end;
   k := KFieldKind(r, f);
   case k of
@@ -239,7 +245,7 @@ end;
 function Pad6(const s: string): string;
 begin
   { a format name as a Pascal string of 6 characters }
-  Result := Decode(Copy(Encode(s) + '      ', 1, 6));
+  Result := W2U(Copy(U2W(Name6(s)) + '      ', 1, 6));
 end;
 
 function Program1: string;

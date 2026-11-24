@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -136,8 +136,8 @@ END;
 PROCEDURE ПPO;
 VAR I,J:INT;A:ARRAY [1..100 ] OF ALFA;
 BEGIN
-FПAP('ИM-KOЭ');&&HAЙTИ ПEPBYЮ B ПA-AЛФ&&;
-IF ПYCTO THEN begin WRITE(OUTPUT,'HET KAPT');PUTT;EXIT end ;
+FПAP('ИМ-КОЭ');&&HAЙTИ ПEPBYЮ B ПA-AЛФ&&;
+IF ПYCTO THEN begin WRITE(OUTPUT,'НЕТ КАРТ');PUTT;EXIT end ;
 I:=0;WHILE MOЖHO DO begin I:=I+1;&&BЗЯTЬ AЛФ.ЗH HA A[I];HAЙTИ CЛEДYЮ&&; end ;
 J:=1;ШAГ:=1;
 REPEAT
@@ -154,42 +154,42 @@ BEGIN
 IF TOЛЬKOCИ THEN EXIT;
 REPEAT
 REPEAT
-  WRITE(OUTPUT,'COKPAЩEHHOE HAЗBAHИE:');GETHAЧ;
+  WRITE(OUTPUT,'СОКРАЩЕННОЕ НАЗВАНИЕ:');GETHAЧ;
   IF HAЧ THEN EXIT;
   begin RT_Read(ПAP.ИMЯ) end;FПAP(ПAP.ИMЯ);
-  IF MOЖHO THEN begin WRITE(OUTPUT,'ЭTO HAЗBAHИE YЖE ЗAPEГИCTPИPOBAHO');PUTT end ;
+  IF MOЖHO THEN begin WRITE(OUTPUT,'ЭТО НАЗВАНИЕ УЖЕ ЗАРЕГИСТРИРОВАНО');PUTT end ;
 UNTIL ПYCTO;
 (**)
-WRITE(OUTPUT,'ПOЛHOE HAЗBAHИE:');RCTP;IF HAЧ THEN EXIT;
+WRITE(OUTPUT,'ПОЛНОЕ НАЗВАНИЕ:');RCTP;IF HAЧ THEN EXIT;
 begin RT_Read(ПAP.HAЗB) end;
 (**)
-WRITE(OUTPUT,'ЗHAЧEHИE:');
+WRITE(OUTPUT,'ЗНАЧЕНИЕ:');
 ДEЙ.ЗH:=RBEЩ(0.0,999999.9);IF HAЧ THEN EXIT;
 (**)
 ПAP.COKP[1]:=#255;
 (**)
-WRITE(OUTPUT,'BOT, ЧTO BЫ BBEЛИ:');PUTT;ПEЧKOЭФ;
-WRITE(OUTPUT,'ПOДTBEPДИTE ПPABИЛЬHOCTЬ KAPTЫ');
+WRITE(OUTPUT,'ВОТ, ЧТО ВЫ ВВЕЛИ:');PUTT;ПEЧKOЭФ;
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ПРАВИЛЬНОСТЬ КАРТЫ');
 IF ДA AND NOT HAЧ THEN begin 
   &&ПOCTABИTЬ ПAP;ПOCTABИTЬ ДEЙ;BKЛЮЧИ B ПA-ДEЙ&&;
-  &&HAЙTИ ПO-KЛЮ 'ИM-KOЭ' B SY-ПAP;ПOCTAB AЛФ;BKЛЮЧИ B ПA-AЛФ&&;
-  YCTMOД;WRITE(OUTPUT,'KAPTA ЗAPEГИCTPИPOBAHA') end 
-ELSE WRITE(OUTPUT,'KAPTA AHYЛИPOBAHA');PUTT;
-UNTIL NOT EЩE('EЩE ! ') OR HAЧ;
+  &&HAЙTИ ПO-KЛЮ 'ИМ-КОЭ' B SY-ПAP;ПOCTAB AЛФ;BKЛЮЧИ B ПA-AЛФ&&;
+  YCTMOД;WRITE(OUTPUT,'КАРТА ЗАРЕГИСТРИРОВАНА') end 
+ELSE WRITE(OUTPUT,'КАРТА АНУЛИРОВАНА');PUTT;
+UNTIL NOT EЩE('ЕЩЕ ! ') OR HAЧ;
 END;
 
 
 
 PROCEDURE ЗAM;
 BEGIN
-WRITE(OUTPUT,'COKPAЩEHHOE HAЗBAHИE:');GETHAЧ;
+WRITE(OUTPUT,'СОКРАЩЕННОЕ НАЗВАНИЕ:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(ПAP.ИMЯ) end;FПAP(ПAP.ИMЯ);
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'TAKAЯ KAPTA HE ЗAPEГИCTPИPOBAHA');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ТАКАЯ КАРТА НЕ ЗАРЕГИСТРИРОВАНА');PUTT;EXIT end ;
 &&BЗЯTЬ;HAЙTИ ПEPBYЮ B ПA-ДEЙ;BЗЯTЬ&&;
-WRITE(OUTPUT,'BOT ЭTA KAPTA:');PUTT;ПEЧKOЭФ;
-WRITE(OUTPUT,'HOBOE ЗHAЧEHИE:');
+WRITE(OUTPUT,'ВОТ ЭТА КАРТА:');PUTT;ПEЧKOЭФ;
+WRITE(OUTPUT,'НОВОЕ ЗНАЧЕНИЕ:');
 ДEЙ.ЗH:=RBEЩ(0.0,999999.9);IF HAЧ THEN EXIT;
 &&ЗAMEHИTЬ&&;YCTMOД;ECTЬ;
 END;
@@ -199,42 +199,42 @@ END;
 PROCEDURE ИCK;
 BEGIN
 IF TOЛЬKOCИ THEN EXIT;
-WRITE(OUTPUT,'COKPAЩEHHOE HAЗBAHИE:');GETHAЧ;
+WRITE(OUTPUT,'СОКРАЩЕННОЕ НАЗВАНИЕ:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(ПAP.ИMЯ) end;FПAP(ПAP.ИMЯ);
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'TAKAЯ KAPTA HE ЗAPEГИCTPИPOBAHA');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ТАКАЯ КАРТА НЕ ЗАРЕГИСТРИРОВАНА');PUTT;EXIT end ;
 &&BЗЯTЬ;HAЙTИ ПEPBYЮ B ПA-ДEЙ;BЗЯTЬ&&;
-WRITE(OUTPUT,'BOT ЭTA KAPTA:');PUTT;ПEЧKOЭФ;
-WRITE(OUTPUT,'ПOДTBEPДИTE ИCKЛЮЧEHИE');
+WRITE(OUTPUT,'ВОТ ЭТА КАРТА:');PUTT;ПEЧKOЭФ;
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ИСКЛЮЧЕНИЕ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'ИCKЛЮЧEHИE OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ИСКЛЮЧЕНИЕ ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 &&YБPATЬ ДEЙ;YБPATЬ ПAP&&;
-FПAP('ИM-KOЭ');&&HAЙTИ ПO-KЛЮ ПAP.ИMЯ B ПA-AЛФ;YБPATЬ&&;YCTMOД;
+FПAP('ИМ-КОЭ');&&HAЙTИ ПO-KЛЮ ПAP.ИMЯ B ПA-AЛФ;YБPATЬ&&;YCTMOД;
 END;
 
 
 
 BEGIN
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ KOЭФФИЦИEHTOB...');PUTT;
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ КОЭФФИЦИЕНТОВ...');PUTT;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP ЗAPEГИCTPИPOBAHHЫX KAPT/',
-          'HOB - PEГИCTPAЦИЯ HOBЫX KAPT/',
-          'ЗAM - ЗAMEHA ЗHAЧEHИЯ KOЭФИЦИEHTA/',
-          'ИCK - ИCKЛЮЧEHИE KAPTЫ/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ЗАРЕГИСТРИРОВАННЫХ КАРТ/',
+          'НОВ - РЕГИСТРАЦИЯ НОВЫХ КАРТ/',
+          'ЗАМ - ЗАМЕНА ЗНАЧЕНИЯ КОЭФИЦИЕНТА/',
+          'ИСК - ИСКЛЮЧЕНИЕ КАРТЫ/');
 MENU;
 
-  if 'ПPO'=ДИP then begin ПPO end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ЗAM'=ДИP then begin ЗAM end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'KOH'=ДИP then begin  begin KYДA:='HAPYЖY';EXIT end  end else if 
-  'BЫX'=ДИP then begin EXIT  end  ;
+  if 'ПРО'=ДИP then begin ПPO end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ЗАМ'=ДИP then begin ЗAM end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end  end else if 
+  'ВЫХ'=ДИP then begin EXIT  end  ;
  end ;
 END;
 
 
 
 BEGIN
-PEKOЭФ;KYДA:='HAPYЖY';
+PEKOЭФ;KYДA:='НАРУЖУ';
 END.

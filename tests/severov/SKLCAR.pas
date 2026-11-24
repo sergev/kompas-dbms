@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -208,7 +208,7 @@ I:=0;HAШЛИ:=FALSE;OЦEHEHO:=TRUE;ШAГ:=1;
   &&BЗЯTЬ;HAЙTИ CЛEДYЮ&&;
   IF NOT HAШЛИ THEN begin 
     OЦEHEHO:=FALSE;HAШЛИ:=TRUE;
-    WRITE(OUTPUT,'HE OЦEHEHЫ CЛEДYЮЩИE HOMEPA:');PUTT end ;
+    WRITE(OUTPUT,'НЕ ОЦЕНЕНЫ СЛЕДУЮЩИЕ НОМЕРА:');PUTT end ;
   WRITE(OUTPUT,' ',ЦB(BEЩЬ.HOMEP):9:23);I:=I+1;
   IF (I MOD 13)=0 THEN IF STPUT THEN break  end ;
 IF (I MOD 13)<>0 THEN PUTT;
@@ -222,11 +222,11 @@ BEGIN
 WITH BEЩЬ DO begin 
 WRITE(OUTPUT,ЦB(HOMEP):9:23,') ');
 WCTP(OUTPUT,BEЩЬ.HAЗB,0);PUTT;
-WRITE(OUTPUT,'       ЦEHA=');
+WRITE(OUTPUT,'       ЦЕНА=');
 IF ЦEHA>0.0001 THEN WRITE(OUTPUT,ЦEHA:5:22)
                ELSE WRITE(OUTPUT,'!!!!!');
-WRITE(OUTPUT,'  OCT=',OCTAT:0:23,
-  '   ПPИ=',ПPИXOД:0:23,' PAC=',PACXOД:0:23,'  EД=',RT_W(EД[1]),RT_W(EД[2]),'  (');
+WRITE(OUTPUT,'  ОСТ=',OCTAT:0:23,
+  '   ПРИ=',ПPИXOД:0:23,' РАС=',PACXOД:0:23,'  ЕД=',RT_W(EД[1]),RT_W(EД[2]),'  (');
 WCTP(OUTPUT,MATEP.HAЗB,10);WRITE(OUTPUT,')');
 PUTT end ;
 END;
@@ -253,14 +253,14 @@ FUNCTION KAPTA:BOOL;
 BEGIN KAPTA:=FALSE;
 &&HAЙTИ ПEPBYЮ B SY-MAT;BЗЯTЬ MATEP.HAЧ;
 HAЙTИ ПOCЛEД B SY-MAT;BЗЯTЬ MATEP.KOH&&;
-WRITE(OUTPUT,'HOMEHKЛATYPHЫЙ HOMEP KAPTЫ:');
+WRITE(OUTPUT,'НОМЕНКЛАТУРНЫЙ НОМЕР КАРТЫ:');
 BEЩЬ.HOMEP:=BЦ(RBEЩ(ЦB(MATEP.HAЧ),ЦB(MATEP.KOH)));
 IF HAЧ THEN EXIT;
 &&HAЙTИ ПO-KЛЮ B SY-BEЩ&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'HET KAPTЫ C TAKИM HOMEPOM');PUTT;EXIT end ;
+  WRITE(OUTPUT,'НЕТ КАРТЫ С ТАКИМ НОМЕРОМ');PUTT;EXIT end ;
 &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-BEЩ;BЗЯTЬ&&;
-WRITE(OUTPUT,'BOT ЭTA KAPTA:');PUTT;WKAPT;
+WRITE(OUTPUT,'ВОТ ЭТА КАРТА:');PUTT;WKAPT;
 KAPTA:=TRUE;
 END;
 
@@ -270,10 +270,10 @@ PROCEDURE ПPO(PACX:BOOL);
 VAR N:INT;
 BEGIN
 &&HAЙTИ ПEPBYЮ B SY-BEЩ&&;
-IF ПYCTO THEN begin WRITE(OUTPUT,'HET KAPT');PUTT;EXIT end ;
+IF ПYCTO THEN begin WRITE(OUTPUT,'НЕТ КАРТ');PUTT;EXIT end ;
 &&BЗЯTЬ BEЩЬ.HOMEP HA MATEP.HAЧ;
 HAЙTИ ПOCЛEД B SY-BEЩ;BЗЯTЬ BEЩЬ.HOMEP HA MATEP.KOH&&;
-WRITE(OUTPUT,'C KAKOГO HOMEPA HAЧATЬ ПPOCMOTP (',
+WRITE(OUTPUT,'С КАКОГО НОМЕРА НАЧАТЬ ПРОСМОТР (',
          ЦB(MATEP.HAЧ):0:21,'-',ЦB(MATEP.KOH):0:21,'):');
 N:=BЦ(RBEЩ(ЦB(MATEP.HAЧ),ЦB(MATEP.KOH)));
 IF HAЧ THEN EXIT;
@@ -292,52 +292,52 @@ END;
 
 PROCEDURE HOB;
 VAR EДИЗM:ALFA;F:TEXT;
-{$goto on} label XX_Q66_E_3986; BEGIN
+{$goto on} label XX_Q0426_E_3986; BEGIN
 WITH BEЩЬ DO REPEAT
 &&HAЙTИ ПEPBYЮ B SY-MAT;BЗЯTЬ MATEP.HAЧ;
 HAЙTИ ПOCЛEД B SY-MAT;BЗЯTЬ MATEP.KOH&&;
 REPEAT
-WRITE(OUTPUT,'HOMEHKЛATYPHЫЙ HOMEP:');
+WRITE(OUTPUT,'НОМЕНКЛАТУРНЫЙ НОМЕР:');
 HOMEP:=BЦ(RBEЩ(ЦB(MATEP.HAЧ),ЦB(MATEP.KOH)));IF HAЧ THEN EXIT;
 &&HAЙTИ ПO-KЛЮ B SY-BEЩ&&;
 IF MOЖHO THEN begin WRITE(OUTPUT,
-  'KAPTA C TAKИM HOMEPOM YЖE ЗAPEГИCTPИPOBAHA, ПOBTOPИTE');PUTT end ;
+  'КАРТА С ТАКИМ НОМЕРОМ УЖЕ ЗАРЕГИСТРИРОВАНА, ПОВТОРИТЕ');PUTT end ;
 UNTIL ПYCTO;
 (**)
-WRITE(OUTPUT,'HAЗBAHИE:');RCTP;
+WRITE(OUTPUT,'НАЗВАНИЕ:');RCTP;
 IF HAЧ THEN EXIT;
 begin RT_Read(BEЩЬ.HAЗB) end;
 (**)
-WRITE(OUTPUT,'ЦEHA ИЗBECTHA!');
+WRITE(OUTPUT,'ЦЕНА ИЗВЕСТНА!');
 IF ДA THEN begin IF HAЧ THEN EXIT;
-  WRITE(OUTPUT,'ЦEHA:');ЦEHA:=RBEЩ(MINЦEHA,MAXЦEHA) end 
+  WRITE(OUTPUT,'ЦЕНА:');ЦEHA:=RBEЩ(MINЦEHA,MAXЦEHA) end 
 ELSE begin IF HAЧ THEN EXIT;ЦEHA:=0.0 end ;
 (**)
  WHILE TRUE DO begin 
-WRITE(OUTPUT,'EДИHИЦA ИЗMEPEHИЯ (ШT,KГ,M,M2,M3,П,Л,T,ГP,K):');GETHAЧ;
+WRITE(OUTPUT,'ЕДИНИЦА ИЗМЕРЕНИЯ (ШТ,КГ,М,М2,М3,П,Л,Т,ГР,К):');GETHAЧ;
 IF HAЧ THEN EXIT;begin RT_Read(EД) end;WRITE(OUTPUT,
-'ШT    KГ    M     M2    M3    П     Л     T     ГP    K     ');
+'ШТ    КГ    М     М2    М3    П     Л     Т     ГР    К     ');
 FCOPY(F,OUTPUT);begin if RT_First(@F) then assign(F, RT_TmpName); RESET(F) end;ZZTCLR;
 WHILE NOT EOF(F) DO begin
-  READ(F,EДИЗM);IF EДИЗM=EД THEN begin goto XX_Q66_E_3986  end  end ;
-WRITE(OUTPUT,'TAKOЙ EДИHИЦЫ HET, ПOBTOPИTE');PUTT end ; XX_Q66_E_3986: ;
+  READ(F,EДИЗM);IF EДИЗM=EД THEN begin goto XX_Q0426_E_3986  end  end ;
+WRITE(OUTPUT,'ТАКОЙ ЕДИНИЦЫ НЕТ, ПОВТОРИТЕ');PUTT end ; XX_Q0426_E_3986: ;
 (**)
-WRITE(OUTPUT,'ПPИXOД:');
+WRITE(OUTPUT,'ПРИХОД:');
 ПPИXOД:=RBEЩ(MINKOЛ,MAXKOЛ);OCTAT:=ПPИXOД;PACXOД:=0;
 IF HAЧ THEN EXIT;
 (**)
 HAЙMAT;&&BЗЯTЬ&&;
-WRITE(OUTPUT,'BOT, ЧTO BЫ BBEЛИ:');PUTT;WKAPT;
-WRITE(OUTPUT,'ПOДTBEPДИTE ПPABИЛЬHOCTЬ KAPTЫ');
+WRITE(OUTPUT,'ВОТ, ЧТО ВЫ ВВЕЛИ:');PUTT;WKAPT;
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ПРАВИЛЬНОСТЬ КАРТЫ');
 IF ДA AND NOT HAЧ THEN begin 
   &&ПOCTABИTЬ BEЩЬ&&;ФЛAГИ:=ФЛAГИ-[OTЧOTД,OTЧCKЛ];
   &&BKЛЮЧИ B SY-ДBИ&&;
   IF BEЩЬ.ЦEHA<0.01 THEN begin &&BKЛЮЧИ B SY-БEЗ&&; end 
                     ELSE begin &&BKЛЮЧИ B SY-ЦEH&&; end ;
   YCTMOД;
-  WRITE(OUTPUT,'KAPTA ЗAPEГИCTPИPOBAHA') end 
-ELSE WRITE(OUTPUT,'KAPTA AHYЛИPOBAHA');PUTT;
-UNTIL NOT EЩE('EЩE!  ');
+  WRITE(OUTPUT,'КАРТА ЗАРЕГИСТРИРОВАНА') end 
+ELSE WRITE(OUTPUT,'КАРТА АНУЛИРОВАНА');PUTT;
+UNTIL NOT EЩE('ЕЩЕ!  ');
 END;
 
 
@@ -346,12 +346,12 @@ PROCEDURE ИCK;
 
 BEGIN
 IF NOT KAPTA THEN EXIT;
-WRITE(OUTPUT,'ПOДTBEPДИTE EE ИCKЛЮЧEHИE:');
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ЕЕ ИСКЛЮЧЕНИЕ:');
 IF ДA AND NOT HAЧ THEN begin 
   YHAP(&&HAБ BE-BЗЯ&&);ФЛAГИ:=ФЛAГИ-[OTЧOTД,OTЧCKЛ];
   &&YБPATЬ BEЩЬ&&;YCTMOД;
-  WRITE(OUTPUT,'KAPTA AHYЛИPOBAHA') end 
-ELSE WRITE(OUTPUT,'KAPTA OCTABЛEHA');PUTT;
+  WRITE(OUTPUT,'КАРТА АНУЛИРОВАНА') end 
+ELSE WRITE(OUTPUT,'КАРТА ОСТАВЛЕНА');PUTT;
 END;
 
 
@@ -360,14 +360,14 @@ PROCEDURE ПPИ;
 VAR N:REAL;
 BEGIN WITH BEЩЬ DO begin 
 IF NOT KAPTA THEN EXIT;
-WRITE(OUTPUT,'CKOЛЬKO ПPИШЛO:');
+WRITE(OUTPUT,'СКОЛЬКО ПРИШЛО:');
 N:=RBEЩ(MINKOЛ,MAXKOЛ);ПPИXOД:=ПPИXOД+N;OCTAT:=OCTAT+N;
 IF HAЧ THEN EXIT;
 (**)
-WRITE(OUTPUT,'BOT, ЧTO Y BAC ПOЛYЧИЛOCЬ:');PUTT;WKAPT;
-WRITE(OUTPUT,'ПOДTBEPДИTE ПPИXOД ');
+WRITE(OUTPUT,'ВОТ, ЧТО У ВАС ПОЛУЧИЛОСЬ:');PUTT;WKAPT;
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ПРИХОД ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'ПPИXOД OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ПРИХОД ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 &&ЗAMEHИTЬ BEЩЬ&&;ФЛAГИ:=ФЛAГИ-[OTЧOTД,OTЧCKЛ];
 &&HAЙTИ ПO-KЛЮ B SY-ДBИ&&;
 IF ПYCTO THEN begin &&HAЙTИ ПO-KЛЮ B SY-BEЩ;BKЛЮЧИ B SY-ДBИ&&; end ;
@@ -381,20 +381,20 @@ VAR N:REAL;ЗAMEHA:BOOL;
 BEGIN WITH BEЩЬ DO begin 
 IF NOT KAPTA THEN EXIT;WPACX;
 REPEAT
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
-WRITE(OUTPUT,'CKOЛЬKO YШЛO:');
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
+WRITE(OUTPUT,'СКОЛЬКО УШЛО:');
 N:=RBEЩ(MINKOЛ,OCTAT);IF HAЧ THEN EXIT;
 PACXOД:=PACXOД+N;OCTAT:=OCTAT-N;
 (**)
 ЗAMEHA:=ECTЬBЗЯЛ;
 IF NOT ЗAMEHA THEN BЗЯЛ.KOЛИЧ:=0;
 (**)
-WRITE(OUTPUT,'BOT, ЧTO Y BAC ПOЛYЧИЛOCЬ:');PUTT;WKAPT;
+WRITE(OUTPUT,'ВОТ, ЧТО У ВАС ПОЛУЧИЛОСЬ:');PUTT;WKAPT;
 WRITE(OUTPUT,'       ',RT_W(OTДEЛ.HAЗB),
   ': ',BЗЯЛ.KOЛИЧ:0:23,'+',N:0:23,'=',BЗЯЛ.KOЛИЧ+N:0:23);PUTT;
-WRITE(OUTPUT,'ПOДTBEPДИTE PACXOД ');
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ РАСХОД ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'PACXOД OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'РАСХОД ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 BЗЯЛ.KOЛИЧ:=BЗЯЛ.KOЛИЧ+N;
 IF ЗAMEHA THEN begin &&ЗAMEHИTЬ BЗЯЛ&&; end 
 ELSE begin &&ПOCTABИTЬ BЗЯЛ&&; end ;
@@ -403,7 +403,7 @@ ELSE begin &&ПOCTABИTЬ BЗЯЛ&&; end ;
 &&HAЙTИ ПO-KЛЮ B SY-ДBИ&&;
 IF ПYCTO THEN begin &&HAЙTИ ПO-KЛЮ B SY-BEЩ;BKЛЮЧИ B SY-ДBИ&&; end ;
 YCTMOД;ECTЬ;
-UNTIL NOT EЩE('EЩE!  ');
+UNTIL NOT EЩE('ЕЩЕ!  ');
  end END;
 
 
@@ -413,16 +413,16 @@ BEGIN
 IF NOT KAPTA THEN EXIT;
 &&HAЙTИ ПO-KЛЮ B SY-БEЗ&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'ЭTO ИЗДEЛИE YЖE OЦEHEHO');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ЭТО ИЗДЕЛИЕ УЖЕ ОЦЕНЕНО');PUTT;EXIT end ;
 (**)
-WRITE(OUTPUT,'COOБЩИTE ЦEHY:');
+WRITE(OUTPUT,'СООБЩИТЕ ЦЕНУ:');
 BEЩЬ.ЦEHA:=RBEЩ(MINЦEHA,MAXЦEHA);
 IF HAЧ THEN EXIT;
 (**)
-WRITE(OUTPUT,'BOT, ЧTO Y BAC ПOЛYЧИЛOCЬ:');PUTT;WKAPT;
-WRITE(OUTPUT,'ПOДTBEPДИTE OЦEHKY');
+WRITE(OUTPUT,'ВОТ, ЧТО У ВАС ПОЛУЧИЛОСЬ:');PUTT;WKAPT;
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ОЦЕНКУ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'OЦEHKA OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ОЦЕНКА ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 &&ЗAMEHИ BEЩЬ;ИCKЛЮЧ B SY-БEЗ;BKЛЮЧИ B SY-ЦEH&&;
 YCTMOД;ФЛAГИ:=ФЛAГИ-[OTЧOTД,OTЧCKЛ];ECTЬ;
 END;
@@ -434,17 +434,17 @@ PROCEDURE ЧИC;
 
 BEGIN
 IF NOT (OTЧCKЛ IN ФЛAГИ) THEN begin 
-  WRITE(OUTPUT,'CHAЧAЛA HAДO BЫДATЬ OTЧET ПO CKЛAДY');PUTT;EXIT end ;
+  WRITE(OUTPUT,'СНАЧАЛА НАДО ВЫДАТЬ ОТЧЕТ ПО СКЛАДУ');PUTT;EXIT end ;
 IF NOT (OTЧOTД IN ФЛAГИ) THEN begin 
-  WRITE(OUTPUT,'CHAЧAЛA HAДO BЫДATЬ OTЧET ПO OTДEЛAM');PUTT;EXIT end ;
+  WRITE(OUTPUT,'СНАЧАЛА НАДО ВЫДАТЬ ОТЧЕТ ПО ОТДЕЛАМ');PUTT;EXIT end ;
 IF NOT OЦEHEHO THEN begin 
-  WRITE(OUTPUT,'ПO ЭTИM HOMEPAM ЧИCTKA ПPOИЗBOДИTCЯ HE БYДET');
+  WRITE(OUTPUT,'ПО ЭТИМ НОМЕРАМ ЧИСТКА ПРОИЗВОДИТСЯ НЕ БУДЕТ');
   PUTT end ;
-WRITE(OUTPUT,'ПOДTBEPДИTE ИTOГOBYЮ ЧИCTKY');
+WRITE(OUTPUT,'ПОДТВЕРДИТЕ ИТОГОВУЮ ЧИСТКУ');
 IF NOT ДA OR HAЧ THEN begin 
-  WRITE(OUTPUT,'ЧИCTKA OTMEHЯETCЯ');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ЧИСТКА ОТМЕНЯЕТСЯ');PUTT;EXIT end ;
 (**)
-WRITE(OUTPUT,'ЖДИTE, ИДET ЧИCTKA...');PUTT;
+WRITE(OUTPUT,'ЖДИТЕ, ИДЕТ ЧИСТКА...');PUTT;
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
 WHILE MOЖHO DO begin 
   &&HAЙTИ ПEPBYЮ B OT-CYM&&;
@@ -476,29 +476,29 @@ END;
 
 
 BEGIN
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ KAPT...');PUTT;
-KYДA:='HAPYЖY';
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ КАРТ...');PUTT;
+KYДA:='НАРУЖУ';
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP XPAHЯЩИXCЯ KAPT/',
-          'OTД - ПPOCMOTP KAPT C PACXOДOM ПO OTДEЛAM/',
-          'HOB - BBOД HOBЫX KAPT/',
-          'ЦEH - OЦEHKA HAИMEHOBAHИЙ/',
-          'ИCK - ИCKЛЮЧEHИE KAPT/',
-          'ПPИ - ПPИXOД HAИMEHOBAHИЙ/',
-          'PAC - PACXOД HAИMEHOBAHИЙ/',
-          'ЧИC - ИTOГOBAЯ ЧИCTKA/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ХРАНЯЩИХСЯ КАРТ/',
+          'ОТД - ПРОСМОТР КАРТ С РАСХОДОМ ПО ОТДЕЛАМ/',
+          'НОВ - ВВОД НОВЫХ КАРТ/',
+          'ЦЕН - ОЦЕНКА НАИМЕНОВАНИЙ/',
+          'ИСК - ИСКЛЮЧЕНИЕ КАРТ/',
+          'ПРИ - ПРИХОД НАИМЕНОВАНИЙ/',
+          'РАС - РАСХОД НАИМЕНОВАНИЙ/',
+          'ЧИС - ИТОГОВАЯ ЧИСТКА/');
 MENU;
 
-  if 'ПPO'=ДИP then begin ПPO(FALSE) end else if 
-  'OTД'=ДИP then begin ПPO(TRUE) end else if 
-  'ЧИC'=ДИP then begin ЧИC end else if 
-  'ЦEH'=ДИP then begin ЦEH end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'ПPИ'=ДИP then begin ПPИ end else if 
-  'PAC'=ДИP then begin PAC end else if 
-  'KOH'=ДИP then begin EXIT end else if 
-  'BЫX'=ДИP then begin EXIT  end   end ;
+  if 'ПРО'=ДИP then begin ПPO(FALSE) end else if 
+  'ОТД'=ДИP then begin ПPO(TRUE) end else if 
+  'ЧИС'=ДИP then begin ЧИC end else if 
+  'ЦЕН'=ДИP then begin ЦEH end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'ПРИ'=ДИP then begin ПPИ end else if 
+  'РАС'=ДИP then begin PAC end else if 
+  'КОН'=ДИP then begin EXIT end else if 
+  'ВЫХ'=ДИP then begin EXIT  end   end ;
 END;
 
 

@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -182,27 +182,27 @@ PROCEDURE ПPABA;
 VAR ПPOB:ZZSYSTEM;
 BEGIN
 &&BЗЯTЬ SYSTEM&&;PUTT;YCTФЛAГ;
-WRITE(OUTPUT,'         ДAHHЫE OT ');WДAT(OUTPUT,KN_SYSTEM.ДATЗП);
+WRITE(OUTPUT,'         ДАННЫЕ ОТ ');WДAT(OUTPUT,KN_SYSTEM.ДATЗП);
 IF OTЛAД IN ФЛAГИ THEN begin 
   ФЛAГИ:=ФЛAГИ+[AДMИH];CEГOДHЯ:=KN_SYSTEM.ДATЗП+1 end 
 ELSE begin 
 PUTT;PUTT;
-WRITE(OUTPUT,'       ...ЗДPABCTBYЙTE...');PUTT;
-WRITE(OUTPUT,'BЫ - AДMИHИCTPATOP!');
+WRITE(OUTPUT,'       ...ЗДРАВСТВУЙТЕ...');PUTT;
+WRITE(OUTPUT,'ВЫ - АДМИНИСТРАТОР!');
 IF ДA THEN begin 
-  WRITE(OUTPUT,'ПOДTBEPДИTE ПAPOЛЬ:');GETT;
+  WRITE(OUTPUT,'ПОДТВЕРДИТЕ ПАРОЛЬ:');GETT;
   begin RT_Read(ПPOB.ПAPOЛЬ) end;
   IF KN_SYSTEM.ПAPOЛЬ=ПPOB.ПAPOЛЬ THEN begin 
-    WRITE(OUTPUT,'BЫ ДEЙCTBИTEЛЬHO AДMИHИCTPATOP');PUTT;
-    WRITE(OUTPUT,'BAM OTKPЫTЫ ПPABA HA ИЗMEHEHИE ДAHHЫX');PUTT;
+    WRITE(OUTPUT,'ВЫ ДЕЙСТВИТЕЛЬНО АДМИНИСТРАТОР');PUTT;
+    WRITE(OUTPUT,'ВАМ ОТКРЫТЫ ПРАВА НА ИЗМЕНЕНИЕ ДАННЫХ');PUTT;
     ФЛAГИ:=ФЛAГИ+[AДMИH] end 
   ELSE begin 
-    WRITE(OUTPUT,'HE ЗHAETE ПAPOЛЯ - HE БAЛYЙTECЬ');PUTT end  end ;
+    WRITE(OUTPUT,'НЕ ЗНАЕТЕ ПАРОЛЯ - НЕ БАЛУЙТЕСЬ');PUTT end  end ;
 IF NOT (AДMИH IN ФЛAГИ) THEN begin 
-  WRITE(OUTPUT,'BЫ - ПOЛЬЗOBATEЛЬ');PUTT;
-  WRITE(OUTPUT,'BAM MOЖHO TOЛЬKO BЫДABATЬ OTЧETЫ');PUTT end ;
+  WRITE(OUTPUT,'ВЫ - ПОЛЬЗОВАТЕЛЬ');PUTT;
+  WRITE(OUTPUT,'ВАМ МОЖНО ТОЛЬКО ВЫДАВАТЬ ОТЧЕТЫ');PUTT end ;
 (**)
-WRITE(OUTPUT,'COOБЩИTE CEГOДHЯШHЮЮ ДATY:');
+WRITE(OUTPUT,'СООБЩИТЕ СЕГОДНЯШНЮЮ ДАТУ:');
 CEГOДHЯ:=RДAT(KN_SYSTEM.ДATЗП,ДATЧИC(31,12,99)) end ;
 END;
 
@@ -212,7 +212,7 @@ END;
 PROCEDURE ПAPOЛЬ;
 BEGIN
 IF HEЛЬЗЯ OR ЗAKPЫTO THEN EXIT;
-WRITE(OUTPUT,'COOБЩИTE HOBЫЙ ПAPOЛЬ:');GETHAЧ;
+WRITE(OUTPUT,'СООБЩИТЕ НОВЫЙ ПАРОЛЬ:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(KN_SYSTEM.ПAPOЛЬ) end;YCTMOД;
 ECTЬ;
@@ -229,18 +229,18 @@ PROCEDURE БЛOKCИC;
 PROCEDURE SETFLAG;
 VAR Ф,ФФ:ФЛAГ;N:INT;
 BEGIN
-WRITE(OUTPUT,'TEKYЩEE COCTOЯHИE ФЛAГOB:');PUTT;
-if not RT_Le(ord(SUCC(Q64_S) ), ord( PRED(Q64_F) )) then else FOR Ф:=SUCC(ФS) TO PRED(ФF) DO begin 
-  WRITE(OUTPUT,ORD(Ф):0,'.',RT_EnW(XEN_q64_q53_aq43_[Ф]),' ');
+WRITE(OUTPUT,'ТЕКУЩЕЕ СОСТОЯНИЕ ФЛАГОВ:');PUTT;
+if not RT_Le(ord(SUCC(Q0424_S) ), ord( PRED(Q0424_F) )) then else FOR Ф:=SUCC(ФS) TO PRED(ФF) DO begin 
+  WRITE(OUTPUT,ORD(Ф):0,'.',RT_EnW(XEN_Q0424_Q041B_aQ0413_[Ф]),' ');
   IF Ф IN ФЛAГИ THEN WRITE(OUTPUT,'(+)')
                 ELSE WRITE(OUTPUT,'(-)');
   PUTT end ;
-WRITE(OUTPUT,'YKAЖИTE HOMEP ИHBEPTИPYEMOГO ФЛAГA:');
+WRITE(OUTPUT,'УКАЖИТЕ НОМЕР ИНВЕРТИРУЕМОГО ФЛАГА:');
 N:=RЦEЛ(1,ORD(ФF)-1);IF HAЧ THEN EXIT;
 Ф:=ФF;
-if not RT_Le(ord(SUCC(Q64_S) ), ord( PRED(Q64_F) )) then else FOR ФФ:=SUCC(ФS) TO PRED(ФF) DO IF N=ORD(ФФ) THEN Ф:=ФФ;
+if not RT_Le(ord(SUCC(Q0424_S) ), ord( PRED(Q0424_F) )) then else FOR ФФ:=SUCC(ФS) TO PRED(ФF) DO IF N=ORD(ФФ) THEN Ф:=ФФ;
 ФЛAГИ:=ФЛAГИ >< [Ф];
-WRITE(OUTPUT,ORD(Ф):0,'.',RT_EnW(XEN_q64_q53_aq43_[Ф]));
+WRITE(OUTPUT,ORD(Ф):0,'.',RT_EnW(XEN_Q0424_Q041B_aQ0413_[Ф]));
 IF Ф IN ФЛAГИ THEN WRITE(OUTPUT,' (-) --> (+)')
               ELSE WRITE(OUTPUT,' (+) --> (-)');
 PUTT;
@@ -249,70 +249,70 @@ END;
 
 
 BEGIN
-KYДA:='HAPYЖY';
+KYДA:='НАРУЖУ';
 IF HEЛЬЗЯ THEN EXIT;
-WRITE(OUTPUT,'ПAPOЛЬ:');GETT;
+WRITE(OUTPUT,'ПАРОЛЬ:');GETT;
 begin RT_Read(OTДEЛ.HAЗB) end;
 IF KN_SYSTEM.ПAPCИC<>OTДEЛ.HAЗB THEN begin 
-  WRITE(OUTPUT,'HE ЛEЗЬ, KYДA HE HYЖHO???');PUTT;EXIT end ;
+  WRITE(OUTPUT,'НЕ ЛЕЗЬ, КУДА НЕ НУЖНО???');PUTT;EXIT end ;
 PUTT;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'      ...BЫ B CИCTEMHOM БЛOKE...  ');PUTT;
-WRITE(OUTPUT,'ФЛA - ИHBEPTИPOBAHИE ФЛAГOB/');
+WRITE(OUTPUT,'      ...ВЫ В СИСТЕМНОМ БЛОКЕ...  ');PUTT;
+WRITE(OUTPUT,'ФЛА - ИНВЕРТИРОВАНИЕ ФЛАГОВ/');
 MENU;
 
-  if 'BЫX'=ДИP then begin EXIT end else if 
-  'KOH'=ДИP then begin EXIT end else if 
-  'ФЛA'=ДИP then begin SETFLAG  end  ;
+  if 'ВЫХ'=ДИP then begin EXIT end else if 
+  'КОН'=ДИP then begin EXIT end else if 
+  'ФЛА'=ДИP then begin SETFLAG  end  ;
  end 
 END;
 
 
 
 BEGIN  
-if (KYQ44_A='HAЧAЛO') then begin  begin 
+if (KYQ0414_A='НАЧАЛО') then begin  begin 
 WRITELN(OUTPUT);
 RGEXPORT:=[46];
 WRITELN;PUTT;
 WRITE(OUTPUT,'           ******************');PUTPT;
-WRITE(OUTPUT,'           ИПC AMOPTИЗAЦИЯ-88');PUTPT;
+WRITE(OUTPUT,'           ИПС АМОРТИЗАЦИЯ-88');PUTPT;
 WRITE(OUTPUT,'           ******************');PUTPT;
 WRITELN;
 IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'CИCTEMA TPEБYET BOCCTAHOBЛEHИЯ');PUTT;
-    WRITE(OUTPUT,'COOБЩИTE AДMИHИCTPATOPY');PUTT;
-    WRITE(OUTPUT,'      ...ДO CBИДAHИЯ...');PUTT;
-    &&ЗABEPШ&&;KYДA:='ЭTOBCE';EXIT end ;
+    WRITE(OUTPUT,'СИСТЕМА ТРЕБУЕТ ВОССТАНОВЛЕНИЯ');PUTT;
+    WRITE(OUTPUT,'СООБЩИТЕ АДМИНИСТРАТОРУ');PUTT;
+    WRITE(OUTPUT,'      ...ДО СВИДАНИЯ...');PUTT;
+    &&ЗABEPШ&&;KYДA:='ЭТОВСЕ';EXIT end ;
   ПPABA end   end  ;
-  IF (KYДA<>'HAPYЖY') AND (KYДA<>'HAЧAЛO') THEN EXIT;
+  IF (KYДA<>'НАРУЖУ') AND (KYДA<>'НАЧАЛО') THEN EXIT;
 (**)
 WHILE TRUE DO begin 
-IF ДИP<>'KOH' THEN begin 
-WRITE(OUTPUT,'      ...BЫ B OБЩEM БЛOKE...  ');PUTT;
-WRITE(OUTPUT,'KAP - BXOД B БЛOK PEГИCTPAЦИИ KAPT/',
-          'ГPY - BXOД B БЛOK PEГИCTPAЦИИ ГPYПП ШИФPOB/',
-          'OTД - BXOД B БЛOK PEГИCTPAЦИИ OTДEЛOB/',
-          'OTЧ - BXOД B БЛOK BЫДAЧИ OTЧETOB/',
-          'CИC - BXOД B CИCTEMHЫЙ БЛOK/',
-          'ПAP - ИЗMEHEHИE ПAPOЛЯ AДMИHИCTPATOPA/',
-          'ЗAK - ЗAKPEПИTЬ ИЗMEHEHИЯ/',
-          'CБP - CБPOCИTЬ ИЗMEHEHИЯ/');
+IF ДИP<>'КОН' THEN begin 
+WRITE(OUTPUT,'      ...ВЫ В ОБЩЕМ БЛОКЕ...  ');PUTT;
+WRITE(OUTPUT,'КАР - ВХОД В БЛОК РЕГИСТРАЦИИ КАРТ/',
+          'ГРУ - ВХОД В БЛОК РЕГИСТРАЦИИ ГРУПП ШИФРОВ/',
+          'ОТД - ВХОД В БЛОК РЕГИСТРАЦИИ ОТДЕЛОВ/',
+          'ОТЧ - ВХОД В БЛОК ВЫДАЧИ ОТЧЕТОВ/',
+          'СИС - ВХОД В СИСТЕМНЫЙ БЛОК/',
+          'ПАР - ИЗМЕНЕНИЕ ПАРОЛЯ АДМИНИСТРАТОРА/',
+          'ЗАК - ЗАКРЕПИТЬ ИЗМЕНЕНИЯ/',
+          'СБР - СБРОСИТЬ ИЗМЕНЕНИЯ/');
 MENU end ;
 
-  if 'KAP'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
-              KYДA:='AMOCAR';EXIT end  end else if 
-  'ГPY'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
-              KYДA:='AMOGRU';EXIT end  end else if 
-  'OTД'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
-              KYДA:='AMOOTD';EXIT end  end else if 
-  'OTЧ'=ДИP then begin IF NOT ЗAKPЫTO THEN begin 
-              KYДA:='AMOOTC';EXIT end  end else if 
-  'CИC'=ДИP then begin БЛOKCИC end else if 
-  'ЗAK'=ДИP then begin ЖYPHAЛ('ЗAK',ПPEДЗAK) end else if 
-  'CБP'=ДИP then begin ЖYPHAЛ('CБP',ПPEДЗAK) end else if 
-  'ПAP'=ДИP then begin ПAPOЛЬ end else if 
-  'KOH'=ДИP then begin  begin KOHEЦ(ПPEДЗAK);IF NOT HAЧ THEN begin ДИP:='KOH';EXIT end  end  end else if 
-  'BЫX'=ДИP then begin  begin WRITE(OUTPUT,
-             'ECЛИ XOTИTE ЗABEPШИTЬ PAБOTY HAБEPИTE "KOH"');
+  if 'КАР'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
+              KYДA:='АМОСАR';EXIT end  end else if 
+  'ГРУ'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
+              KYДA:='АМОGRU';EXIT end  end else if 
+  'ОТД'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
+              KYДA:='АМООТD';EXIT end  end else if 
+  'ОТЧ'=ДИP then begin IF NOT ЗAKPЫTO THEN begin 
+              KYДA:='АМООТС';EXIT end  end else if 
+  'СИС'=ДИP then begin БЛOKCИC end else if 
+  'ЗАК'=ДИP then begin ЖYPHAЛ('ЗАК',ПPEДЗAK) end else if 
+  'СБР'=ДИP then begin ЖYPHAЛ('СБР',ПPEДЗAK) end else if 
+  'ПАР'=ДИP then begin ПAPOЛЬ end else if 
+  'КОН'=ДИP then begin  begin KOHEЦ(ПPEДЗAK);IF NOT HAЧ THEN begin ДИP:='КОН';EXIT end  end  end else if 
+  'ВЫХ'=ДИP then begin  begin WRITE(OUTPUT,
+             'ЕСЛИ ХОТИТЕ ЗАВЕРШИТЬ РАБОТУ НАБЕРИТЕ "КОН"');
              PUTT end   end   end ;
 END.

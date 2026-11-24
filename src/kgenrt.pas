@@ -18,18 +18,18 @@ function GCOUNT: int64;
 procedure GVALI(i, dp: int64; var x: int64);
 procedure GVALR(i: int64; var x: double);
 procedure GVALB(i: int64; var x: boolean);
-procedure GVALA(i: int64; var x: array of char);
-procedure GVALC(i: int64; var x: char);
+procedure GVALA(i: int64; var x: array of WideChar);
+procedure GVALC(i: int64; var x: WideChar);
 procedure GUNKNOWN(var fmt: alfa);
 procedure GDONE;
 
 implementation
 
-uses SysUtils, Classes, kgost, kdb;
+uses SysUtils, Classes, kutf, kdb;
 
 type
   TRecd = record
-    fmt: string;
+    fmt: string;           { the format name, folded, 6 characters }
     vals: array of string;
     line: integer;
   end;
@@ -44,8 +44,7 @@ var
 
 procedure Say(const s: string);
 begin
-  { the loader prints in the internal code }
-  writeln(Encode(s));
+  writeln(s);
 end;
 
 procedure Parse;
@@ -65,7 +64,7 @@ var text, s, name, rec: string; i, n, line, depth, j: integer; f: TStringList;
   begin
     SetLength(data, length(data) + 1);
     with data[high(data)] do begin
-      fmt := Copy(nm + '      ', 1, 6);
+      fmt := W2U(Copy(U2W(Name6(nm)) + '      ', 1, 6));
       SetLength(vals, 0);
       if empty then exit;
       v := '';
@@ -87,7 +86,7 @@ begin
   if fn <> '' then f.LoadFromFile(fn)
   else while not eof(input) do begin readln(s); f.Add(s); end;
   text := '';
-  for j := 0 to f.Count - 1 do text := text + Encode(f[j]) + #10;
+  for j := 0 to f.Count - 1 do text := text + StringReplace(f[j], #9, ' ', [rfReplaceAll]) + #10;
   i := 1; n := length(text); line := 1; depth := 0;
   while i <= n do begin
     SkipWs;
@@ -98,12 +97,12 @@ begin
       name := name + text[i]; inc(i);
     end;
     SkipWs;
-    if name = Encode('КОНЕЦ') then begin
+    if Name6(name) = 'КОНЕЦ' then begin
       if (i <= n) and (text[i] = ']') then begin dec(depth); inc(i); end;
       continue;
     end;
     if (i > n) or (text[i] <> '[') then begin
-      Say('ГЕН: ПРОПУЩЕНО В СТРОКЕ ' + IntToStr(line) + ': ' + Decode(name));
+      Say('ГЕН: ПРОПУЩЕНО В СТРОКЕ ' + IntToStr(line) + ': ' + name);
       while (i <= n) and (text[i] <> #10) do inc(i);
       continue;
     end;
@@ -140,7 +139,7 @@ begin
   { an error of the previous record }
   if (cur >= 0) and (cur <= high(data)) and (KHARD <> hard0) then begin
     inc(errs);
-    ln := 'ГЕН: ОШИБКА ' + KStatusText(KLASTHARD) + ': ' + Decode(TrimRight(data[cur].fmt)) +
+    ln := 'ГЕН: ОШИБКА ' + KStatusText(KLASTHARD) + ': ' + TrimRight(data[cur].fmt) +
       ' СТРОКА ' + IntToStr(data[cur].line);
     Say(ln);
   end;
@@ -148,7 +147,7 @@ begin
 end;
 
 function GNEXT(var fmt: alfa): boolean;
-var j: integer;
+var j: integer; w: UnicodeString;
 begin
   if not parsed then begin
     Parse;
@@ -159,7 +158,8 @@ begin
   inc(cur);
   Result := cur <= high(data);
   if not Result then exit;
-  for j := 1 to 6 do fmt[j] := data[cur].fmt[j];
+  w := U2W(data[cur].fmt);
+  for j := 1 to 6 do fmt[j] := w[j];
   j := counts.IndexOfName(data[cur].fmt);
   if j < 0 then counts.Values[data[cur].fmt] := '1'
   else counts.ValueFromIndex[j] := IntToStr(StrToInt(counts.ValueFromIndex[j]) + 1);
@@ -184,7 +184,7 @@ begin
   s := Val0(i);
   val(s, Result, e);
   if e <> 0 then begin
-    if s <> '' then Say('ГЕН: НЕ ЧИСЛО "' + Decode(s) + '" СТРОКА ' +
+    if s <> '' then Say('ГЕН: НЕ ЧИСЛО "' + s + '" СТРОКА ' +
       IntToStr(data[cur].line));
     Result := 0;
   end;
@@ -204,31 +204,32 @@ begin
 end;
 
 procedure GVALB(i: int64; var x: boolean);
-var s: string;
+var s: UnicodeString;
 begin
-  s := Copy(Val0(i), 1, 1);
-  x := (s = 'T') or (s = '1') or (s = Encode('И')) or (s = Encode('Д'));
+  { T, 1, И(СТИНА), Д(А), folded }
+  s := FoldW(Copy(U2W(Val0(i)), 1, 1));
+  x := (s <> '') and (Pos(s, U2W('Т1ИД')) > 0);
 end;
 
-procedure GVALA(i: int64; var x: array of char);
-var s: string; j: integer;
+procedure GVALA(i: int64; var x: array of WideChar);
+var s: UnicodeString; j: integer;
 begin
-  s := Val0(i);
+  s := U2W(Val0(i));
   for j := 0 to high(x) do
     if j < length(s) then x[j] := s[j + 1] else x[j] := ' ';
 end;
 
-procedure GVALC(i: int64; var x: char);
-var s: string;
+procedure GVALC(i: int64; var x: WideChar);
+var s: UnicodeString;
 begin
-  s := Val0(i);
+  s := U2W(Val0(i));
   if s <> '' then x := s[1] else x := ' ';
 end;
 
 procedure GUNKNOWN(var fmt: alfa);
 begin
   inc(errs);
-  Say('ГЕН: НЕТ ФОРМАТА ' + Decode(TrimRight(fmt)) + ' СТРОКА ' + IntToStr(data[cur].line));
+  Say('ГЕН: НЕТ ФОРМАТА ' + TrimRight(BufU(@fmt[1], 6)) + ' СТРОКА ' + IntToStr(data[cur].line));
 end;
 
 procedure GDONE;

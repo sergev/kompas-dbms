@@ -204,7 +204,7 @@ More MAD commands:
 
 ### Step 5. Your own program (DML in Pascal)
 
-DML commands are written right inside a Free Pascal program, between `&&` and `&&`. Names in the program may be Russian, like the names of the schema; `predt` turns them into ASCII names, string literals into the internal code of KOMPAS, and the DML into calls of the engine. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `INTEGER`:
+DML commands are written right inside a Free Pascal program, between `&&` and `&&`. Names in the program may be Russian, like the names of the schema; `predt` turns them into ASCII names and the DML into calls of the engine. A `CHAR` holds any letter, Russian or not; strings and text are UTF-8. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `INTEGER`:
 
 ```
 &&НАЙТИ ПО-КЛЮ В SY-ОТД&&
@@ -310,16 +310,16 @@ servis < areas.srv
 Output:
 
 ```
-SЕRVIS РRОСЕSSОR 15.1
-АDМIN: ПОЛЬЗОВАТЕЛЬ АDМIN ЗАРЕГИСТРИРОВАН
-NЕW АRЕА N =          1 INFО=    618561
-NЕW АRЕА N =          2 INFО=   1142913
-NЕW АRЕА N =          3 INFО=   1142977
-NЕW АRЕА N =          4 INFО=   2191617
-ЕХN=         0
+SERVIS PROCESSOR 15.1
+ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
+New Area N =          1 INFO=    618561
+New Area N =          2 INFO=   1142913
+New Area N =          3 INFO=   1142977
+New Area N =          4 INFO=   2191617
+EXN=         0
 ```
 
-One line per area; `ЕХN= 0` means no errors. Latin and Cyrillic letters that look alike are one letter for KOMPAS, so the output mixes them.
+One line per area; `EXN= 0` means no errors. In names, Latin and Cyrillic letters that look alike are one letter for KOMPAS, so names are printed in one form: `SУ-АРТ` has a Cyrillic `У`.
 
 ### Step 2. Describe the schema
 
@@ -382,26 +382,26 @@ ttc < cd.ddl
 Output (shortened):
 
 ```
-ТТС15
-=== ТУРЕS          2 ===
- СТРОКА ВАSЕ=СИМВОЛ SZ=
- СЕКУНД ВАSЕ=ЦЕЛОЕ  SZ=9999
-=== RЕСОRDS          3 ===
- АРТИСТ FIЕLDS=         2
+TTC15
+=== TYPES          2 ===
+ СТРОКА BASE=СИМВОЛ SZ=
+ СЕКУНД BASE=ЦЕЛОЕ  SZ=9999
+=== RECORDS          3 ===
+ АРТИСТ FIELDS=         2
    ИМЯ    СТРОКА        КОНСИМ
    СТРАНА СИМВОЛ
- ДИСК   FIЕLDS=         4
+ ДИСК   FIELDS=         4
  ...
-=== SЕТS          4 ===
+=== SETS          4 ===
  ...
- ДИ-ТРЕ МЕМВЕR=ПО-ЭЛЕ ОWNЕR=ДИСК   АТТ=         5
+ ДИ-ТРЕ MEMBER=ПО-ЭЛЕ OWNER=ДИСК   ATT=         5
    ВЛАДЕЛ ДИСК
    ЧЛЕН   ТРЕК
    ПРИВЯЗ ИН-ДИС
    УПОРЯД ПО-ЭЛЕ
    ПОЛЕ   НОМЕР
-SАVЕD=         9 МАRSЕRR=         0
-ЕХN=         0
+SAVED=         9 MARSERR=         0
+EXN=         0
 ```
 
 Check the counts: 2 types, 3 records, 4 sets. `ЗАМЕНИ СХЕМА` replaces the old schema, so you may run `ttc` again after a fix.
@@ -676,7 +676,7 @@ A simple routine:
 | `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |
 | The database is empty in a later step | `MARS_DIR` points to another directory |
 
-Latin and Cyrillic letters that look alike (`A` and `А`, `C` and `С`) are the same for KOMPAS. Lower-case letters are read as upper case.
+In names and keywords, Latin and Cyrillic letters that look alike (`A` and `А`, `C` and `С`) are the same for KOMPAS, and lower case is read as upper case. Data are kept exactly as written: `Ёж` and `ёж` are different keys, and sets are ordered by the codes of the letters.
 
 ## 9. Further reading
 

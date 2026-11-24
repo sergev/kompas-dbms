@@ -4,13 +4,13 @@ program kdbtest;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, kdb, kgost;
+uses SysUtils, kdb;
 
 var
   fails: integer = 0;
 
-function RN(const n: string): integer; begin Result := KRecNo(Encode(n)); end;
-function SN(const n: string): integer; begin Result := KSetNo(Encode(n)); end;
+function RN(const n: string): integer; begin Result := KRecNo(n); end;
+function SN(const n: string): integer; begin Result := KSetNo(n); end;
 
 procedure Check(const what: string);
 var c: string;
@@ -36,7 +36,7 @@ var i, rt: integer;
 begin
   rt := RN(rec);
   KBEGINPUT(rt);
-  for i := 0 to high(v) do KPutText(i + 1, Encode(v[i]));
+  for i := 0 to high(v) do KPutText(i + 1, v[i]);
   KSTORE(rt);
 end;
 
@@ -44,9 +44,9 @@ function Show(rec: integer): string;
 var i: integer;
 begin
   KBEGINGET(rec);
-  Result := Decode(KRecName(KBufType)) + ':';
+  Result := KRecName(KBufType) + ':';
   for i := 1 to KFieldCount(KBufType) do
-    Result := Result + ' ' + Trim(Decode(KFieldText(i)));
+    Result := Result + ' ' + Trim(KFieldText(i));
 end;
 
 procedure Walk(const setn: string; back: boolean);
@@ -89,7 +89,7 @@ begin
   { string key }
   FillChar(name, sizeof(name), ' ');
   name[1] := 'X';
-  KFindKeyText(SN('SY-АРТ'), Encode('АКВАРИУМ')); Expect(kOk, 'artist by name');
+  KFindKeyText(SN('SY-АРТ'), 'АКВАРИУМ'); Expect(kOk, 'artist by name');
   writeln('found: ', Show(0));
   { modify: renumber disc 1003 to 1000, SY-ДИС reorders }
   KFINDKEY(SN('SY-ДИС'), int64(1003));
@@ -104,12 +104,12 @@ begin
   writeln('by db-key: ', Show(0));
   { disconnect from АР-ДИС, connect to КИНО }
   KDISCONNECT(SN('АР-ДИС')); Expect(kOk, 'disconnect');
-  KFindKeyText(SN('SY-АРТ'), Encode('КИНО'));
+  KFindKeyText(SN('SY-АРТ'), 'КИНО');
   KSETCUR(RN('ДИСК'), k);
-  KFindKeyText(SN('SY-АРТ'), Encode('КИНО'));
+  KFindKeyText(SN('SY-АРТ'), 'КИНО');
   KSETCUR(0, k);
   KCONNECT(SN('АР-ДИС')); Expect(kOk, 'connect');
-  KFindKeyText(SN('SY-АРТ'), Encode('КИНО'));
+  KFindKeyText(SN('SY-АРТ'), 'КИНО');
   Walk('АР-ДИС', false);
   { type chain }
   KFINDFIRSTREC(RN('ТРЕК')); i := 0;

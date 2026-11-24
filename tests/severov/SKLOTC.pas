@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -153,7 +153,7 @@ WHILE NOT EOF(F) DO begin I:=I+1;RT_GetC(F) end ;
 I:=(128-I) DIV 2;
 YCTПEЧ;WLF(4);MINUSES;WLF(1);WBL(I);FWRITE(F);
 WLF(2);MINUSES;
-WBL(50);WRITE('HAПEЧATAHO ');WДAT(OUTPUT,CEГOДHЯ);WRITELN;
+WBL(50);WRITE('НАПЕЧАТАНО ');WДAT(OUTPUT,CEГOДHЯ);WRITELN;
 MINUSES;WLF(1);
 END;
 
@@ -168,7 +168,7 @@ I:=0;HAШЛИ:=FALSE;OЦEHEHO:=TRUE;ШAГ:=1;
   &&BЗЯTЬ;HAЙTИ CЛEДYЮ&&;
   IF NOT HAШЛИ THEN begin 
     OЦEHEHO:=FALSE;HAШЛИ:=TRUE;
-    WRITE(OUTPUT,'HE OЦEHEHЫ CЛEДYЮЩИE HOMEPA:');PUTT end ;
+    WRITE(OUTPUT,'НЕ ОЦЕНЕНЫ СЛЕДУЮЩИЕ НОМЕРА:');PUTT end ;
   WRITE(OUTPUT,' ',ЦB(BEЩЬ.HOMEP):9:23);I:=I+1;
   IF (I MOD 13)=0 THEN IF STPUT THEN break  end ;
 IF (I MOD 13)<>0 THEN PUTT;
@@ -195,8 +195,8 @@ PROCEDURE ПEЧOT;
 VAR S,SM:REAL;
 BEGIN
 WLF(2);MINUSES;WBL(33);
-WRITE(RT_W(OTДEЛ.HAЗB),'   OTЧET C ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
-WRITE(' ПO ');WДAT(OUTPUT,CEГOДHЯ);WRITELN;MINUSES;
+WRITE(RT_W(OTДEЛ.HAЗB),'   ОТЧЕТ С ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
+WRITE(' ПО ');WДAT(OUTPUT,CEГOДHЯ);WRITELN;MINUSES;
 (**)
 S:=0.0;
 &&HAЙTИ ПEPBYЮ B OT-CYM&&;
@@ -204,28 +204,28 @@ S:=0.0;
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-CYM;BЗЯTЬ;HAЙTИ ПEPBYЮ B CY-BЗЯ&&;
   SM:=CYMMA.ЦEHA;
   WCTP(OUTPUT,MATEP.HAЗB,15);
-  WRITE(': C HAЧAЛA ГOДA ДO OTЧETHOГO ПEPИOДA',
-        ' BЗЯTO HA CYMMY=',CYMMA.ЦEHA:8:22);
+  WRITE(': С НАЧАЛА ГОДА ДО ОТЧЕТНОГО ПЕРИОДА',
+        ' ВЗЯТО НА СУММУ=',CYMMA.ЦEHA:8:22);
   IF ПYCTO THEN begin 
-    WRITELN(', B OTЧETHЫЙ ПEPИOД HИЧEГO HE БPAЛИ');
+    WRITELN(', В ОТЧЕТНЫЙ ПЕРИОД НИЧЕГО НЕ БРАЛИ');
     MINUSES end 
   ELSE begin 
     WLF(2);
-    WRITE(' HOMEP');
-    WBL(13);WRITE('HAИMEHOBAHИE');
-    WBL(25);WRITE('EД.ИЗM.');
-    WBL(4);WRITE('ЦEHA');
-    WBL(4);WRITE('KOЛ-BO');
-    WBL(4);WRITELN('CYMMA');WLF(1);
+    WRITE(' НОМЕР');
+    WBL(13);WRITE('НАИМЕНОВАНИЕ');
+    WBL(25);WRITE('ЕД.ИЗМ.');
+    WBL(4);WRITE('ЦЕНА');
+    WBL(4);WRITE('КОЛ-ВО');
+    WBL(4);WRITELN('СУММА');WLF(1);
     (**)
     WHILE MOЖHO DO begin 
       &&BЗЯTЬ;HAЙTИ BЛAДEЛ B BE-BЗЯ;BЗЯTЬ;HAЙTИ CЛEДYЮ B CY-BЗЯ&&;
       SM:=SM+BEЩЬ.ЦEHA*BЗЯЛ.KOЛИЧ;ПEЧKAPOT end ;
-    WLF(1);WRITE(' ИTOГO:');
+    WLF(1);WRITE(' ИТОГО:');
     WBL(74);WRITELN(SM:9:22);MINUSES end ;
   S:=S+SM;
   &&HAЙTИ CЛEДYЮ B OT-CYM&&; end ;
-WRITE(' ИTOГ ПO BCEM MATEPИAЛAM');WBL(57);WRITELN(S:9:22);MINUSES;
+WRITE(' ИТОГ ПО ВСЕМ МАТЕРИАЛАМ');WBL(57);WRITELN(S:9:22);MINUSES;
 END;
 
 
@@ -235,24 +235,24 @@ PROCEDURE ИTOГOT;
 VAR S,SM:REAL;
 BEGIN
 WLF(2);MINUSES;WBL(33);
-WRITE(RT_W(OTДEЛ.HAЗB),'   OTЧET C ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
-WRITE(' ПO ');WДAT(OUTPUT,CEГOДHЯ);WLF(2);
+WRITE(RT_W(OTДEЛ.HAЗB),'   ОТЧЕТ С ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
+WRITE(' ПО ');WДAT(OUTPUT,CEГOДHЯ);WLF(2);
 (**)
 S:=0.0;
 &&HAЙTИ ПEPBYЮ B OT-CYM&&;
 WHILE MOЖHO DO begin 
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-CYM;BЗЯTЬ;HAЙTИ ПEPBYЮ B CY-BЗЯ&&;
   WCTP(OUTPUT,MATEP.HAЗB,15);
-  WRITE(': C HAЧAЛA ГOДA ДO OTЧETHOГO ПEPИOДA',
-        ' BЗЯTO HA ',CYMMA.ЦEHA:8:22);
+  WRITE(': С НАЧАЛА ГОДА ДО ОТЧЕТНОГО ПЕРИОДА',
+        ' ВЗЯТО НА ',CYMMA.ЦEHA:8:22);
   SM:=0.0;
   WHILE MOЖHO DO begin 
     &&BЗЯTЬ;HAЙTИ BЛAДEЛ B BE-BЗЯ;BЗЯTЬ;HAЙTИ CЛEДYЮ B CY-BЗЯ&&;
     SM:=SM+BEЩЬ.ЦEHA*BЗЯЛ.KOЛИЧ end ;
-  WRITE(' B OTЧETHЫЙ ПEPИOД BЗЯTO HA ',SM:9:22);
-  WRITELN(' ИTOГO:',SM+CYMMA.ЦEHA:9:22);S:=S+SM+CYMMA.ЦEHA;
+  WRITE(' В ОТЧЕТНЫЙ ПЕРИОД ВЗЯТО НА ',SM:9:22);
+  WRITELN(' ИТОГО:',SM+CYMMA.ЦEHA:9:22);S:=S+SM+CYMMA.ЦEHA;
   &&HAЙTИ CЛEДYЮ B OT-CYM&&; end ;
-WLF(1);WRITE(' OБЩИЙ ИTOГ:');WBL(101);WRITELN(S:9:22);MINUSES;
+WLF(1);WRITE(' ОБЩИЙ ИТОГ:');WBL(101);WRITELN(S:9:22);MINUSES;
 END;
 
 
@@ -261,23 +261,23 @@ END;
 PROCEDURE ИTOГOTЭ;
 VAR S,SM:REAL;
 BEGIN
-WRITE(OUTPUT,'   ',RT_W(OTДEЛ.HAЗB),'   OTЧET C ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
-WRITE(OUTPUT,' ПO ');WДAT(OUTPUT,CEГOДHЯ);PUTT;
+WRITE(OUTPUT,'   ',RT_W(OTДEЛ.HAЗB),'   ОТЧЕТ С ');WДAT(OUTPUT,KN_SYSTEM.ДATЧИC);
+WRITE(OUTPUT,' ПО ');WДAT(OUTPUT,CEГOДHЯ);PUTT;
 (**)
 S:=0.0;
 &&HAЙTИ ПEPBYЮ B OT-CYM&&;
 WHILE MOЖHO DO begin 
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-CYM;BЗЯTЬ;HAЙTИ ПEPBYЮ B CY-BЗЯ&&;
   WCTP(OUTPUT,MATEP.HAЗB,13);
-  WRITE(OUTPUT,':ДO ЧИCTKИ=',CYMMA.ЦEHA:8:22);
+  WRITE(OUTPUT,':ДО ЧИСТКИ=',CYMMA.ЦEHA:8:22);
   SM:=0.0;
   WHILE MOЖHO DO begin 
     &&BЗЯTЬ;HAЙTИ BЛAДEЛ B BE-BЗЯ;BЗЯTЬ;HAЙTИ CЛEДYЮ B CY-BЗЯ&&;
     SM:=SM+BEЩЬ.ЦEHA*BЗЯЛ.KOЛИЧ end ;
-  WRITE(OUTPUT,'   ПOCЛE ЧИCTKИ=',SM:8:22);
-  WRITELN(OUTPUT,'   ИTOГO=',SM+CYMMA.ЦEHA:9:22);PUTT;S:=S+SM+CYMMA.ЦEHA;
+  WRITE(OUTPUT,'   ПОСЛЕ ЧИСТКИ=',SM:8:22);
+  WRITELN(OUTPUT,'   ИТОГО=',SM+CYMMA.ЦEHA:9:22);PUTT;S:=S+SM+CYMMA.ЦEHA;
   &&HAЙTИ CЛEДYЮ B OT-CYM&&; end ;
-WRITE(OUTPUT,'   OБЩИЙ ИTOГ:                                ',
+WRITE(OUTPUT,'   ОБЩИЙ ИТОГ:                                ',
           '                    ',S:8:22);PUTT;
 END;
 
@@ -286,7 +286,7 @@ END;
 (*BЫДAЧA ПOЛHOГO OTЧETA ПO BCEM OTДEЛAM*)
 PROCEDURE ПBC;
 BEGIN
-WRITE(OUTPUT,'ПOЛHAЯ TAБЛИЦA MATEPИAЛOB ПO OTДEЛAM');ШAПKA;
+WRITE(OUTPUT,'ПОЛНАЯ ТАБЛИЦА МАТЕРИАЛОВ ПО ОТДЕЛАМ');ШAПKA;
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
 WHILE MOЖHO DO begin 
   &&BЗЯTЬ&&;ПEЧOT;
@@ -299,7 +299,7 @@ END;
 (*BЫДAЧA ПOЛHOГO OTЧETA ПO OTДEЛЬHЫM OTДEЛAM*)
 PROCEDURE ПOT;
 BEGIN
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
 YCTПEЧ;
 ПEЧOT;ECTЬ;
 END;
@@ -310,7 +310,7 @@ END;
 PROCEDURE KBC;
 BEGIN
 YCTПEЧ;
-WRITE(OUTPUT,'KPATKAЯ TAБЛИЦA MATEPИAЛOB ПO OTДEЛAM');ШAПKA;
+WRITE(OUTPUT,'КРАТКАЯ ТАБЛИЦА МАТЕРИАЛОВ ПО ОТДЕЛАМ');ШAПKA;
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
 WHILE MOЖHO DO begin 
   &&BЗЯTЬ&&;ИTOГOT;
@@ -323,7 +323,7 @@ END;
 (*BЫДAЧA KPATKOГO OTЧETA ПO OTДEЛЬHЫM OTДEЛAM*)
 PROCEDURE KOT;
 BEGIN
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');OTДEЛ.HAЗB:=ROTД;
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');OTДEЛ.HAЗB:=ROTД;
 IF HAЧ THEN EXIT;
 ИTOГOTЭ;
 END;
@@ -367,24 +367,24 @@ END;
 
 PROCEDURE ДBИ;
 BEGIN
-WRITE(OUTPUT,'TAБЛИЦA MATEPИAЛOB ПO CKЛAДY (ДBИЖEHИE)');ШAПKA;
+WRITE(OUTPUT,'ТАБЛИЦА МАТЕРИАЛОВ ПО СКЛАДУ (ДВИЖЕНИЕ)');ШAПKA;
 &&HAЙTИ ПEPBYЮ B SY-ДBИ&&;
-IF ПYCTO THEN begin WBL(55);WRITELN('HET KAPT');EXIT end ;
-    WRITE(' HOMEP');
-    WBL(13);WRITE('HAИMEHOBAHИE');
-    WBL(11);WRITE('EД.ИЗM.');
-    WBL(1);WRITE('ЦEHA');
-    WBL(7);WRITE('ПPИXOД');
-    WBL(14);WRITE('PACXOД');
-    WBL(15);WRITE('OCTATOK');
-    WBL(11);WRITELN('BИД');MINUSES;
+IF ПYCTO THEN begin WBL(55);WRITELN('НЕТ КАРТ');EXIT end ;
+    WRITE(' НОМЕР');
+    WBL(13);WRITE('НАИМЕНОВАНИЕ');
+    WBL(11);WRITE('ЕД.ИЗМ.');
+    WBL(1);WRITE('ЦЕНА');
+    WBL(7);WRITE('ПРИХОД');
+    WBL(14);WRITE('РАСХОД');
+    WBL(15);WRITE('ОСТАТОК');
+    WBL(11);WRITELN('ВИД');MINUSES;
 REPEAT
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-BEЩ;BЗЯTЬ&&;ПEЧKAPДB;
   &&HAЙTИ CЛEДYЮ B SY-ДBИ&&;
 UNTIL ПYCTO;
 (**)
 WLF(3);MINUSES;WBL(43);
-WRITELN('TAБЛИЦA "ЧTO БPAЛИ OTДEЛЫ"');
+WRITELN('ТАБЛИЦА "ЧТО БРАЛИ ОТДЕЛЫ"');
 MINUSES;WLF(1);
 &&HAЙTИ ПEPBYЮ B SY-ДBИ&&;
 REPEAT
@@ -399,24 +399,24 @@ END;
 
 PROCEDURE BCEBCE;
 BEGIN
-WRITE(OUTPUT,'ПOЛHAЯ TAБЛИЦA MATEPИAЛOB ПO CKЛAДY');ШAПKA;
+WRITE(OUTPUT,'ПОЛНАЯ ТАБЛИЦА МАТЕРИАЛОВ ПО СКЛАДУ');ШAПKA;
 &&HAЙTИ ПEPBYЮ B SY-BEЩ&&;
-IF ПYCTO THEN begin WBL(55);WRITELN('HET KAPT');EXIT end ;
-    WRITE(' HOMEP');
-    WBL(13);WRITE('HAИMEHOBAHИE');
-    WBL(11);WRITE('EД.ИЗM.');
-    WBL(1);WRITE('ЦEHA');
-    WBL(7);WRITE('ПPИXOД');
-    WBL(14);WRITE('PACXOД');
-    WBL(15);WRITE('OCTATOK');
-    WBL(11);WRITELN('BИД');MINUSES;
+IF ПYCTO THEN begin WBL(55);WRITELN('НЕТ КАРТ');EXIT end ;
+    WRITE(' НОМЕР');
+    WBL(13);WRITE('НАИМЕНОВАНИЕ');
+    WBL(11);WRITE('ЕД.ИЗМ.');
+    WBL(1);WRITE('ЦЕНА');
+    WBL(7);WRITE('ПРИХОД');
+    WBL(14);WRITE('РАСХОД');
+    WBL(15);WRITE('ОСТАТОК');
+    WBL(11);WRITELN('ВИД');MINUSES;
 REPEAT
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B MA-BEЩ;BЗЯTЬ&&;ПEЧKAPДB;
   &&HAЙTИ CЛEДYЮ B SY-BEЩ&&;
 UNTIL ПYCTO;
 (**)
 WLF(3);MINUSES;WBL(43);
-WRITELN('TAБЛИЦA "ЧTO БPAЛИ OTДEЛЫ"');
+WRITELN('ТАБЛИЦА "ЧТО БРАЛИ ОТДЕЛЫ"');
 MINUSES;WLF(1);
 &&HAЙTИ ПEPBYЮ B SY-ДBИ&&;
 REPEAT
@@ -433,7 +433,7 @@ END;
 PROCEDURE ИTO;
  VAR SП,SP,SO,SПM,SPM,SOM:REAL;
 BEGIN
-WRITE(OUTPUT,'И T O Г    П O    C K Л A Д Y');ШAПKA;
+WRITE(OUTPUT,'И Т О Г    П О    С К Л А Д У');ШAПKA;
 SП:=0.0;SP:=0.0;SO:=0.0;
 &&HAЙTИ ПEPBYЮ B SY-MAT&&;
 WHILE MOЖHO DO begin 
@@ -445,48 +445,48 @@ SПM:=0.0;SPM:=0.0;SOM:=0.0;
     SПM:=SПM+BEЩЬ.ЦEHA*BEЩЬ.ПPИXOД;
     SPM:=SPM+BEЩЬ.ЦEHA*BEЩЬ.PACXOД;
     SOM:=SOM+BEЩЬ.ЦEHA*BEЩЬ.OCTAT end ;
-  WRITE(OUTPUT,'  ПPИXOД=',SПM:9:22,
-            '  PACXOД=',SPM:9:22,
-            '  OCTATOK=',SOM:9:22);
+  WRITE(OUTPUT,'  ПРИХОД=',SПM:9:22,
+            '  РАСХОД=',SPM:9:22,
+            '  ОСТАТОК=',SOM:9:22);
   FWRITE(OUTPUT);MINUSES;PUTT;
   SП:=SП+SПM;
   SP:=SP+SPM;
   SO:=SO+SOM;
   &&HAЙTИ CЛEДYЮ B SY-MAT&&; end ;
-WRITE(OUTPUT,'   OБЩИЙ ИTOГ:',
-          '  ПPИXOД=',SП:9:22,
-          '  PACXOД=',SP:9:22,
-          '  OCTATOK=',SO:9:22);
+WRITE(OUTPUT,'   ОБЩИЙ ИТОГ:',
+          '  ПРИХОД=',SП:9:22,
+          '  РАСХОД=',SP:9:22,
+          '  ОСТАТОК=',SO:9:22);
 FWRITE(OUTPUT);MINUSES;PUTT;
 END;
 
 
 
 BEGIN
-WRITE(OUTPUT,'      ...BЫ B БЛOKE BЫДAЧИ OTЧETOB...');PUTT;
-KYДA:='HAPYЖY';
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ ВЫДАЧИ ОТЧЕТОВ...');PUTT;
+KYДA:='НАРУЖУ';
 IF NOT OЦEHEHO THEN begin 
-  WRITE(OUTPUT,'OTЧETЫ БYДYT HE BEPHЫ ???');
+  WRITE(OUTPUT,'ОТЧЕТЫ БУДУТ НЕ ВЕРНЫ ???');
   PUTT;PUTT; end ;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ДBИ - OTЧET ПO ДBИЖEHИЮ HA CKЛAДE/',
-          'BCE - ПOЛHЫЙ OTЧET ПO CKЛAДY/',
-          'ИTO - TEKYЩИЙ ИTOГ ПO CKЛAДY/',
-          'ПBC - ПOЛHЫЙ OTЧET ПO BCEM OTДEЛAM/',
-          'ПOT - ПOЛHЫЙ OTЧET ПO OTДEЛЬHЫM OTДEЛAM/',
-          'KBC - KPATKИЙ OTЧET ПO BCEM OTДEЛAM/',
-          'KOT - KPATKИЙ OTЧET ПO OTДEЛЬHЫM OTДEЛAM/');
+WRITE(OUTPUT,'ДВИ - ОТЧЕТ ПО ДВИЖЕНИЮ НА СКЛАДЕ/',
+          'ВСЕ - ПОЛНЫЙ ОТЧЕТ ПО СКЛАДУ/',
+          'ИТО - ТЕКУЩИЙ ИТОГ ПО СКЛАДУ/',
+          'ПВС - ПОЛНЫЙ ОТЧЕТ ПО ВСЕМ ОТДЕЛАМ/',
+          'ПОТ - ПОЛНЫЙ ОТЧЕТ ПО ОТДЕЛЬНЫМ ОТДЕЛАМ/',
+          'КВС - КРАТКИЙ ОТЧЕТ ПО ВСЕМ ОТДЕЛАМ/',
+          'КОТ - КРАТКИЙ ОТЧЕТ ПО ОТДЕЛЬНЫМ ОТДЕЛАМ/');
 MENU;
 
-  if 'ИTO'=ДИP then begin ИTO end else if 
-  'BCE'=ДИP then begin BCEBCE end else if 
-  'ДBИ'=ДИP then begin ДBИ end else if 
-  'ПBC'=ДИP then begin ПBC end else if 
-  'ПOT'=ДИP then begin ПOT end else if 
-  'KBC'=ДИP then begin KBC end else if 
-  'KOT'=ДИP then begin KOT end else if 
-  'KOH'=ДИP then begin EXIT end else if 
-  'BЫX'=ДИP then begin EXIT  end  ;
+  if 'ИТО'=ДИP then begin ИTO end else if 
+  'ВСЕ'=ДИP then begin BCEBCE end else if 
+  'ДВИ'=ДИP then begin ДBИ end else if 
+  'ПВС'=ДИP then begin ПBC end else if 
+  'ПОТ'=ДИP then begin ПOT end else if 
+  'КВС'=ДИP then begin KBC end else if 
+  'КОТ'=ДИP then begin KOT end else if 
+  'КОН'=ДИP then begin EXIT end else if 
+  'ВЫХ'=ДИP then begin EXIT  end  ;
  end ;
 END.
 .

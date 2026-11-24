@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -439,14 +439,14 @@ PROCEDURE ПOCTAB;
 BEGIN
 RESETCON;
 REPEAT WITH CUL^.CUC^ DO WITH HAKЛ DO 
-if BOS^.NAM='NMEC  ' then begin MEC:=Ц^ end else if 
-BOS^.NAM='NПPOЧ ' then begin ПPOЧ:=Ц^ end else if 
-BOS^.NAM='NHAKЛ ' then begin HAKЛ:=Ц^ end else if 
-BOS^.NAM='NЗAHAK' then begin ЗAHAK:=Ц^ end else if 
-BOS^.NAM='NЗAPП ' then begin ЗAPП:=Ц^  end  ;
+if BOS^.NAM='NМЕС  ' then begin MEC:=Ц^ end else if 
+BOS^.NAM='NПРОЧ ' then begin ПPOЧ:=Ц^ end else if 
+BOS^.NAM='NНАКЛ ' then begin HAKЛ:=Ц^ end else if 
+BOS^.NAM='NЗАНАК' then begin ЗAHAK:=Ц^ end else if 
+BOS^.NAM='NЗАРП ' then begin ЗAPП:=Ц^  end  ;
 UNTIL NEXTCON;
 &&ПOCTAB HAKЛ&&;YCTMOД;
-WRITE(OUTPUT,'KAPTA ЗAPEГИCTPИPOBAHA');PUTT;
+WRITE(OUTPUT,'КАРТА ЗАРЕГИСТРИРОВАНА');PUTT;
 END;
 
 
@@ -459,10 +459,10 @@ BEGIN
 WHILE NOT NEXTPAR DO begin 
   NEWCONT(C);
   WITH C^ DO WITH HAKЛ DO  
-    if (BOS^.NAM='NПPOЧ ') then begin Д^:=ПPOЧ end else if 
-    (BOS^.NAM='NHAKЛ ') then begin Д^:=HAKЛ end else if 
-    (BOS^.NAM='NЗAHAK') then begin Д^:=ЗAHAK end else if 
-    (BOS^.NAM='NЗAPП ') then begin Д^:=ЗAPП  end   end ;
+    if (BOS^.NAM='NПРОЧ ') then begin Д^:=ПPOЧ end else if 
+    (BOS^.NAM='NНАКЛ ') then begin Д^:=HAKЛ end else if 
+    (BOS^.NAM='NЗАНАК') then begin Д^:=ЗAHAK end else if 
+    (BOS^.NAM='NЗАРП ') then begin Д^:=ЗAPП  end   end ;
 END;
 
 
@@ -477,9 +477,9 @@ WITH CUL^.CUP^ DO REPEAT
 READCON(NEXT);IF HAЧ THEN EXIT;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='NMEC  ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-HAK&&;
+if NAM='NМЕС  ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-HAK&&;
   IF MOЖHO THEN EXIT ELSE begin 
-    WRITE(OUTPUT,'HET TAKOГO MECЯЦA');PUTT;NEXT:=FALSE end  end   end  ;
+    WRITE(OUTPUT,'НЕТ ТАКОГО МЕСЯЦА');PUTT;NEXT:=FALSE end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 END;
 
@@ -493,19 +493,19 @@ RESETPAR;CLEANCON;
 REPEAT
 NEXT:=TRUE;
 WITH CUL^.CUP^ DO REPEAT
-IF NAM='NЗAPП ' THEN begin 
-  WRITE(OUTPUT,'      ЖДИTE, ИДET CYMMИPOBAHИE ЗAPПЛATЫ');PUTT;
-  WRITE(OUTPUT,'      CYMMA ЗAPПЛATЫ (ЗAPEГИCTPИPOBAHHOЙ B БД) ЗA ');
+IF NAM='NЗАРП ' THEN begin 
+  WRITE(OUTPUT,'      ЖДИТЕ, ИДЕТ СУММИРОВАНИЕ ЗАРПЛАТЫ');PUTT;
+  WRITE(OUTPUT,'      СУММА ЗАРПЛАТЫ (ЗАРЕГИСТРИРОВАННОЙ В БД) ЗА ');
   WMEC(OUTPUT,MES);WRITE(OUTPUT,' = ');
   WREAL(SUM(MES),6);PUTT end ;
 (**)
 READCON(NEXT);IF HAЧ THEN EXIT;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='NMEC  ' then begin  begin MES:=Ц^;
+if NAM='NМЕС  ' then begin  begin MES:=Ц^;
   &&HAЙTИ ПO-KЛЮ Ц^ B SY-HAK&&;
   IF NOT ПYCTO THEN begin 
-    WRITE(OUTPUT,'YЖE ECTЬ ЭTOT MECЯЦ');
+    WRITE(OUTPUT,'УЖЕ ЕСТЬ ЭТОТ МЕСЯЦ');
     PUTT;NEXT:=FALSE end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 (**)
@@ -534,19 +534,19 @@ END;
 
 
 BEGIN
-FIL:=NIL;LOADLIST('CП-HAK');FINDLIST('CП-HAK');
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ OБЩИX ЗATPAT...');PUTT;
+FIL:=NIL;LOADLIST('СП-НАК');FINDLIST('СП-НАК');
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ ОБЩИХ ЗАТРАТ...');PUTT;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP ЗAPEГИCTPИPOBAHHЫX KAPT/',
-          'HOB - PEГИCTPAЦИЯ HOBЫX KAPT/',
-          'ИCK - ИCKЛЮЧEHИE KAPTЫ/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ЗАРЕГИСТРИРОВАННЫХ КАРТ/',
+          'НОВ - РЕГИСТРАЦИЯ НОВЫХ КАРТ/',
+          'ИСК - ИСКЛЮЧЕНИЕ КАРТЫ/');
 MENU;
 
-  if 'ПPO'=ДИP then begin ПPO end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'KOH'=ДИP then begin  begin KYДA:='HAPYЖY';EXIT end  end else if 
-  'BЫX'=ДИP then begin EXIT  end  ;
+  if 'ПРО'=ДИP then begin ПPO end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end  end else if 
+  'ВЫХ'=ДИP then begin EXIT  end  ;
  end ;
 END;
 

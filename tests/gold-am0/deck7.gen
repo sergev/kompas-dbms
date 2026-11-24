@@ -1,23 +1,23 @@
-ИMЯ-ЗA AMOЗAГ
-ПOДCXEMA CX-AM0
+ИМЯ-ЗА АМОЗАГ
+ПОДСХЕМА СХ-АМ0
 
-? .ПEP
-ПEPEMEHHЫE
-  HH CИMBOЛ 84,
-  ЦЦ ДEЙCTB,
-  BB ДEЙCTB,
-  KK ДEЙCTB,
-  HAШЛИ ЛOГИЧE,
-KOHEЦ
+? .ПЕР
+ПЕРЕМЕННЫЕ
+  НН СИМВОЛ 84,
+  ЦЦ ДЕЙСТВ,
+  ВВ ДЕЙСТВ,
+  КК ДЕЙСТВ,
+  НАШЛИ ЛОГИЧЕ,
+КОНЕЦ
 
-? .OГP
-OГPAHИЧ
-  ФOPMATA:[,];
-  ЭЛEMEHT:_;
-KOHEЦ
+? .ОГР
+ОГРАНИЧ
+  ФОРМАТА:[,];
+  ЭЛЕМЕНТ:_;
+КОНЕЦ
 
-? .ПPO
-ПPOЦEДYPЫ "
+? .ПРО
+ПРОЦЕДУРЫ "
 PROCEDURE PUTSYSTEM;
 TYPE ФЛAГ=(ФS,ПEЧATЬ,MOДИФ,AДMИH,OTЛAД,OTЧCKЛ,OTЧOTД,BXOД,ФF);
 VAR ФЛAГИ,ФЛAГИCOX:SET OF ФЛAГ;
@@ -26,38 +26,38 @@ BEGIN
 SYSTEM.PEЖИMЫ:=LONGINT(ФЛAГИ);SYSTEM.XPAHИM:=LONGINT(ФЛAГИCOX);
 SYSTEM.ГOД:=88;SYSTEM.ДATЗП:=1;
 SYSTEM.BPEЗП:=0;SYSTEM.ПAPCИC:='0909  ';
-SYSTEM.ПAPOЛЬ:='CTAKAH';
+SYSTEM.ПAPOЛЬ:='СТАКАН';
 &&ЗAMEHИ SYSTEM&&
 END;
 "
 
 ? .Ф
-ФOPMAT SYSTEM
-  ПACKAЛ "PUTSYSTEM;"
+ФОРМАТ SУSТЕМ
+  ПАСКАЛ "PUTSYSTEM;"
 
-ФOPMAT METAЛ
-  METAЛ.HAЗB*
-  &&ПOCTAB METAЛ&&
+ФОРМАТ МЕТАЛ
+  МЕТАЛ.НАЗВ*
+  &&ПОСТАВ МЕТАЛ&&
 
-ФOPMAT OTДEЛЫ
-  OTДEЛ.HAЗB*  ПACKAЛ "&&ПOCTAB OTДEЛ&&"
+ФОРМАТ ОТДЕЛЫ
+  ОТДЕЛ.НАЗВ*  ПАСКАЛ "&&ПOCTAB OTДEЛ&&"
 
-ФOPMAT ШИФP
-  ШИФP.HOMEP*  ПACKAЛ "&&ПOCTAB ШИФP&&"
+ФОРМАТ ШИФР
+  ШИФР.НОМЕР*  ПАСКАЛ "&&ПOCTAB ШИФP&&"
 
-ФOPMAT ДPAГOЦ
- METAЛ.HAЗB_ИHB.HOMEP_COДEPЖ.KOЛИЧ*
- ПACKAЛ "
+ФОРМАТ ДРАГОЦ
+ МЕТАЛ.НАЗВ_ИНВ.НОМЕР_СОДЕРЖ.КОЛИЧ*
+ ПАСКАЛ "
     &&HAЙTИ ПO-KЛЮ B SY-MET;
     HAЙTИ ПO-KЛЮ B SY-ИHB;HAЙTИ BЛAДEЛ B ПP-ИHB;
     ПOCTAB COДEPЖ&&
   "
 
-ФOPMAT ПPИБOP
-  ПPИБOP.HAЗB_ИHB.HOMEP_
-  ПPИБOP.ЦEHA_ПPИБOP.BOC_ПPИБOP.KAП_
-  OTДEЛ.HAЗB_CTOИT.ПPИHЯЛ*
-  ПACKAЛ "
+ФОРМАТ ПРИБОР
+  ПРИБОР.НАЗВ_ИНВ.НОМЕР_
+  ПРИБОР.ЦЕНА_ПРИБОР.ВОС_ПРИБОР.КАП_
+  ОТДЕЛ.НАЗВ_СТОИТ.ПРИНЯЛ*
+  ПАСКАЛ "
     WITH ПPИБOP DO BEGIN 
       HH:=HAЗB;ЦЦ:=ЦEHA;BB:=BOC;KK:=KAП;
     CTOИT.CПИCAЛ:=0;
@@ -77,52 +77,52 @@ END;
     &&ПOCTAB ИHB;ПOCTAB CTOИT&& END;
     "
 
-KOHEЦ
+КОНЕЦ
 
-*READ:31017
-*REL:LP
-*PASC
-*C
-OCBOБO ЖY-AM0,ИH-AM0,ДA-AM0,BP-AM0;
-OЧИCTИ ЖY-AM0,ИH-AM0,ДA-AM0,BP-AM0.
-? .E
-*ИПC
-*CALL AMOЗAГ
-PEЖИM [[ПOBTOP]
+*RЕАD:31017
+*RЕL:LР
+*РАSС
+*С
+ОСВОБО ЖУ-АМ0,ИН-АМ0,ДА-АМ0,ВР-АМ0;
+ОЧИСТИ ЖУ-АМ0,ИН-АМ0,ДА-АМ0,ВР-АМ0.
+? .Е
+*ИПС
+*САLL АМОЗАГ
+РЕЖИМ [[ПОВТОР]
 
-SYSTEM []
+SУSТЕМ []
 
-METAЛ [ЗOЛOTO*CEPEБPO*ПЛATИHA*ПAЛЛAДИЙ*ПЛAT.ГP.
-*ПAЛЛ.XЛOPИCT.*CEP.AЗOT-KИC*CEP.ПPИПOЙ*POДИЙ*ИHДИЙ*]
+МЕТАЛ [ЗОЛОТО*СЕРЕБРО*ПЛАТИНА*ПАЛЛАДИЙ*ПЛАТ.ГР.
+*ПАЛЛ.ХЛОРИСТ.*СЕР.АЗОТ-КИС*СЕР.ПРИПОЙ*РОДИЙ*ИНДИЙ*]
 
-OTДEЛЫ [
-ATX *
-AXO *
-HMOЭИ *
-O.K *
-OAИC *
-OBП *
-OHBЭ *
-OHИ *
-OKOИC *
-OMATИ *
-OMOИ *
-OMИ *
-OБC *
-OГИ *
-OГПC *
-OИCM *
-OИO *
-OИЖK *
-OПИP *
-OЭPC *
-OЭИ1 *
-OЭИ2 *
-PEAЛ *
-PYK-BO*
-БYXГ *
-ППO *
-ЭИO *
+ОТДЕЛЫ [
+АТХ *
+АХО *
+НМОЭИ *
+О.К *
+ОАИС *
+ОВП *
+ОНВЭ *
+ОНИ *
+ОКОИС *
+ОМАТИ *
+ОМОИ *
+ОМИ *
+ОБС *
+ОГИ *
+ОГПС *
+ОИСМ *
+ОИО *
+ОИЖК *
+ОПИР *
+ОЭРС *
+ОЭИ1 *
+ОЭИ2 *
+РЕАЛ *
+РУК-ВО*
+БУХГ *
+ППО *
+ЭИО *
 ]
 
-KOHEЦ]
+КОНЕЦ]

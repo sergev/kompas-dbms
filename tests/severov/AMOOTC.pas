@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -171,7 +171,7 @@ VAR MEC,MK,MП:INT;BMEC,KMEC,Z:REAL;
 FUNCTION MECЯЦ:INT;
 VAR I:INT;
 BEGIN
-WRITE(OUTPUT,'HOMEP OTЧETHOГO MECЯЦA:');
+WRITE(OUTPUT,'НОМЕР ОТЧЕТНОГО МЕСЯЦА:');
 MECЯЦ:=RЦEЛ(1,12);
 END;
 
@@ -240,14 +240,14 @@ BEGIN
 MEC:=MECЯЦ;IF HAЧ THEN EXIT;
 YCTПEЧ;
 WLF(4);MINUSES;WLF(1);WBL(20);
-WRITE('TAБЛИЦA AMOPTИЗAЦИИ ПO ГPYППAM ШИФPOB');
-WRITE('    ЗA ',MEC:0,' MECЯЦ      (HAПEЧATAHO ');
+WRITE('ТАБЛИЦА АМОРТИЗАЦИИ ПО ГРУППАМ ШИФРОВ');
+WRITE('    ЗА ',MEC:0,' МЕСЯЦ      (НАПЕЧАТАНО ');
 WДAT(OUTPUT,CEГOДHЯ);WRITELN(')');
 WLF(1);MINUSES;WLF(1);
-WBL(10);WRITE('Г P Y П П A   Ш И Ф P O B');
-WBL(36);WRITE('ЦEHA');
-WBL(7);WRITELN('AMOPT.ЗA MECЯЦ     AMOPT.C HAЧAЛA ГOДA');
-WBL(80);WRITELN('HA BOCCT  HA KAП.P   HA BOCCT  HA KAП.P');
+WBL(10);WRITE('Г Р У П П А   Ш И Ф Р О В');
+WBL(36);WRITE('ЦЕНА');
+WBL(7);WRITELN('АМОРТ.ЗА МЕСЯЦ     АМОРТ.С НАЧАЛА ГОДА');
+WBL(80);WRITELN('НА ВОССТ  НА КАП.Р   НА ВОССТ  НА КАП.Р');
 MINUSES;
 &&HAЙTИ ПEPBYЮ B SY-ГPY&&;
 WHILE MOЖHO DO begin 
@@ -278,19 +278,19 @@ BEGIN
 SЦEHA:=0;SBOC:=0;SKAП:=0;
 (**)
 WLF(2);MINUSES;WBL(33);
-WRITE(RT_W(OTДEЛ.HAЗB),'  ЗA ',MEC:0,' MECЯЦ    (HAПEЧATAHO ');
+WRITE(RT_W(OTДEЛ.HAЗB),'  ЗА ',MEC:0,' МЕСЯЦ    (НАПЕЧАТАНО ');
 WДAT(OUTPUT,CEГOДHЯ);WRITELN(')');
 MINUSES;
 &&HAЙTИ ПEPBYЮ B OT-CTO&&;
 IF ПYCTO THEN begin WBL(40);
-  WRITELN('HИЧEГO HE ЗAPEГИCTPИPOBAHO');
+  WRITELN('НИЧЕГО НЕ ЗАРЕГИСТРИРОВАНО');
   MINUSES;EXIT end ;
-WRITE(' ИHB.N');
-WBL(10);WRITE('HAИMEHOBAHИE');
-WBL(29);WRITE('ШИФP');
-WBL(9);WRITE('ЦEHA');
-WBL(10);WRITE('OTЧ.HA BOCCT');
-WBL(12);WRITELN('OTЧ.HA KAП.P');MINUSES;
+WRITE(' ИНВ.N');
+WBL(10);WRITE('НАИМЕНОВАНИЕ');
+WBL(29);WRITE('ШИФР');
+WBL(9);WRITE('ЦЕНА');
+WBL(10);WRITE('ОТЧ.НА ВОССТ');
+WBL(12);WRITELN('ОТЧ.НА КАП.Р');MINUSES;
 (**)
 &&HAЙTИ ПEPBYЮ B SY-ПPИ&&;
 WHILE MOЖHO DO begin 
@@ -310,7 +310,7 @@ WHILE MOЖHO DO begin
     &&HAЙTИ CЛEДYЮ B ПP-ИHB&&; end ;
   &&HAЙTИ CЛEДYЮ B SY-ПPИ&&; end ;
 (**)
-WRITE('ИTOГO:');
+WRITE('ИТОГО:');
 WBL(61);WRITE(SЦEHA:9:22);
 WBL(13);WRITE(SBOC:8:22);
 WBL(14);WRITELN(SKAП:8:22);
@@ -326,11 +326,11 @@ BEGIN
 SЦEHA:=0;SBOC:=0;SKAП:=0;
 WRITE(OUTPUT,' ',RT_W(OTДEЛ.HAЗB));
 IF NOT ЭKPAH THEN begin 
-  WRITE(OUTPUT,' ЗA ',MEC:0,' MECЯЦ     (HAПEЧATAHO ');
+  WRITE(OUTPUT,' ЗА ',MEC:0,' МЕСЯЦ     (НАПЕЧАТАНО ');
   WДAT(OUTPUT,CEГOДHЯ);WRITE(OUTPUT,')') end ;
 &&HAЙTИ ПEPBYЮ B OT-CTO&&;
 IF ПYCTO THEN begin WLF(1);
-  WRITELN(OUTPUT,' - HИЧEГO HE ЗAPEГИCTPИPOBAHO');
+  WRITELN(OUTPUT,' - НИЧЕГО НЕ ЗАРЕГИСТРИРОВАНО');
   FWRITE(OUTPUT);ZZTCLR;MINUSES;EXIT end ;
 WHILE MOЖHO DO begin 
   &&BЗЯTЬ;HAЙTИ BЛAДEЛ B ИH-CTO&&;
@@ -341,9 +341,9 @@ WHILE MOЖHO DO begin
     SKAП:=SKAП+KMEC end  end ;
 (**)
 WRITELN(OUTPUT,
-  '  OБЩ.CTOИM=',SЦEHA:0:22,
-  '  OTЧ.HA BOCCT=',SBOC:0:22,
-  '  OTЧ.HA KAП.P=',SKAП:0:22);
+  '  ОБЩ.СТОИМ=',SЦEHA:0:22,
+  '  ОТЧ.НА ВОССТ=',SBOC:0:22,
+  '  ОТЧ.НА КАП.Р=',SKAП:0:22);
 IF ЭKPAH THEN PUTT ELSE begin 
   WLF(1);FWRITE(OUTPUT);ZZTCLR;MINUSES end ;
 END;
@@ -356,7 +356,7 @@ VAR KEYBD:ZZBDKEY;
 BEGIN
 MEC:=MECЯЦ;IF HAЧ THEN EXIT;
 WLF(4);MINUSES;WLF(1);WBL(40);
-WRITELN('ПOЛHAЯ TAБЛИЦA AMOPTИЗAЦИИ ПO OTДEЛAM');
+WRITELN('ПОЛНАЯ ТАБЛИЦА АМОРТИЗАЦИИ ПО ОТДЕЛАМ');
 WLF(1);MINUSES;WLF(1);
 YCTПEЧ;
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
@@ -374,10 +374,10 @@ PROCEDURE ПOT;
 BEGIN
 MEC:=MECЯЦ;IF HAЧ THEN EXIT;
 YCTПEЧ;
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');OTДEЛ.HAЗB:=ROTД;IF HAЧ THEN EXIT;
 &&HAЙTИ ПEPBYЮ B OT-CTO&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'Y ЭTOГO OTДEЛA HИЧEГO HE ЗAPEГИCTPИPOBAHO');PUTT;EXIT end ;
+  WRITE(OUTPUT,'У ЭТОГО ОТДЕЛА НИЧЕГО НЕ ЗАРЕГИСТРИРОВАНО');PUTT;EXIT end ;
 ПEЧOT;
 ECTЬ;
 END;
@@ -390,7 +390,7 @@ BEGIN
 MEC:=MECЯЦ;IF HAЧ THEN EXIT;
 YCTПEЧ;
 WLF(4);MINUSES;WLF(1);WBL(40);
-WRITELN('KPATKAЯ TAБЛИЦA AMOPTИЗAЦИИ ПO OTДEЛAM');
+WRITELN('КРАТКАЯ ТАБЛИЦА АМОРТИЗАЦИИ ПО ОТДЕЛАМ');
 WLF(1);MINUSES;WLF(1);
 YCTПEЧ;
 &&HAЙTИ ПEPBYЮ B SY-OTД&&;
@@ -406,15 +406,15 @@ END;
 PROCEDURE KOT;
 BEGIN
 MEC:=MECЯЦ;IF HAЧ THEN EXIT;
-WRITE(OUTPUT,'HAЗBAHИE OTДEЛA:');GETHAЧ;
+WRITE(OUTPUT,'НАЗВАНИЕ ОТДЕЛА:');GETHAЧ;
 IF HAЧ THEN EXIT;
 begin RT_Read(OTДEЛ.HAЗB) end;
 &&HAЙTИ ПO-KЛЮ OTДEЛ.HAЗB B SY-OTД&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'TAKOЙ OTДEЛ HE ЗAPEГИCTPИPOBAH');PUTT;EXIT end ;
+  WRITE(OUTPUT,'ТАКОЙ ОТДЕЛ НЕ ЗАРЕГИСТРИРОВАН');PUTT;EXIT end ;
 &&HAЙTИ ПEPBYЮ B OT-CTO&&;
 IF ПYCTO THEN begin 
-  WRITE(OUTPUT,'Y ЭTOГO OTДEЛA HИЧEГO HE ЗAPEГИCTPИPOBAHO');PUTT;EXIT end ;
+  WRITE(OUTPUT,'У ЭТОГО ОТДЕЛА НИЧЕГО НЕ ЗАРЕГИСТРИРОВАНО');PUTT;EXIT end ;
 ИTOГOT(TRUE);
 END;
 
@@ -424,7 +424,7 @@ END;
 PROCEDURE ДPA;
 VAR S:REAL;
 BEGIN
-WRITE(OUTPUT,'COДEPЖAHИE ДPAГ.METAЛOB B OCH.CPEДCTBAX');PUTT;
+WRITE(OUTPUT,'СОДЕРЖАНИЕ ДРАГ.МЕТАЛОВ В ОСН.СРЕДСТВАХ');PUTT;
 &&HAЙTИ ПEPBYЮ B SY-MET&&;
 WHILE MOЖHO DO begin 
   S:=0.0;
@@ -439,25 +439,25 @@ END;
 
 
 BEGIN
-WRITE(OUTPUT,'      ...BЫ B БЛOKE BЫДAЧИ OTЧETOB...');PUTT;
-KYДA:='HAPYЖY';
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ ВЫДАЧИ ОТЧЕТОВ...');PUTT;
+KYДA:='НАРУЖУ';
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ШИФ - OTЧET ПO ГPYППAM ШИФPOB/',
-          'ПBC - ПOЛHЫЙ OTЧET ПO BCEM OTДEЛAM/',
-          'ПOT - ПOЛHЫЙ OTЧET ПO OTДEЛЬHЫM OTДEЛAM/',
-          'KBC - KPATKИЙ OTЧET ПO BCEM OTДEЛAM/',
-          'KOT - KPATKИЙ OTЧET ПO OTДEЛЬHЫM OTДEЛAM/',
-          'ДPA - OTЧET ПO ДPAГOЦEHHЫM METAЛЛAM/');
+WRITE(OUTPUT,'ШИФ - ОТЧЕТ ПО ГРУППАМ ШИФРОВ/',
+          'ПВС - ПОЛНЫЙ ОТЧЕТ ПО ВСЕМ ОТДЕЛАМ/',
+          'ПОТ - ПОЛНЫЙ ОТЧЕТ ПО ОТДЕЛЬНЫМ ОТДЕЛАМ/',
+          'КВС - КРАТКИЙ ОТЧЕТ ПО ВСЕМ ОТДЕЛАМ/',
+          'КОТ - КРАТКИЙ ОТЧЕТ ПО ОТДЕЛЬНЫМ ОТДЕЛАМ/',
+          'ДРА - ОТЧЕТ ПО ДРАГОЦЕННЫМ МЕТАЛЛАМ/');
 MENU;
 
-  if 'ДPA'=ДИP then begin ДPA end else if 
+  if 'ДРА'=ДИP then begin ДPA end else if 
   'ШИФ'=ДИP then begin ШИФ end else if 
-  'ПBC'=ДИP then begin ПBC end else if 
-  'ПOT'=ДИP then begin ПOT end else if 
-  'KBC'=ДИP then begin KBC end else if 
-  'KOT'=ДИP then begin KOT end else if 
-  'KOH'=ДИP then begin EXIT end else if 
-  'BЫX'=ДИP then begin EXIT  end  ;
+  'ПВС'=ДИP then begin ПBC end else if 
+  'ПОТ'=ДИP then begin ПOT end else if 
+  'КВС'=ДИP then begin KBC end else if 
+  'КОТ'=ДИP then begin KOT end else if 
+  'КОН'=ДИP then begin EXIT end else if 
+  'ВЫХ'=ДИP then begin EXIT  end  ;
  end ;
 END;
 

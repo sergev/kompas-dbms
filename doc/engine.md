@@ -9,10 +9,10 @@ No historical outputs survive. So the check is consistency and review by hand, n
 | File | What |
 |---|---|
 | `src/kdb.pas` | the engine: schema, records, sets, currency, DML |
-| `src/kgost.pas` | the internal 8-bit code (GOST 10859) and UTF-8 |
+| `src/kutf.pas` | text: UTF-8 outside, WideChar inside; folding of names |
 | `src/rt/mars.pas` | MARS: keyed storage of areas, one file per area in `$MARS_DIR` |
 | `src/rt/krt.pas` | runtime of KOMPAS Pascal programs: `integer` = 64 bits, `alfa`, write formats |
-| `src/rt/kio.pas` | standard input and output of KOMPAS Pascal programs in UTF-8 |
+| `src/rt/kio.pas` | standard output of KOMPAS Pascal programs past its buffer (`sevlib`) |
 | `src/servis.pas` | `servis`: areas, journals |
 | `src/ttc.pas` | `ttc`: the schema (DDL) into catalogue 270000 (`CXHD`/`CXFL`/`CXAT`) |
 | `src/gen.pas`, `src/kgenrt.pas` | `gen`: the loader generator and the runtime of its loaders |
@@ -29,8 +29,10 @@ Programs with DML are Free Pascal with two additions: Russian identifiers, and D
 
 - `&&ПОДСХЕ X&&` declares the records of the schema in `$MARS_DIR`: types `ZZ<record>`, variables named as the records, `ZZBDKEY`, `СОСТ`, and procedures that move fields between the variables and the engine.
 - Every statement fragment becomes `begin … СОСТ:=KSTAT end` with its own `;` (except before `ELSE`). `НАБ s` and `ЗП r` become the numbers of a set and of a record.
-- Names with non-ASCII letters become ASCII names. Latin and Cyrillic homoglyphs give the same name (`С` and `C`), and so do lower and upper case.
-- String literals become the internal code. Programs work in that code; `kio` converts standard input from UTF-8 and output to UTF-8.
+- Names with non-ASCII letters become ASCII names. Latin and Cyrillic homoglyphs give the same name (`С` and `C`), and so do lower and upper case: Cyrillic look-alikes become Latin letters, other letters `Q<hex code>_` (`ФЛАГ` is `Q0424_Q041B_AQ0413_`).
+- A `char` is a `WideChar`: one element of `alfa` or of a char array is one letter, whatever the alphabet. `chr` becomes `WideChar`, `string[n]` becomes `UnicodeString`.
+- String literals stay as written; the program is compiled with `{$codepage utf8}`. Text files, standard input and output are UTF-8 (`kutf`).
+- FPC cannot write or read an array of `WideChar`. An argument of `write`/`writeln` that is a char array becomes `RT_S(…)`, and a `read`/`readln` with one reads it with `RT_Rd`. Char arrays are found by the names declared with such types; `RT_S` passes numbers through unchanged.
 - Each `packed array[1..N] of char` becomes one named type `ZZC<N>` (`alfa` for 6). In Turbo Pascal mode two arrays of the same shape are otherwise incompatible.
 - Without `{$mode}` the program gets `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}`, and it uses `krt`, `kio`, `kdb` (added to its own `uses` clause if it has one).
 
@@ -90,6 +92,9 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 | `gold-ck0` | schema CX-CK0, loader deck 6, query deck 3 | 23 records, 0 errors; the unload equals the data of deck 6 |
 | `gold-am0` | schema CX-AM0, loader deck 7 | 38 records, 0 errors |
 | `gold-zt0` | schema CX-ЗТ0, loader deck 11, query deck 9 | 108 records, 0 errors; topics and co-executors equal the data of deck 11 |
+| `utf8` | lower case, `Ё`, Latin, German, Greek data through `gen`, `mad` and a program; names written with Latin look-alikes | data as written, sets in code order, exact keys |
+
+The decks and the Severov programs are transcriptions of 1988 texts in the GOST code, where Latin `A` and Cyrillic `А` were one letter. The transcriptions mix the two alphabets at random. Since data are now kept as written, their data and string literals were folded once into one form (Cyrillic look-alikes, upper case), the form the old system saw.
 
 Queries 3 and 9 return exactly what decks 6 and 11 loaded, in the data format of GEN: the original loader and the original unload query of 1988 close on each other.
 

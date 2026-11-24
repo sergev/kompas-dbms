@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -426,9 +426,9 @@ VAR TEKЗAП:ZZBDKEY;
 BEGIN
 &&BЗЯTЬ ИCПOЛH;HAЙTИ BЛAДEЛ B OT-ИCП;BЗЯTЬ OTДEЛ&&;
 CASE YPOB OF
-1:WRITE(OUTPUT,'ИCП');
-2:WRITE(OUTPUT,'COИ');
-3:WRITE(OUTPUT,'ПOД') end ;
+1:WRITE(OUTPUT,'ИСП');
+2:WRITE(OUTPUT,'СОИ');
+3:WRITE(OUTPUT,'ПОД') end ;
 WRITE(OUTPUT,'(',ИCПOЛH.HOMEP:0,')=',RT_W(OTДEЛ.HAЗB),RT_W(CLF));
 &&HAЙTИ ПEPBYЮ B ИC-ИCП&&;
 WHILE MOЖHO DO begin 
@@ -447,27 +447,27 @@ PROCEDURE ПOCTAB;
 BEGIN
 RESETCON;
 REPEAT WITH CUL^.CUC^ DO WITH ЗAT DO 
-if BOS^.NAM='ZMEC  ' then begin ЗAT.MEC:=Ц^ end else if 
-BOS^.NAM='ZTEMA ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&; end  end else if 
-BOS^.NAM='ZOTД  ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ИCП&&; end  end else if 
-BOS^.NAM='ZЭTAП ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ЭTA&&; end  end else if 
-BOS^.NAM='ZBЫП  ' then begin BЫП  :=Д^ end else if 
-BOS^.NAM='ZOЗAPП' then begin OЗAPП:=Д^ end else if 
-BOS^.NAM='ZДЗAPП' then begin ДЗAPП:=Д^ end else if 
-BOS^.NAM='ZMATEP' then begin MATEP:=Д^ end else if 
-BOS^.NAM='ZKOMAH' then begin KOMAH:=Д^ end else if 
-BOS^.NAM='ZCПEЦ ' then begin CПEЦ :=Д^ end else if 
-BOS^.NAM='ZAMOP ' then begin AMOP :=Д^ end else if 
-BOS^.NAM='ZCTOP ' then begin CTOP :=Д^ end else if 
-BOS^.NAM='ZПOCH ' then begin ПOCH :=Д^ end else if 
-BOS^.NAM='ZПTPEC' then begin ПTPEC:=Д^ end else if 
-BOS^.NAM='ZПPБK ' then begin ПPБK :=Д^ end else if 
-BOS^.NAM='ZOBЫШ ' then begin OBЫШ :=Д^ end else if 
-BOS^.NAM='ZOГOC ' then begin OГOC :=Д^ end else if 
-BOS^.NAM='ZHEПЛ ' then begin HEПЛ :=Д^  end  ;
+if BOS^.NAM='ZМЕС  ' then begin ЗAT.MEC:=Ц^ end else if 
+BOS^.NAM='ZТЕМА ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&; end  end else if 
+BOS^.NAM='ZОТД  ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ИCП&&; end  end else if 
+BOS^.NAM='ZЭТАП ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ЭTA&&; end  end else if 
+BOS^.NAM='ZВЫП  ' then begin BЫП  :=Д^ end else if 
+BOS^.NAM='ZОЗАРП' then begin OЗAPП:=Д^ end else if 
+BOS^.NAM='ZДЗАРП' then begin ДЗAPП:=Д^ end else if 
+BOS^.NAM='ZМАТЕР' then begin MATEP:=Д^ end else if 
+BOS^.NAM='ZКОМАН' then begin KOMAH:=Д^ end else if 
+BOS^.NAM='ZСПЕЦ ' then begin CПEЦ :=Д^ end else if 
+BOS^.NAM='ZАМОР ' then begin AMOP :=Д^ end else if 
+BOS^.NAM='ZСТОР ' then begin CTOP :=Д^ end else if 
+BOS^.NAM='ZПОСН ' then begin ПOCH :=Д^ end else if 
+BOS^.NAM='ZПТРЕС' then begin ПTPEC:=Д^ end else if 
+BOS^.NAM='ZПРБК ' then begin ПPБK :=Д^ end else if 
+BOS^.NAM='ZОВЫШ ' then begin OBЫШ :=Д^ end else if 
+BOS^.NAM='ZОГОС ' then begin OГOC :=Д^ end else if 
+BOS^.NAM='ZНЕПЛ ' then begin HEПЛ :=Д^  end  ;
 UNTIL NEXTCON;
 &&ПOCTAB ЗAT&&;YCTMOД;
-WRITE(OUTPUT,'KAPTA ЗAPEГИCTPИPOBAHA');PUTT;
+WRITE(OUTPUT,'КАРТА ЗАРЕГИСТРИРОВАНА');PUTT;
 END;
 
 
@@ -479,20 +479,20 @@ BEGIN
 &&BЗЯTЬ ЗAT&&;
 WHILE NOT NEXTPAR DO begin 
   NEWCONT(C);WITH C^ DO WITH ЗAT DO 
-    if BOS^.NAM='ZBЫП  ' then begin Д^:=BЫП   end else if 
-    BOS^.NAM='ZOЗAPП' then begin Д^:=OЗAPП end else if 
-    BOS^.NAM='ZДЗAPП' then begin Д^:=ДЗAPП end else if 
-    BOS^.NAM='ZMATEP' then begin Д^:=MATEP end else if 
-    BOS^.NAM='ZKOMAH' then begin Д^:=KOMAH end else if 
-    BOS^.NAM='ZCПEЦ ' then begin Д^:=CПEЦ  end else if 
-    BOS^.NAM='ZAMOP ' then begin Д^:=AMOP  end else if 
-    BOS^.NAM='ZCTOP ' then begin Д^:=CTOP  end else if 
-    BOS^.NAM='ZПOCH ' then begin Д^:=ПOCH  end else if 
-    BOS^.NAM='ZПTPEC' then begin Д^:=ПTPEC end else if 
-    BOS^.NAM='ZПPБK ' then begin Д^:=ПPБK  end else if 
-    BOS^.NAM='ZOBЫШ ' then begin Д^:=OBЫШ  end else if 
-    BOS^.NAM='ZOГOC ' then begin Д^:=OГOC  end else if 
-    BOS^.NAM='ZHEПЛ ' then begin Д^:=HEПЛ  end   end ;
+    if BOS^.NAM='ZВЫП  ' then begin Д^:=BЫП   end else if 
+    BOS^.NAM='ZОЗАРП' then begin Д^:=OЗAPП end else if 
+    BOS^.NAM='ZДЗАРП' then begin Д^:=ДЗAPП end else if 
+    BOS^.NAM='ZМАТЕР' then begin Д^:=MATEP end else if 
+    BOS^.NAM='ZКОМАН' then begin Д^:=KOMAH end else if 
+    BOS^.NAM='ZСПЕЦ ' then begin Д^:=CПEЦ  end else if 
+    BOS^.NAM='ZАМОР ' then begin Д^:=AMOP  end else if 
+    BOS^.NAM='ZСТОР ' then begin Д^:=CTOP  end else if 
+    BOS^.NAM='ZПОСН ' then begin Д^:=ПOCH  end else if 
+    BOS^.NAM='ZПТРЕС' then begin Д^:=ПTPEC end else if 
+    BOS^.NAM='ZПРБК ' then begin Д^:=ПPБK  end else if 
+    BOS^.NAM='ZОВЫШ ' then begin Д^:=OBЫШ  end else if 
+    BOS^.NAM='ZОГОС ' then begin Д^:=OГOC  end else if 
+    BOS^.NAM='ZНЕПЛ ' then begin Д^:=HEПЛ  end   end ;
 END;
 
 
@@ -519,23 +519,23 @@ RESETPAR;CLEANCON;
 REPEAT
 NEXT:=TRUE;
 WITH CUL^.CUP^ DO REPEAT
-IF NAM='ZOTД  ' THEN WTREE;
+IF NAM='ZОТД  ' THEN WTREE;
 READCON(NEXT);IF HAЧ THEN EXIT;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='ZMEC  ' then begin ЗAT.MEC:=Ц^ end else if 
-NAM='ZTEMA ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
+if NAM='ZМЕС  ' then begin ЗAT.MEC:=Ц^ end else if 
+NAM='ZТЕМА ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
   IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'HET TAKOЙ TEMЫ');PUTT;NEXT:=FALSE end  end  end else if 
-NAM='ZOTД  ' then begin  begin ИCПOЛH.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ИCП&&;
+    WRITE(OUTPUT,'НЕТ ТАКОЙ ТЕМЫ');PUTT;NEXT:=FALSE end  end  end else if 
+NAM='ZОТД  ' then begin  begin ИCПOЛH.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ИCП&&;
   IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'HET TAKOГO ИCПOЛHИTELЯ');PUTT;NEXT:=FALSE end  end  end else if 
-NAM='ZЭTAП ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ЭTA&&;
+    WRITE(OUTPUT,'НЕТ ТАКОГО ИСПОЛНИТЕLЯ');PUTT;NEXT:=FALSE end  end  end else if 
+NAM='ZЭТАП ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B TE-ЭTA&&;
   IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'HET TAKOГO ЭTAПA');PUTT;NEXT:=FALSE end 
+    WRITE(OUTPUT,'НЕТ ТАКОГО ЭТАПА');PUTT;NEXT:=FALSE end 
   ELSE begin 
     IF ECTЬЗAT THEN EXIT ELSE begin 
-      WRITE(OUTPUT,'ЭTOM MECЯЦE ЗATPATЫ HE ЗAPEГИCTPИPOBAHЫ');
+      WRITE(OUTPUT,'ЭТОМ МЕСЯЦЕ ЗАТРАТЫ НЕ ЗАРЕГИСТРИРОВАНЫ');
       PUTT;NEXT:=FALSE end  end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 END;
@@ -552,38 +552,38 @@ RESETPAR;CLEANCON;
 REPEAT
 NEXT:=TRUE;
 WITH CUL^.CUP^ DO REPEAT
-IF (NAM='ZOTД  ') AND (OTД=-1) THEN WTREE;
+IF (NAM='ZОТД  ') AND (OTД=-1) THEN WTREE;
 
-  if (NAM='ZMEC  ') and (MEC<>0) then begin  begin INPUTCON(MEC) end  end else if 
-  (NAM='ZTEMA ') and (TEM<>0) then begin  begin INPUTCON(TEM) end  end else if 
-  (NAM='ZOTД  ') and (OTД<>-1) then begin  begin INPUTCON(OTД) end  end else if 
+  if (NAM='ZМЕС  ') and (MEC<>0) then begin  begin INPUTCON(MEC) end  end else if 
+  (NAM='ZТЕМА ') and (TEM<>0) then begin  begin INPUTCON(TEM) end  end else if 
+  (NAM='ZОТД  ') and (OTД<>-1) then begin  begin INPUTCON(OTД) end  end else if 
   TRUE then begin  begin READCON(NEXT);IF HAЧ THEN EXIT end   end  ;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='ZMEC  ' then begin  begin MEC:=Ц^;ЗAT.MEC:=Ц^ end  end else if 
-NAM='ZTEMA ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
+if NAM='ZМЕС  ' then begin  begin MEC:=Ц^;ЗAT.MEC:=Ц^ end  end else if 
+NAM='ZТЕМА ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
   IF NOT ПYCTO THEN TEM:=Ц^ ELSE begin 
-    WRITE(OUTPUT,'HET TAKOЙ TEMЫ');PUTT;NEXT:=FALSE end  end  end else if 
-NAM='ZOTД  ' then begin  begin ИCПOЛH.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ИCП&&;
+    WRITE(OUTPUT,'НЕТ ТАКОЙ ТЕМЫ');PUTT;NEXT:=FALSE end  end  end else if 
+NAM='ZОТД  ' then begin  begin ИCПOЛH.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ИCП&&;
   IF NOT ПYCTO THEN OTД:=Ц^ ELSE begin 
-    WRITE(OUTPUT,'HET TAKOГO ИCПOЛHИTEЛЯ');PUTT;NEXT:=FALSE end  end  end else if 
-NAM='ZЭTAП ' then begin  begin ЭTAП.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ЭTA&&;
+    WRITE(OUTPUT,'НЕТ ТАКОГО ИСПОЛНИТЕЛЯ');PUTT;NEXT:=FALSE end  end  end else if 
+NAM='ZЭТАП ' then begin  begin ЭTAП.HOMEP:=Ц^;&&HAЙTИ ПO-KЛЮ B TE-ЭTA&&;
   IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'HET TAKOГO ЭTAПA');PUTT;NEXT:=FALSE end 
+    WRITE(OUTPUT,'НЕТ ТАКОГО ЭТАПА');PUTT;NEXT:=FALSE end 
   ELSE IF ECTЬЗAT THEN begin 
-    WRITE(OUTPUT,'YЖE ECTЬ ЭTOT ИCПOЛHИTEЛЬ');
+    WRITE(OUTPUT,'УЖЕ ЕСТЬ ЭТОТ ИСПОЛНИТЕЛЬ');
     PUTT;NEXT:=FALSE end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 (**)
 IF CONFIRM THEN ПOCTAB;
 (**)
-WRITE(OUTPUT,'EЩE ЭTAП!');
+WRITE(OUTPUT,'ЕЩЕ ЭТАП!');
 UNTIL NOT ДA;IF HAЧ THEN EXIT;
-OTД:=-1;WRITE(OUTPUT,'EЩE OTДEЛ!');
+OTД:=-1;WRITE(OUTPUT,'ЕЩЕ ОТДЕЛ!');
 UNTIL NOT ДA;IF HAЧ THEN EXIT;
-TEM:=0;WRITE(OUTPUT,'EЩE TEMY!');
+TEM:=0;WRITE(OUTPUT,'ЕЩЕ ТЕМУ!');
 UNTIL NOT ДA;IF HAЧ THEN EXIT;
-MEC:=0;WRITE(OUTPUT,'EЩE MECЯЦ!');
+MEC:=0;WRITE(OUTPUT,'ЕЩЕ МЕСЯЦ!');
 UNTIL NOT ДA;(*IF HAЧ THEN EXIT;*)
 END;
 
@@ -610,19 +610,19 @@ END;
 
 
 BEGIN
-FIL:=NIL;LOADLIST('CП-ЗAT');FINDLIST('CП-ЗAT');
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ ЗATPAT ПO TEMAM...');PUTT;
+FIL:=NIL;LOADLIST('СП-ЗАТ');FINDLIST('СП-ЗАТ');
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ ЗАТРАТ ПО ТЕМАМ...');PUTT;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP ЗAPEГИCTPИPOBAHHЫX KAPT/',
-          'HOB - PEГИCTPAЦИЯ HOBЫX KAPT/',
-          'ИCK - ИCKЛЮЧEHИE KAPTЫ/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ЗАРЕГИСТРИРОВАННЫХ КАРТ/',
+          'НОВ - РЕГИСТРАЦИЯ НОВЫХ КАРТ/',
+          'ИСК - ИСКЛЮЧЕНИЕ КАРТЫ/');
 MENU;
 
-  if 'ПPO'=ДИP then begin ПPO end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'KOH'=ДИP then begin  begin KYДA:='HAPYЖY';CLEANALL;EXIT end  end else if 
-  'BЫX'=ДИP then begin  begin CLEANALL;EXIT end   end  ;
+  if 'ПРО'=ДИP then begin ПPO end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';CLEANALL;EXIT end  end else if 
+  'ВЫХ'=ДИP then begin  begin CLEANALL;EXIT end   end  ;
  end ;
 END;
 

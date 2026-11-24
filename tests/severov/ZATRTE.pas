@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -425,24 +425,24 @@ VAR TEKИCП,TEKCOИ:INT;
 BEGIN
 RESETCON;WITH ИCПOЛH DO begin HOMEP:=-1;YPOB:=-1 end ;
 REPEAT WITH CUL^.CUC^ DO 
-if BOS^.NAM='THOMK ' then begin  begin TEMA.HOMEP:=Ц^;
+if BOS^.NAM='ТНОМК ' then begin  begin TEMA.HOMEP:=Ц^;
   &&HAЙTИ ПO-KЛЮ B SY-TEM&&;IF ПYCTO THEN begin &&ПOCTAB TEMA&&; end  end  end else if 
-BOS^.NAM='TЭTAП ' then begin  begin ЭTAП.HOMEP:=Ц^;
+BOS^.NAM='ТЭТАП ' then begin  begin ЭTAП.HOMEP:=Ц^;
   &&HAЙTИ ПO-KЛЮ B TE-ЭTA&&;IF ПYCTO THEN begin &&ПOCTAB ЭTAП&&; end  end  end else if 
-BOS^.NAM='TИCП  ' then begin  begin WITH ИCПOЛH DO begin HOMEP:=HOMEP+1;TEKИCП:=HOMEP end ;
+BOS^.NAM='ТИСП  ' then begin  begin WITH ИCПOЛH DO begin HOMEP:=HOMEP+1;TEKИCП:=HOMEP end ;
   &&HAЙTИ ПO-KЛЮ B TE-ИCП&&;IF ПYCTO THEN begin 
     &&HAЙTИ ПO-KЛЮ A^ B SY-OTД;ПOCTAB ИCПOЛH&&; end  end  end else if 
-BOS^.NAM='TCOИ  ' then begin  begin WITH ИCПOЛH DO begin HOMEP:=HOMEP+1;TEKCOИ:=HOMEP end ;
+BOS^.NAM='ТСОИ  ' then begin  begin WITH ИCПOЛH DO begin HOMEP:=HOMEP+1;TEKCOИ:=HOMEP end ;
   ЦEЛ.ЗH:=TEKИCП;
   &&HAЙTИ ПO-KЛЮ B TE-ИCП&&;IF ПYCTO THEN begin 
     &&HAЙTИ ПO-KЛЮ A^ B SY-OTД;ПOCTAB ИCПOЛH;BKЛЮЧИ B ИC-ИCП&&; end  end  end else if 
-BOS^.NAM='TПOД  ' then begin  begin WITH ИCПOЛH DO HOMEP:=HOMEP+1;
+BOS^.NAM='ТПОД  ' then begin  begin WITH ИCПOЛH DO HOMEP:=HOMEP+1;
   ЦEЛ.ЗH:=TEKCOИ;
   &&HAЙTИ ПO-KЛЮ B TE-ИCП&&;IF ПYCTO THEN begin 
     &&HAЙTИ ПO-KЛЮ A^ B SY-OTД;ПOCTAB ИCПOЛH;BKЛЮЧИ B ИC-ИCП&&; end  end   end  ;
 UNTIL NEXTCON;
 YCTMOД;
-WRITE(OUTPUT,'KAPTA ЗAPEГИCTPИPOBAHA');PUTT;
+WRITE(OUTPUT,'КАРТА ЗАРЕГИСТРИРОВАНА');PUTT;
 END;
 
 
@@ -452,9 +452,9 @@ PROCEDURE GTREE(YPOB:INT);
 VAR TEKЗAП:ZZBDKEY;C:^CONTENT;
 BEGIN
 CASE YPOB OF
-1:FINDPAR('TИCП  ');
-2:FINDPAR('TCOИ  ');
-3:FINDPAR('TПOД  ') end ;
+1:FINDPAR('ТИСП  ');
+2:FINDPAR('ТСОИ  ');
+3:FINDPAR('ТПОД  ') end ;
 NEWCONT(C);
 &&HAЙTИ BЛAДEЛ B OT-ИCП;BЗЯTЬ OTДEЛ.HAЗB HA C^.A^;
 HAЙTИ ПEPBYЮ B ИC-ИCП&&;
@@ -471,14 +471,14 @@ VAR C:^CONTENT;
 BEGIN
 RESETCON;
 REPEAT WITH CUL^.CUC^ DO 
-if BOS^.NAM='THOMK ' then begin break   end  ;
+if BOS^.NAM='ТНОМК ' then begin break   end  ;
 UNTIL NEXTCON;
 (**)
 &&HAЙTИ ПEPBYЮ B TE-ИCП&&;IF MOЖHO THEN GTREE(1);
 (**)
 &&HAЙTИ ПEPBYЮ B TE-ЭTA&&;
 WHILE MOЖHO DO begin 
-  FINDPAR('TЭTAП ');NEWCONT(C);
+  FINDPAR('ТЭТАП ');NEWCONT(C);
   &&BЗЯTЬ ЭTAП.HOMEP HA C^.Ц^;HAЙTИ CЛEДYЮ&&; end ;
 END;
 
@@ -494,9 +494,9 @@ WITH CUL^.CUP^ DO REPEAT
 READCON(NEXT);IF HAЧ THEN EXIT;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='THOMK ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
+if NAM='ТНОМК ' then begin  begin &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
   IF MOЖHO THEN EXIT ELSE begin 
-    WRITE(OUTPUT,'HET TAKOЙ TEMЫ');PUTT;NEXT:=FALSE end  end   end  ;
+    WRITE(OUTPUT,'НЕТ ТАКОЙ ТЕМЫ');PUTT;NEXT:=FALSE end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 END;
 
@@ -512,15 +512,15 @@ WITH CUL^.CUP^ DO REPEAT
 READCON(NEXT);IF HAЧ THEN EXIT;
 NEXT:=TRUE;
 WITH CUL^.CUC^ DO 
-if NAM='THOMK ' then begin  begin 
+if NAM='ТНОМК ' then begin  begin 
   &&HAЙTИ ПO-KЛЮ Ц^ B SY-TEM&&;
   IF NOT ПYCTO THEN begin 
-    WRITE(OUTPUT,'YЖE ECTЬ ЭTA TEMA');
+    WRITE(OUTPUT,'УЖЕ ЕСТЬ ЭТА ТЕМА');
     PUTT;NEXT:=FALSE end  end  end else if 
-(NAM='TИCП  ')OR(NAM='TCOИ  ')OR(NAM='TПOД  ') then begin  begin 
+(NAM='ТИСП  ')OR(NAM='ТСОИ  ')OR(NAM='ТПОД  ') then begin  begin 
   &&HAЙTИ ПO-KЛЮ A^ B SY-OTД&&;
   IF ПYCTO THEN begin 
-    WRITE(OUTPUT,'HET TAKOГO OTДEЛA');
+    WRITE(OUTPUT,'НЕТ ТАКОГО ОТДЕЛА');
     PUTT;NEXT:=FALSE end  end   end  ;
 UNTIL NEXT;UNTIL NEXTPAR;
 (**)
@@ -560,7 +560,7 @@ HAЙTИ;IF HAЧ THEN EXIT;BЗЯTЬ;
 WHILE MOЖHO DO begin 
   &&HAЙTИ ПEPBYЮ B ЭT-ЗAT&&;
   IF NOT ПYCTO THEN begin WRITE(OUTPUT,
-    'CHAЧAЛA HAДO ИCKЛЮЧИTЬ BCE ЗATPATЫ ПO TEME');PUTT;EXIT end ;
+    'СНАЧАЛА НАДО ИСКЛЮЧИТЬ ВСЕ ЗАТРАТЫ ПО ТЕМЕ');PUTT;EXIT end ;
   &&HAЙTИ CЛEДYЮ B TE-ЭTA&&; end ;
 IF NOT CONFIRM THEN EXIT;
 &&HAЙTИ ПEPBYЮ B TE-ИCП&&;
@@ -572,21 +572,21 @@ END;
 
 
 BEGIN
-FIL:=NIL;LOADLIST('CП-TEM');FINDLIST('CП-TEM');
-WRITE(OUTPUT,'      ...BЫ B БЛOKE PEГИCTPAЦИИ TEM...');PUTT;
+FIL:=NIL;LOADLIST('СП-ТЕМ');FINDLIST('СП-ТЕМ');
+WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ РЕГИСТРАЦИИ ТЕМ...');PUTT;
 WHILE TRUE DO begin 
-WRITE(OUTPUT,'ПPO - ПPOCMOTP ЗAPEГИCTPИPOBAHHЫX KAPT/',
-          'HOB - PEГИCTPAЦИЯ HOBЫX KAPT/',
-          'ЭTA - ДOБABЛEHИE B TEMY HOBЫX ЭTAПOB/',
-          'ИCK - ИCKЛЮЧEHИE KAPTЫ/');
+WRITE(OUTPUT,'ПРО - ПРОСМОТР ЗАРЕГИСТРИРОВАННЫХ КАРТ/',
+          'НОВ - РЕГИСТРАЦИЯ НОВЫХ КАРТ/',
+          'ЭТА - ДОБАВЛЕНИЕ В ТЕМУ НОВЫХ ЭТАПОВ/',
+          'ИСК - ИСКЛЮЧЕНИЕ КАРТЫ/');
 MENU;
 
-  if 'ЭTA'=ДИP then begin ЭTA end else if 
-  'ПPO'=ДИP then begin ПPO end else if 
-  'HOB'=ДИP then begin HOB end else if 
-  'ИCK'=ДИP then begin ИCK end else if 
-  'KOH'=ДИP then begin  begin KYДA:='HAPYЖY';CLEANALL;EXIT end  end else if 
-  'BЫX'=ДИP then begin  begin CLEANALL;EXIT end   end  ;
+  if 'ЭТА'=ДИP then begin ЭTA end else if 
+  'ПРО'=ДИP then begin ПPO end else if 
+  'НОВ'=ДИP then begin HOB end else if 
+  'ИСК'=ДИP then begin ИCK end else if 
+  'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';CLEANALL;EXIT end  end else if 
+  'ВЫХ'=ДИP then begin  begin CLEANALL;EXIT end   end  ;
  end ;
 END;
 

@@ -34,7 +34,7 @@ var
   KLASTHARD: int64 = 0;
 
 { --- DML for programs (names are numbers given by predt) --- }
-procedure KOPEN(const journal: array of char);
+procedure KOPEN(const journal: array of WideChar);
 procedure KCLOSE;
 procedure KFINDFIRST(s: int64);
 procedure KFINDLAST(s: int64);
@@ -43,7 +43,8 @@ procedure KFINDPRIOR(s: int64);
 procedure KFINDOWNER(s: int64);
 procedure KFINDKEY(s: int64; v: int64);
 procedure KFINDKEY(s: int64; v: double);
-procedure KFINDKEY(s: int64; const v: array of char);
+procedure KFINDKEY(s: int64; const v: array of WideChar);
+procedure KFINDKEY(s: int64; const v: UnicodeString);
 procedure KFINDFIRSTREC(r: int64);
 procedure KFINDNEXTREC(r: int64);
 { field transfer: KBEGINGET(r) loads the current r (0: of the run unit),
@@ -53,14 +54,15 @@ procedure KBEGINPUT(r: int64);
 procedure KGETF(i: int64; var x: int64);
 procedure KGETF(i: int64; var x: double);
 procedure KGETF(i: int64; var x: boolean);
-procedure KGETF(i: int64; var x: array of char);
-procedure KGETF(i: int64; var x: char);
+procedure KGETF(i: int64; var x: array of WideChar);
+procedure KGETF(i: int64; var x: WideChar);
 procedure KGETF(i: int64; var x);          { a set: the low 32 bits }
 procedure KPUTF(i: int64; x: int64);
 procedure KPUTF(i: int64; x: double);
 procedure KPUTF(i: int64; x: boolean);
-procedure KPUTF(i: int64; const x: array of char);
-procedure KPUTF(i: int64; x: char);
+procedure KPUTF(i: int64; const x: array of WideChar);
+procedure KPUTF(i: int64; const x: UnicodeString);
+procedure KPUTF(i: int64; x: WideChar);
 procedure KPUTF(i: int64; const x);        { a set: the low 32 bits }
 procedure KSTORE(r: int64);
 procedure KMODIFY(r: int64);         { the loaded buffer back to its record }
@@ -69,7 +71,8 @@ procedure KCONNECT(s: int64);
 { ВЫБОР t ИСПОЛЬЗ r.f: the owner is the member of set t with key v }
 procedure KCONNECTKEY(s: int64; v: int64);
 procedure KCONNECTKEY(s: int64; v: double);
-procedure KCONNECTKEY(s: int64; const v: array of char);
+procedure KCONNECTKEY(s: int64; const v: array of WideChar);
+procedure KCONNECTKEY(s: int64; const v: UnicodeString);
 procedure KDISCONNECT(s: int64);
 function KCURTYPE: int64;            { type of the current of the run unit }
 function KDBKEY(r: int64): int64;    { current of type r, 0: run unit }
@@ -106,7 +109,7 @@ function KCheck: string;
 
 implementation
 
-uses SysUtils, mars, kgost;
+uses SysUtils, mars, kutf;
 
 type
   TKey = mars.TKey;
@@ -176,27 +179,27 @@ begin
   PInt64(MarsErr)^ := 0;
 end;
 
-function Pad6(const s: string): string;
-begin
-  Result := Copy(s + '      ', 1, 6);
-end;
-
 function K6(const s: string): TKey;
-var i: integer; t: string;
 begin
-  t := Pad6(s);
-  for i := 0 to 5 do Result[i] := t[i + 1];
+  Result := NameKey(s);
 end;
 
-function DbKeyName(k: int64; ai: integer): string;
-var i: integer;
+{ a binary key: c, then n in 5 bytes }
+function BinKey(c: integer; n: int64): TKey;
+var b: RawByteString; i: integer;
 begin
-  SetLength(Result, 6);
-  Result[1] := chr(ai + 1);
+  SetLength(b, 6);
+  b[1] := chr(c);
   for i := 6 downto 2 do begin
-    Result[i] := chr(k and 255);
-    k := k shr 8;
+    b[i] := chr(n and 255);
+    n := n shr 8;
   end;
+  Result := ByteKey(b);
+end;
+
+function DbKeyName(k: int64; ai: integer): TKey;
+begin
+  Result := BinKey(ai + 1, k);
 end;
 
 function AreaOf(k: int64): integer;
@@ -226,7 +229,7 @@ begin
   SetLength(w, 512);
   FillChar(w[0], length(w) * 8, 0);
   MClr;
-  getd(K6(DbKeyName(k and $FFFFFFFFFF, ai)), w[0], length(w) * 8);
+  getd(DbKeyName(k and $FFFFFFFFFF, ai), w[0], length(w) * 8);
   Result := MErr = 0;
   if Result then begin
     n := w[0];
@@ -236,15 +239,15 @@ begin
 end;
 
 function WriteW(k: int64; const w: TWords; fresh: boolean): boolean;
-var ai: integer; key: string;
+var ai: integer; key: TKey;
 begin
   Result := false;
   ai := AreaOf(k);
   if (ai > high(areas)) or not OpenArea(ai) then exit;
   key := DbKeyName(k and $FFFFFFFFFF, ai);
   MClr;
-  if fresh then putd(K6(key), w[0], length(w) * 8)
-  else modd(K6(key), w[0], length(w) * 8);
+  if fresh then putd(key, w[0], length(w) * 8)
+  else modd(key, w[0], length(w) * 8);
   Result := MErr = 0;
 end;
 
@@ -255,48 +258,49 @@ begin
   ai := AreaOf(k);
   if (ai > high(areas)) or not OpenArea(ai) then exit;
   MClr;
-  deld(K6(DbKeyName(k and $FFFFFFFFFF, ai)));
+  deld(DbKeyName(k and $FFFFFFFFFF, ai));
   Result := MErr = 0;
 end;
 
 procedure Journal(op: char; k: int64; const w: TWords);
-var key: string; i: integer; n: int64;
+var key: TKey;
 begin
   if jname = '' then exit;
   MClr;
   opend(K6(jname));
   if MErr <> 0 then exit;
   inc(jseq);
-  SetLength(key, 6);
-  key[1] := op;
-  n := jseq;
-  for i := 6 downto 2 do begin key[i] := chr(n and 255); n := n shr 8; end;
+  key := BinKey(ord(op), jseq);
   MClr;
-  if length(w) > 0 then modd(K6(key), w[0], length(w) * 8)
-  else modd(K6(key), k, 8);
+  if length(w) > 0 then modd(key, w[0], length(w) * 8)
+  else modd(key, k, 8);
 end;
 
 { --- schema --- }
 
-function Row(const area, key: string; var d: string): boolean;
+type TRow = UnicodeString;
+
+{ a catalogue row of ttc: 48 characters }
+function Row(const area, key: string; var d: TRow): boolean;
+var i: integer;
 begin
   SetLength(d, 48);
-  FillChar(d[1], 48, ' ');
+  for i := 1 to 48 do d[i] := ' ';
   MClr;
   opend(K6(area));
   if MErr <> 0 then exit(false);
-  getd(K6(key), d[1], 48);
+  getd(K6(key), d[1], 48 * sizeof(WideChar));
   Result := MErr = 0;
 end;
 
-function Fld(const d: string; o, n: integer): string;
+function Fld(const d: TRow; o, n: integer): string;
 begin
-  Result := TrimRight(Copy(d, o, n));
+  Result := TrimRight(W2U(Copy(d, o, n)));
 end;
 
-function Num(const s: string): integer;
+function Num(const s: TRow): integer;
 begin
-  Result := StrToIntDef(Trim(s), 0);
+  Result := StrToIntDef(Trim(W2U(s)), 0);
 end;
 
 function KeyN(c: char; n, w: integer): string;
@@ -315,7 +319,7 @@ begin
 end;
 
 procedure Load;
-var d, a, v, first: string;
+var d: TRow; a, v, first: string;
     nt, nr, ns, i, j, n, w: integer;
     tn, tb, tl, tz: array of string;
     r: integer;
@@ -330,14 +334,14 @@ var d, a, v, first: string;
         if l = '' then l := tl[k];
         if z = '' then z := tz[k];
       end;
-    if b = Encode('ЦЕЛОЕ') then f.kind := fkInt
-    else if b = Encode('ДЕЙСТВ') then f.kind := fkReal
-    else if b = Encode('ЛОГИЧЕ') then f.kind := fkBool
+    if b = 'ЦЕЛОЕ' then f.kind := fkInt
+    else if b = 'ДЕЙСТВ' then f.kind := fkReal
+    else if b = 'ЛОГИЧЕ' then f.kind := fkBool
     else f.kind := fkChar;
     f.len := Num(l);
     if (f.kind = fkChar) and (f.len <= 0) then f.len := 6;
     f.size := z;
-    if f.kind = fkChar then f.words := (f.len + 7) div 8 else f.words := 1;
+    if f.kind = fkChar then f.words := (f.len * sizeof(WideChar) + 7) div 8 else f.words := 1;
   end;
 
 begin
@@ -349,23 +353,23 @@ begin
   SetLength(tn, nt); SetLength(tb, nt); SetLength(tl, nt); SetLength(tz, nt);
   for i := 1 to nt do begin
     if not Row('CXHD', KeyN('T', i, 3), d) then exit;
-    tn[i - 1] := Fld(d, 1, 6); tb[i - 1] := Fld(d, 7, 6);
-    tl[i - 1] := Fld(d, 13, 6); tz[i - 1] := Trim(Copy(d, 19, 10));
+    tn[i - 1] := FoldName(Fld(d, 1, 6)); tb[i - 1] := FoldName(Fld(d, 7, 6));
+    tl[i - 1] := Fld(d, 13, 6); tz[i - 1] := Trim(Fld(d, 19, 10));
   end;
   SetLength(recs, nr + 1);
   SetLength(areas, 0);
   first := '';
   for i := 1 to nr do begin
     if not Row('CXHD', KeyN('R', i, 3), d) then exit;
-    recs[i].name := Fld(d, 1, 6);
-    recs[i].area := Fld(d, 7, 6);
+    recs[i].name := FoldName(Fld(d, 1, 6));
+    recs[i].area := FoldName(Fld(d, 7, 6));
     if (first = '') and (recs[i].area <> '') then first := recs[i].area;
     n := Num(Copy(d, 13, 3));
     SetLength(recs[i].f, n + 1);
     for j := 1 to n do begin
       if not Row('CXFL', KeyN('F', i * 100 + j, 5), d) then exit;
-      recs[i].f[j].name := Fld(d, 1, 6);
-      SetKind(recs[i].f[j], Fld(d, 7, 6), Fld(d, 13, 6), Trim(Copy(d, 19, 10)));
+      recs[i].f[j].name := FoldName(Fld(d, 1, 6));
+      SetKind(recs[i].f[j], FoldName(Fld(d, 7, 6)), Fld(d, 13, 6), Trim(Fld(d, 19, 10)));
     end;
   end;
   if first = '' then exit;
@@ -376,23 +380,23 @@ begin
   SetLength(sets, ns + 1);
   for i := 1 to ns do begin
     if not Row('CXHD', KeyN('S', i, 3), d) then exit;
-    sets[i].name := Fld(d, 1, 6);
+    sets[i].name := FoldName(Fld(d, 1, 6));
     n := Num(Copy(d, 7, 3));
     sets[i].owner := 0; sets[i].member := 0; sets[i].keyf := 0;
     sets[i].dup := false; sets[i].manual := false;
     sets[i].selname := ''; sets[i].using := ''; sets[i].selset := 0;
     for j := 1 to n do begin
       if not Row('CXAT', KeyN('A', i * 100 + j, 5), d) then exit;
-      a := Fld(d, 1, 6); v := Fld(d, 7, 6);
-      if a = Encode('ВЛАДЕЛ') then sets[i].owner := KRecNo(v)
-      else if a = Encode('ЧЛЕН') then sets[i].member := KRecNo(v)
-      else if a = Encode('ДУБЛИК') then sets[i].dup := true
-      else if (a = Encode('ВКЛЮЧЕ')) and (v = Encode('ВРУЧНУ')) then
+      a := FoldName(Fld(d, 1, 6)); v := FoldName(Fld(d, 7, 6));
+      if a = 'ВЛАДЕЛ' then sets[i].owner := KRecNo(v)
+      else if a = 'ЧЛЕН' then sets[i].member := KRecNo(v)
+      else if a = 'ДУБЛИК' then sets[i].dup := true
+      else if (a = 'ВКЛЮЧЕ') and (v = 'ВРУЧНУ') then
         sets[i].manual := true
-      else if a = Encode('ПОЛЕ') then sets[i].keyf := -1
-      else if a = Encode('ВЫБОР') then begin
+      else if a = 'ПОЛЕ' then sets[i].keyf := -1
+      else if a = 'ВЫБОР' then begin
         sets[i].selname := v;
-        sets[i].using := Trim(Copy(d, 13, 10));
+        sets[i].using := FoldName(Fld(d, 13, 10));
       end;
     end;
     { key field: the ПОЛЕ attribute, resolved against the member }
@@ -400,7 +404,7 @@ begin
       sets[i].keyf := 0;
       for j := 1 to n do
         if Row('CXAT', KeyN('A', i * 100 + j, 5), d) and
-           (Fld(d, 1, 6) = Encode('ПОЛЕ')) and (sets[i].member > 0) then
+           (FoldName(Fld(d, 1, 6)) = 'ПОЛЕ') and (sets[i].member > 0) then
           sets[i].keyf := KFieldNo(sets[i].member, Fld(d, 7, 6));
     end;
     if sets[i].member = 0 then exit;
@@ -461,7 +465,7 @@ function KRecNo(const name: string): integer;
 var i: integer;
 begin
   for i := 1 to high(recs) do
-    if recs[i].name = TrimRight(name) then exit(i);
+    if recs[i].name = Name6(name) then exit(i);
   Result := 0;
 end;
 
@@ -469,7 +473,7 @@ function KSetNo(const name: string): integer;
 var i: integer;
 begin
   for i := 1 to high(sets) do
-    if sets[i].name = TrimRight(name) then exit(i);
+    if sets[i].name = Name6(name) then exit(i);
   Result := 0;
 end;
 
@@ -488,7 +492,7 @@ function KFieldNo(r: integer; const name: string): integer;
 var i: integer;
 begin
   for i := 1 to high(recs[r].f) do
-    if recs[r].f[i].name = TrimRight(name) then exit(i);
+    if recs[r].f[i].name = Name6(name) then exit(i);
   Result := 0;
 end;
 
@@ -541,7 +545,7 @@ end;
 
 function Less(s: integer; const a, b: TWords): integer;
 { compare the key field of members a and b: <0, 0, >0 }
-var f: TField; x, y: double; i: integer; ca, cb: char;
+var f: TField; x, y: double; i: integer; ca, cb: WideChar;
 begin
   Result := 0;
   if sets[s].keyf = 0 then exit;
@@ -556,7 +560,7 @@ begin
     end;
     fkChar:
       for i := 0 to f.len - 1 do begin
-        ca := PChar(@a[f.off])[i]; cb := PChar(@b[f.off])[i];
+        ca := PWideChar(@a[f.off])[i]; cb := PWideChar(@b[f.off])[i];
         if ca <> cb then begin
           if ord(ca) < ord(cb) then Result := -1 else Result := 1;
           exit;
@@ -758,22 +762,22 @@ begin
   Result := true;
 end;
 
-procedure PutChars(var w: TWords; const f: TField; p: PChar; n: integer);
-var i: integer; d: PChar;
+procedure PutChars(var w: TWords; const f: TField; p: PWideChar; n: integer);
+var i: integer; d: PWideChar;
 begin
-  d := PChar(@w[f.off]);
+  d := PWideChar(@w[f.off]);
   for i := 0 to f.len - 1 do
     if i < n then d[i] := p[i] else d[i] := ' ';
 end;
 
 procedure KFINDKEY(s: int64; v: int64);
-var kw: TWords; f: TField; st: string;
+var kw: TWords; f: TField; st: UnicodeString;
 begin
   if not Probe(s, kw, f) then exit;
   case f.kind of
     fkInt, fkBool: kw[f.off] := v;
     fkReal: PDouble(@kw[f.off])^ := v;
-    fkChar: begin st := IntToStr(v); PutChars(kw, f, PChar(st), length(st)); end;
+    fkChar: begin st := UnicodeString(IntToStr(v)); PutChars(kw, f, PWideChar(st), length(st)); end;
   end;
   FindKey(s, kw);
 end;
@@ -790,27 +794,34 @@ begin
   FindKey(s, kw);
 end;
 
-procedure KFINDKEY(s: int64; const v: array of char);
+procedure KFINDKEY(s: int64; const v: UnicodeString);
 var kw: TWords; f: TField; t: string;
 begin
   if not Probe(s, kw, f) then exit;
-  SetString(t, PChar(@v[0]), length(v));
+  t := W2U(v);
   case f.kind of
     fkInt, fkBool: kw[f.off] := StrToInt64Def(Trim(t), 0);
     fkReal: PDouble(@kw[f.off])^ := StrToFloatDef(Trim(t), 0);
-    fkChar: PutChars(kw, f, PChar(t), length(t));
+    fkChar: PutChars(kw, f, PWideChar(v), length(v));
   end;
   FindKey(s, kw);
 end;
 
+procedure KFINDKEY(s: int64; const v: array of WideChar);
+var t: UnicodeString;
+begin
+  SetString(t, PWideChar(@v[0]), length(v));
+  KFINDKEY(s, t);
+end;
+
 procedure KFindKeyText(s: integer; const t: string);
-var kw: TWords; f: TField; e: integer; v: double;
+var kw: TWords; f: TField; e: integer; v: double; w: UnicodeString;
 begin
   if not Probe(s, kw, f) then exit;
   case f.kind of
     fkInt, fkBool: begin val(Trim(t), v, e); kw[f.off] := round(v); end;
     fkReal: begin val(Trim(t), v, e); PDouble(@kw[f.off])^ := v; end;
-    fkChar: PutChars(kw, f, PChar(t), length(t));
+    fkChar: begin w := U2W(t); PutChars(kw, f, PWideChar(w), length(w)); end;
   end;
   FindKey(s, kw);
 end;
@@ -838,7 +849,7 @@ procedure KFINDNEXTREC(r: int64); begin TypeStep(r, false); end;
 
 function SystemRec(r: integer): boolean;
 begin
-  Result := recs[r].name = Encode('SYSTEM');
+  Result := recs[r].name = FoldName('SYSTEM');
 end;
 
 procedure NewRecord(r: integer; var w: TWords; var k: int64; var st: integer); forward;
@@ -927,31 +938,31 @@ begin
   x := buf[f.off] <> 0;
 end;
 
-procedure KGETF(i: int64; var x: array of char);
-var f: TField; j: integer; s: string;
+procedure KGETF(i: int64; var x: array of WideChar);
+var f: TField; j: integer; s: UnicodeString;
 begin
   if not FieldOk(i, f) then exit;
-  if f.kind = fkChar then SetString(s, PChar(@buf[f.off]), f.len)
-  else s := KFieldText(i);
+  if f.kind = fkChar then SetString(s, PWideChar(@buf[f.off]), f.len)
+  else s := U2W(KFieldText(i));
   for j := 0 to high(x) do
     if j < length(s) then x[j] := s[j + 1] else x[j] := ' ';
 end;
 
-procedure KGETF(i: int64; var x: char);
+procedure KGETF(i: int64; var x: WideChar);
 var f: TField;
 begin
   if not FieldOk(i, f) then exit;
-  if f.kind = fkChar then x := PChar(@buf[f.off])[0];
+  if f.kind = fkChar then x := PWideChar(@buf[f.off])[0];
 end;
 
 procedure KPUTF(i: int64; x: int64);
-var f: TField; s: string;
+var f: TField; s: UnicodeString;
 begin
   if not FieldOk(i, f) then exit;
   case f.kind of
     fkInt, fkBool: buf[f.off] := x;
     fkReal: PDouble(@buf[f.off])^ := x;
-    fkChar: begin s := IntToStr(x); PutChars(buf, f, PChar(s), length(s)); end;
+    fkChar: begin s := UnicodeString(IntToStr(x)); PutChars(buf, f, PWideChar(s), length(s)); end;
   end;
 end;
 
@@ -973,15 +984,20 @@ begin
   buf[f.off] := ord(x);
 end;
 
-procedure KPUTF(i: int64; const x: array of char);
-var f: TField; s: string;
+procedure KPUTF(i: int64; const x: array of WideChar);
+var f: TField;
 begin
   if not FieldOk(i, f) then exit;
-  SetString(s, PChar(@x[0]), length(x));
-  KPutText(i, s);
+  if f.kind = fkChar then PutChars(buf, f, @x[0], length(x))
+  else KPutText(i, BufU(@x[0], length(x)));
 end;
 
-procedure KPUTF(i: int64; x: char);
+procedure KPUTF(i: int64; const x: UnicodeString);
+begin
+  KPutText(i, W2U(x));
+end;
+
+procedure KPUTF(i: int64; x: WideChar);
 var f: TField;
 begin
   if not FieldOk(i, f) then exit;
@@ -1010,11 +1026,11 @@ begin
 end;
 
 procedure KPutText(i: integer; const s: string);
-var f: TField; t: string; e: integer; v: double;
+var f: TField; t: string; e: integer; v: double; w: UnicodeString;
 begin
   if not FieldOk(i, f) then exit;
   case f.kind of
-    fkChar: PutChars(buf, f, PChar(s), length(s));
+    fkChar: begin w := U2W(s); PutChars(buf, f, PWideChar(w), length(w)); end;
     fkInt: begin
       t := Trim(s);
       val(t, v, e);
@@ -1047,7 +1063,7 @@ begin
   Result := '';
   if not FieldOk(i, f) then exit;
   case f.kind of
-    fkChar: SetString(Result, PChar(@buf[f.off]), f.len);
+    fkChar: Result := BufU(PWideChar(@buf[f.off]), f.len);
     fkBool: if buf[f.off] <> 0 then Result := 'T' else Result := 'F';
     fkInt: begin
       Digits(f.size, ip, dp);
@@ -1371,11 +1387,19 @@ begin
   ConnectSel(s, kw);
 end;
 
-procedure KCONNECTKEY(s: int64; const v: array of char);
+procedure KCONNECTKEY(s: int64; const v: array of WideChar);
 var kw: TWords; f: TField;
 begin
   if not SelProbe(s, kw, f) then exit;
   if f.kind = fkChar then PutChars(kw, f, @v[0], length(v));
+  ConnectSel(s, kw);
+end;
+
+procedure KCONNECTKEY(s: int64; const v: UnicodeString);
+var kw: TWords; f: TField;
+begin
+  if not SelProbe(s, kw, f) then exit;
+  if f.kind = fkChar then PutChars(kw, f, PWideChar(v), length(v));
   ConnectSel(s, kw);
 end;
 
@@ -1422,11 +1446,9 @@ begin
   SetSt(kOk);
 end;
 
-procedure KOPEN(const journal: array of char);
-var s: string;
+procedure KOPEN(const journal: array of WideChar);
 begin
-  SetString(s, PChar(@journal[0]), length(journal));
-  jname := TrimRight(s);
+  jname := FoldName(BufU(@journal[0], length(journal)));
   if Ready then SetSt(kOk);
 end;
 

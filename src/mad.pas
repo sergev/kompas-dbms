@@ -10,11 +10,11 @@ program mad;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, kdb, kgost;
+uses SysUtils, Classes, kdb, kutf;
 
 type
   TTok = record
-    s: string;       { internal code }
+    s: string;       { UTF-8 as written }
     kind: char;      { w word, l literal, p punctuation, e end }
     line: integer;
   end;
@@ -47,7 +47,7 @@ var
 
 function KW(const s: string): string;
 begin
-  Result := Copy(Encode(s), 1, 6);
+  Result := Name6(s);
 end;
 
 procedure Error(line: integer; const msg: string);
@@ -78,7 +78,7 @@ begin
   while i <= n do begin
     c := text[i];
     if c = #10 then begin inc(line); inc(i); continue; end;
-    if c in [' ', #13] then begin inc(i); continue; end;
+    if c in [' ', #9, #13] then begin inc(i); continue; end;
     { comment ?* ... * }
     if (c = '?') and (i < n) and (text[i + 1] = '*') then begin
       inc(i, 2);
@@ -132,7 +132,7 @@ procedure Skip; begin if tp < high(toks) then inc(tp); end;
 
 function IsKw(const t: TTok; const k: string): boolean;
 begin
-  Result := (t.kind = 'w') and (Copy(t.s, 1, 6) = KW(k));
+  Result := (t.kind = 'w') and (Name6(t.s) = KW(k));
 end;
 
 function IsP(const t: TTok; const p: string): boolean;
@@ -152,14 +152,14 @@ end;
 
 procedure JumpTo(i: integer; const lab: string);
 begin
-  code[i].lab := lab;
-  fixups.AddObject(lab, TObject(PtrInt(i)));
+  code[i].lab := FoldName(lab);
+  fixups.AddObject(FoldName(lab), TObject(PtrInt(i)));
 end;
 
 procedure DefLabel(const lab: string);
 begin
-  if labels.IndexOf(lab) >= 0 then Error(Tok.line, 'ПОВТОРНАЯ МЕТКА ' + Decode(lab));
-  labels.AddObject(lab, TObject(PtrInt(length(code))));
+  if labels.IndexOf(FoldName(lab)) >= 0 then Error(Tok.line, 'ПОВТОРНАЯ МЕТКА ' + lab);
+  labels.AddObject(FoldName(lab), TObject(PtrInt(length(code))));
 end;
 
 function NewLabel: string;
@@ -170,14 +170,14 @@ end;
 
 function SetOf(const t: TTok): integer;
 begin
-  Result := KSetNo(Copy(t.s, 1, 6));
-  if Result = 0 then Error(t.line, 'НЕТ НАБОРА ' + Decode(t.s));
+  Result := KSetNo(t.s);
+  if Result = 0 then Error(t.line, 'НЕТ НАБОРА ' + t.s);
 end;
 
 function RecOf(const t: TTok): integer;
 begin
-  Result := KRecNo(Copy(t.s, 1, 6));
-  if Result = 0 then Error(t.line, 'НЕТ ЗАПИСИ ' + Decode(t.s));
+  Result := KRecNo(t.s);
+  if Result = 0 then Error(t.line, 'НЕТ ЗАПИСИ ' + t.s);
 end;
 
 procedure ParseStmts(stop: string); forward;
@@ -191,15 +191,15 @@ begin
     if t.kind = 'l' then begin it.kind := 'l'; it.s := t.s; Skip; end
     else if IsP(t, '/') then begin it.kind := 'n'; Skip; end
     else if IsP(t, '.') then begin
-      Skip; it.kind := 'f'; it.rec := 0; it.s := Copy(Tok.s, 1, 6); Skip;
+      Skip; it.kind := 'f'; it.rec := 0; it.s := Tok.s; Skip;
     end else if (t.kind = 'w') and IsP(Peek(1), '.') then begin
       r := RecOf(t); Skip; Skip;
-      it.kind := 'f'; it.rec := r; it.s := Copy(Tok.s, 1, 6);
+      it.kind := 'f'; it.rec := r; it.s := Tok.s;
       if (r > 0) and (KFieldNo(r, it.s) = 0) then
-        Error(Tok.line, 'НЕТ ПОЛЯ ' + Decode(Tok.s));
+        Error(Tok.line, 'НЕТ ПОЛЯ ' + Tok.s);
       Skip;
     end else begin
-      Error(t.line, 'НЕВЕРНЫЙ ЭЛЕМЕНТ ВЫДАЧИ ' + Decode(t.s));
+      Error(t.line, 'НЕВЕРНЫЙ ЭЛЕМЕНТ ВЫДАЧИ ' + t.s);
       Skip;
     end;
     if it.kind <> ' ' then begin
@@ -214,8 +214,8 @@ end;
 { target or source of БД-КЛЮ: a name, maybe REC.FLD }
 function VarName: string;
 begin
-  Result := Tok.s; Skip;
-  if IsP(Tok, '.') then begin Skip; Result := Result + '.' + Tok.s; Skip; end;
+  Result := FoldName(Tok.s); Skip;
+  if IsP(Tok, '.') then begin Skip; Result := Result + '.' + FoldName(Tok.s); Skip; end;
 end;
 
 procedure ParseSimple;
@@ -250,7 +250,7 @@ begin
     else if IsKw(t, 'ПОСЛЕД') then code[i].sub := 4
     else if IsKw(t, 'ВЛАДЕЛ') then code[i].sub := 5
     else if IsKw(t, 'ПО-КЛЮ') then code[i].sub := 6
-    else Error(t.line, 'НЕВЕРНЫЙ НАЙТИ ' + Decode(t.s));
+    else Error(t.line, 'НЕВЕРНЫЙ НАЙТИ ' + t.s);
     Skip;
     if code[i].sub = 6 then begin
       if IsKw(Tok, 'В') then Error(Tok.line, 'НЕТ КЛЮЧА')
@@ -305,7 +305,7 @@ begin
       DefLabel(l1);
   end else if IsKw(t, 'НА') then begin
     Skip; i := Emit(oJmp); JumpTo(i, Tok.s); Skip;
-  end else if IsKw(t, 'КОНЕЦ') or (IsKw(t, 'К') and (t.s = KW('К'))) then begin
+  end else if IsKw(t, 'КОНЕЦ') or (IsKw(t, 'К') and (FoldName(t.s) = KW('К'))) then begin
     Skip; Emit(oEnd);
   end else if IsKw(t, 'ЖУРНАЛ') then begin
     Skip; i := Emit(oJournal); code[i].key := Tok.s; Skip;
@@ -314,7 +314,7 @@ begin
   end else if IsKw(t, 'ДЛЯ-ВЫ') or IsKw(t, 'СБРОСИ') or IsKw(t, 'ЗАВЕРШ') then
     Skip
   else begin
-    Error(t.line, 'НЕИЗВЕСТНЫЙ ОПЕРАТОР ' + Decode(t.s));
+    Error(t.line, 'НЕИЗВЕСТНЫЙ ОПЕРАТОР ' + t.s);
     while not (IsP(Tok, ';') or (Tok.kind = 'e')) do Skip;
   end;
 end;
@@ -339,7 +339,7 @@ begin
   for i := 0 to fixups.Count - 1 do begin
     k := PtrInt(fixups.Objects[i]);
     j := labels.IndexOf(fixups[i]);
-    if j < 0 then Error(code[k].line, 'НЕТ МЕТКИ ' + Decode(fixups[i]))
+    if j < 0 then Error(code[k].line, 'НЕТ МЕТКИ ' + fixups[i])
     else code[k].target := PtrInt(labels.Objects[j]);
   end;
 end;
@@ -360,7 +360,7 @@ end;
 
 procedure Run;
 var pc, j: integer; st: int64; outl: string; it: TItem; k: int64;
-    jn: array[0..5] of char;
+    jn: array[0..5] of WideChar; w: UnicodeString;
 begin
   pc := 0; st := 0;
   while (pc >= 0) and (pc <= high(code)) do begin
@@ -394,19 +394,20 @@ begin
             it := items[j];
             case it.kind of
               'l': outl := outl + it.s;
-              'n': begin writeln(TrimRight(Decode(outl))); outl := ''; end;
+              'n': begin writeln(TrimRight(outl)); outl := ''; end;
               'f': outl := outl + FieldOf(it);
             end;
           end;
-          writeln(TrimRight(Decode(outl)));
+          writeln(TrimRight(outl));
         end;
         oJmp: begin pc := target; continue; end;
         oJz: if st = 0 then begin pc := target; continue; end;
         oJnz: if st <> 0 then begin pc := target; continue; end;
         oEnd: break;
         oJournal: begin
+          w := U2W(key);
           for j := 0 to 5 do
-            if j < length(key) then jn[j] := key[j + 1] else jn[j] := ' ';
+            if j < length(w) then jn[j] := w[j + 1] else jn[j] := ' ';
           KOPEN(jn);
         end;
       end;
@@ -428,7 +429,7 @@ begin
   end;
   text := '';
   for i := 0 to f.Count - 1 do begin
-    s := Encode(f[i]);
+    s := f[i];
     { job cards *M, *MAD, *YESME; a lone * closes a comment }
     if (length(s) > 1) and (s[1] = '*') and (s[2] <> ' ') then s := '';
     text := text + s + #10;

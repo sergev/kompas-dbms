@@ -10,7 +10,7 @@ LIB     := $(B)/lib
 OBJ     := $(B)/obj
 FFLAGS  := -O1 -v0e -l- -Fusrc -Fusrc/rt
 
-UNITS   := krt kio kgost mars kdb kgenrt sevlib
+UNITS   := kutf krt kio mars kdb kgenrt sevlib
 NATIVE  := mad predt gen
 CONVERT := servis ttc
 

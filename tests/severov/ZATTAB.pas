@@ -10,7 +10,7 @@ VAR ДИР: packed array[1..3] of char;
     ШАГ: INTEGER;
 TYPE BOOL=BOOLEAN;
   СТРОКА=packed array[1..84] of char;
-  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q64_Q53_AQ43_: array[Q64_Q53_AQ43_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
+  ФЛАГ=(ФS,ПЕЧАТЬ,МОДИФ,АДМИН,ОТЛАД,ОТЧСКЛ,ОТЧОТД,ВХОД,ФF); const XEN_Q0424_Q041B_AQ0413_: array[Q0424_Q041B_AQ0413_] of string[8] = ('ФS','ПЕЧАТЬ','МОДИФ','АДМИН','ОТЛАД','ОТЧСКЛ','ОТЧОТД','ВХОД','ФF'); type
   ДИРЕКТ=RECORD ИМЯ: ALFA; НАЗВ: ALFA END;
 CONST LF=#10; CLF=#10; SСТРОКА=84;
 VAR ФЛАГИ: SET OF ФЛАГ;
@@ -188,8 +188,8 @@ COLUMN=(
         VOCT    ,
         VФPEЗ   ,
         VФMП    ,
-        VФHTCP  ); const XEN_COLUMN: array[COLUMN] of string[8] = ('ZTEMA','ZMEC','ZOTД','ZNOTД','ZЭTAП','ZBЫП','ZOЗAPП','ZДЗAPП','VЗAPП','VCTPAX','ZMATEP','ZKOMAH','ZCПEЦ','ZAMOP','ZCTOP','VПPOЧ','VHAKЛ','VЗAPH','VCБC','VЭФЗ','ZПOCH','ZПTPEC','ZПPБK','VPACЧ','ZOBЫШ','ZOГOC','ZHEПЛ','VOCT','VФPEЗ','VФMП','VФHTCP'); type
-TYPPAR=(CEL,DEY,ALF,STR,LOG,DAT,MES,KVA); const XEN_TYPPAR: array[TYPPAR] of string[8] = ('CEL','DEY','ALF','STR','LOG','DAT','MES','KVA'); type
+        VФHTCP  ); const XEN_COLUMN: array[COLUMN] of string[8] = ('ZТЕМА','ZМЕС','ZОТД','ZNОТД','ZЭТАП','ZВЫП','ZОЗАРП','ZДЗАРП','VЗАРП','VСТРАХ','ZМАТЕР','ZКОМАН','ZСПЕЦ','ZАМОР','ZСТОР','VПРОЧ','VНАКЛ','VЗАРН','VСБС','VЭФЗ','ZПОСН','ZПТРЕС','ZПРБК','VРАСЧ','ZОВЫШ','ZОГОС','ZНЕПЛ','VОСТ','VФРЕЗ','VФМП','VФНТСР'); type
+TYPPAR=(CEL,DEY,ALF,STR,LOG,DAT,MES,KVA); const XEN_TYPPAR: array[TYPPAR] of string[8] = ('СЕL','DЕУ','АLF','SТR','LОG','DАТ','МЕS','КVА'); type
 CELL=PACKED RECORD FRM:CHAR;CON:^CONTENT end ;
 CONTENT=RECORD CASE TYP:TYPPAR OF
                    CEL,DAT,MES,KVA:(Ц:^ATCЦEЛ);
@@ -277,9 +277,9 @@ BEGIN;&&HAЙTИ ПO-KЛЮ A B SY-ПAP;HAЙTИ ПEPBYЮ B ПA-ДEЙ;ЗAMEHИ&&;
 END;
 BEGIN
 WITH HAKЛ DO begin OБЩЗAPП:=ЗAPП;
-PДEЙ('ZKПPOЧ',ПPOЧ/OБЩЗAPП);
-PДEЙ('ZKHAKЛ',HAKЛ/OБЩЗAPП);
-PДEЙ('ZKЗAPH',ЗAHAK/OБЩЗAPП) end ;
+PДEЙ('ZКПРОЧ',ПPOЧ/OБЩЗAPП);
+PДEЙ('ZКНАКЛ',HAKЛ/OБЩЗAPП);
+PДEЙ('ZКЗАРН',ЗAHAK/OБЩЗAPП) end ;
 END;
 
 
@@ -345,7 +345,7 @@ if not RT_Le(ord(FIRCOL ), ord( LASCOL )) then else FOR C:=FIRCOL TO LASCOL DO I
 (**)
 IF NNEEWW THEN begin 
 FORLIN[LR]:=[PAЗ,HAД,ПOД];
-AЛФ.ЗH:='ИTOГO ';FILL(ALF,ZTEMA,LR,'П');
+AЛФ.ЗH:='ИТОГО ';FILL(ALF,ZTEMA,LR,'П');
 AЛФ.ЗH:='      ';FILL(ALF,ZMEC,LR,'Ц');
 AЛФ.ЗH:='      ';FILL(ALF,ZNOTД,LR,'Ц');
 AЛФ.ЗH:='      ';FILL(ALF,ZOTД,LR,'Ц');
@@ -388,67 +388,67 @@ END;
 
 BEGIN
 L:=FIRLIN;FORLIN[L]:=[PAЗ,HAД,ПOД];
-Z( 0,ZTEMA   ,'HOMEP^KAЛЬK^TEMЫ                       ', 7);
+Z( 0,ZTEMA   ,'НОМЕР^КАЛЬК^ТЕМЫ                       ', 7);
              (*                       XXXXXXX             *)
-Z( 1,ZMEC    ,'MECЯЦ^ГOД                              ', 5);
+Z( 1,ZMEC    ,'МЕСЯЦ^ГОД                              ', 5);
              (*             XX.XX                         *)
-Z(99,ZOTД    ,'OTДEЛ                                  ', 6);
+Z(99,ZOTД    ,'ОТДЕЛ                                  ', 6);
              (*             XXXXXX                        *)
 Z(99,ZNOTД   ,'N                                      ', 1);
              (*             X                             *)
-Z(99,ZЭTAП   ,'ЭTAП                                   ', 4);
+Z(99,ZЭTAП   ,'ЭТАП                                   ', 4);
              (*             XXXXXX                        *)
-Z( 2,ZBЫП    ,'BЫПOЛH^ПO^TEME                         ', 6);
+Z( 2,ZBЫП    ,'ВЫПОЛН^ПО^ТЕМЕ                         ', 6);
              (*                       XXXXXX              *)
-Z( 3,ZOЗAPП  ,'ЗAPПЛ^OCH^ИCП                          ', 6);
+Z( 3,ZOЗAPП  ,'ЗАРПЛ^ОСН^ИСП                          ', 6);
              (*                 XXXXX.XX                  *)
-Z( 4,ZДЗAPП  ,'ДOПOЛH^ЗAPПЛ^OCH^ИCП                   ', 6);
+Z( 4,ZДЗAPП  ,'ДОПОЛН^ЗАРПЛ^ОСН^ИСП                   ', 6);
              (*                     XXXX.XX               *)
-Z(99,VЗAPП   ,'CYMMAP^ЗAPПЛ^OCH^ИCП                   ', 6);
+Z(99,VЗAPП   ,'СУММАР^ЗАРПЛ^ОСН^ИСП                   ', 6);
              (*                    XXXXX.XX               *)
-Z( 5,VCTPAX  ,'OTЧ HA^COЦ^CTPAX                       ', 6);
+Z( 5,VCTPAX  ,'ОТЧ НА^СОЦ^СТРАХ                       ', 6);
              (*   0.14*(П3+П4)      XXXX.XX               *)
-Z( 6,ZMATEP  ,'MATEP                                  ', 6);
+Z( 6,ZMATEP  ,'МАТЕР                                  ', 6);
              (*             XXXXX.XX                      *)
-Z( 7,ZKOMAH  ,'KOMAHД                                 ', 6);
+Z( 7,ZKOMAH  ,'КОМАНД                                 ', 6);
              (*                 XXX.XX                    *)
-Z( 8,ZCПEЦ   ,'CПEЦ^OБOP                              ', 5);
+Z( 8,ZCПEЦ   ,'СПЕЦ^ОБОР                              ', 5);
              (*                    XXXXX                  *)
-Z( 9,ZAMOP   ,'AMOPT^HA^BOCCT                         ', 5);
+Z( 9,ZAMOP   ,'АМОРТ^НА^ВОССТ                         ', 5);
              (*                  XXXXX                    *)
-Z(10,ZCTOP   ,'OПЛ^PAБOT^CTOP^OPГ                     ', 5);
+Z(10,ZCTOP   ,'ОПЛ^РАБОТ^СТОР^ОРГ                     ', 5);
              (*                         XXXXX             *)
-Z(11,VПPOЧ   ,'ПPOЧИE^ПPЯMЫE^ЗATP                     ', 6);
+Z(11,VПPOЧ   ,'ПРОЧИЕ^ПРЯМЫЕ^ЗАТР                     ', 6);
              (* (П3+П4)*ZKПPOЧ         XXX.XX             *)
-Z(12,VHAKЛ   ,'HAKЛ^PACX                              ', 6);
+Z(12,VHAKЛ   ,'НАКЛ^РАСХ                              ', 6);
              (* (П3+П4)*ZKHAKЛ      XXXXX.XX              *)
-Z(13,VЗAPH   ,'ЗAPПЛ^HAKЛ                             ', 6);
+Z(13,VЗAPH   ,'ЗАРПЛ^НАКЛ                             ', 6);
              (* (П3+П4)*ZKЗAPH       XXXX.XX              *)
-Z(14,VCБC    ,'ИTOГO^C/CTOИM                          ', 6);
+Z(14,VCБC    ,'ИТОГО^С/СТОИМ                          ', 6);
              (*   CYMMA(П3..П12)   XXXXX.XX               *)
-Z(15,VЭФЗ    ,'ЭKOHOMИЯ^ФOHДA^ЗAPПЛ                   ', 7);
+Z(15,VЭФЗ    ,'ЭКОНОМИЯ^ФОНДА^ЗАРПЛ                   ', 7);
              (*   0.3747(П2-П10)-П3-П4-П13  XXXXX.XX      *)
-Z(16,ZПOCH   ,'ПЛAT^ЗA^OCH^ФOHД                       ', 4);
+Z(16,ZПOCH   ,'ПЛАТ^ЗА^ОСН^ФОНД                       ', 4);
              (*                            XXXX           *)
-Z(17,ZПTPEC  ,'ПЛA^ЗA^TPY^PEC                         ', 3);
+Z(17,ZПTPEC  ,'ПЛА^ЗА^ТРУ^РЕС                         ', 3);
              (*                             XXX           *)
-Z(18,ZПPБK   ,'ПP^ЗA^БAH^KP                           ', 3);
+Z(18,ZПPБK   ,'ПР^ЗА^БАН^КР                           ', 3);
              (*                              XXX          *)
-Z(19,VPACЧ   ,'PACЧETH^ПPИБЫЛЬ                        ', 7);
+Z(19,VPACЧ   ,'РАСЧЕТН^ПРИБЫЛЬ                        ', 7);
              (*   П2-CYMMA(П14..П18)         XXXXX.XX     *)
-Z(20,ZOBЫШ   ,'OTЧ^B^BЫШ^OPГ                          ', 4);
+Z(20,ZOBЫШ   ,'ОТЧ^В^ВЫШ^ОРГ                          ', 4);
              (*                            XXXX           *)
-Z(21,ZOГOC   ,'OTЧ^B^ГOC^BTЧ^MEC                      ', 3);
+Z(21,ZOГOC   ,'ОТЧ^В^ГОС^ВТЧ^МЕС                      ', 3);
              (*                                XXX        *)
-Z(22,ZHEПЛ   ,'CAЛЬДO^HEПЛ^ДOX И^PACX                 ', 6);
+Z(22,ZHEПЛ   ,'САЛЬДО^НЕПЛ^ДОХ И^РАСХ                 ', 6);
              (*                              XXX.XX       *)
-Z(23,VOCT    ,'OCTATOЧH^ПPИБЫЛЬ                       ', 7);
+Z(23,VOCT    ,'ОСТАТОЧН^ПРИБЫЛЬ                       ', 7);
              (*   П19-П20-П21-П22        XXXXX.XX         *)
-Z(24,VФPEЗ   ,'ФИHAHC^PEЗEPB                          ', 7);
+Z(24,VФPEЗ   ,'ФИНАНС^РЕЗЕРВ                          ', 7);
              (*   0.1*П23                XXXXX.XX         *)
-Z(25,VФMП    ,'ФMП                                    ', 7);
+Z(25,VФMП    ,'ФМП                                    ', 7);
              (*   0.6584*П23             XXXXX.XX         *)
-Z(26,VФHTCP  ,'ФHTCP                                  ', 7);
+Z(26,VФHTCP  ,'ФНТСР                                  ', 7);
              (*   0.2416*П23             XXXXX.XX         *)
 (**)
 L:=L+1;FORLIN[L]:=[PAЗ,ПOД];
@@ -523,19 +523,19 @@ MOV(VЗAPП,'+',[ZOЗAPП,ZДЗAPП]);
 (*VCTPAX*)
 MINUS;
 MOV(VCTPAX,'+',[VЗAPП]);
-MUL(VCTPAX,'ZKCC  ');
+MUL(VCTPAX,'ZКСС  ');
 (*VПPOЧ*)
 MINUS;
 MOV(VПPOЧ,'+',[VЗAPП]);
-MUL(VПPOЧ,'ZKПPOЧ');
+MUL(VПPOЧ,'ZКПРОЧ');
 (*VHAKЛ*)
 MINUS;
 MOV(VHAKЛ,'+',[VЗAPП]);
-MUL(VHAKЛ,'ZKHAKЛ');
+MUL(VHAKЛ,'ZКНАКЛ');
 (*VЗAPH *)
 MINUS;
 MOV(VЗAPH ,'+',[VЗAPП]);
-MUL(VЗAPH ,'ZKЗAPH');
+MUL(VЗAPH ,'ZКЗАРН');
 (*VCБC*)
 MINUS;
 MOV(VCБC,'+',[VЗAPП..VHAKЛ]);
@@ -543,7 +543,7 @@ MOV(VCБC,'+',[VЗAPП..VHAKЛ]);
 MINUS;
 MOV(VЭФЗ,'+',[ZBЫП]);
 MOV(VЭФЗ,'-',[ZCTOP]);
-MUL(VЭФЗ,'ZKЭФЗ ');
+MUL(VЭФЗ,'ZКЭФЗ ');
 MOV(VЭФЗ,'-',[VЗAPП,VЗAPH ]);
 (*VPACЧ*)
 MINUS;
@@ -556,15 +556,15 @@ MOV(VOCT,'-',[ZOBЫШ..ZHEПЛ]);
 (*VФPEЗ*)
 MINUS;
 MOV(VФPEЗ,'+',[VOCT]);
-MUL(VФPEЗ,'ZKФPEЗ');
+MUL(VФPEЗ,'ZКФРЕЗ');
 (*VФMП*)
 MINUS;
 MOV(VФMП,'+',[VOCT]);
-MUL(VФMП,'ZKФMП ');
+MUL(VФMП,'ZКФМП ');
 (*VФHTCP*)
 MINUS;
 MOV(VФHTCP,'+',[VOCT]);
-MUL(VФHTCP,'ZKФHT ');
+MUL(VФHTCP,'ZКФНТ ');
 MINUS;
 IF PRINTCALC THEN WLF(3);
 END;
@@ -610,7 +610,7 @@ WITH C.CON^ DO CASE TYP OF
   DEY:WREAL(Д^.ЗH,2);
   ALF:WRITE(OUTPUT,RT_W(A^.ЗH));
   STR:WCTP(OUTPUT,C^.ЗH,0);
-  LOG:IF Л^.ЗH THEN WRITE(OUTPUT,'ДA') ELSE WRITE(OUTPUT,'HET') end ;
+  LOG:IF Л^.ЗH THEN WRITE(OUTPUT,'ДА') ELSE WRITE(OUTPUT,'НЕТ') end ;
 END;
 
 
@@ -666,7 +666,7 @@ END;
 
 
 BEGIN
-INITTAB;SCREEN:=126;EXPORT:=ПEЧ;ПOCЛEД;ДИP:='BЫX';
+INITTAB;SCREEN:=126;EXPORT:=ПEЧ;ПOCЛEД;ДИP:='ВЫХ';
 (*INITTAB;
 WRITE(OUT,'      ...BЫ B БЛOKE OTЧETA ПO ЗATPATAM...');PUTT;
 WHILE TRUE DO_(

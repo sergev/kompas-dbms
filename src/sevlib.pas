@@ -16,21 +16,25 @@ procedure FWRITE(var f: text);
   work; P is the program's pre-close procedure.  The engine writes every
   change at once, so only P is called. }
 type TProc = procedure;
-procedure Q46_YPHAQ53_(const a: array of char; p: TProc);
-procedure KOHEQ66_(p: TProc);
-procedure WCTP(var f: text; const s: array of char; n: int64);
-procedure WQ44_AT(var f: text; d: int64);
+procedure Q0416_YPHAQ041B_(const a: array of WideChar; p: TProc);
+procedure Q0416_YPHAQ041B_(const a: UnicodeString; p: TProc);
+procedure KOHEQ0426_(p: TProc);
+procedure WCTP(var f: text; const s: array of WideChar; n: int64);
+procedure WCTP(var f: text; const s: UnicodeString; n: int64);
+procedure WQ0414_AT(var f: text; d: int64);
 { TPUT: the pending (unfinished) output line, its length, a char, drop it }
 function ZZTLEN: int64;
-function ZZTCH(i: int64): char;
+function ZZTCH(i: int64): WideChar;
 procedure ZZTCLR;
 
 implementation
 
-uses SysUtils, krt, kio, kdb;
+uses SysUtils, krt, kio, kdb, kutf;
 
-{ Output keeps its unfinished line in pend (TPUT, FCOPY); whole lines go out }
+{ Output keeps its unfinished line in pend (TPUT, FCOPY); whole lines go out.
+  pw: pend as characters for ZZTLEN/ZZTCH. }
 var pend: AnsiString = '';
+    pw: UnicodeString = '';
 
 procedure YHAP(s: int64);
 begin
@@ -42,12 +46,17 @@ begin
   Result := KCOUNT(s);
 end;
 
-procedure Q46_YPHAQ53_(const a: array of char; p: TProc);
+procedure Q0416_YPHAQ041B_(const a: array of WideChar; p: TProc);
 begin
   if (length(a) > 0) and (a[0] <> ' ') then p;
 end;
 
-procedure KOHEQ66_(p: TProc);
+procedure Q0416_YPHAQ041B_(const a: UnicodeString; p: TProc);
+begin
+  if (length(a) > 0) and (a[1] <> ' ') then p;
+end;
+
+procedure KOHEQ0426_(p: TProc);
 begin
   p;
 end;
@@ -64,16 +73,22 @@ begin
   end;
 end;
 
-procedure WCTP(var f: text; const s: array of char; n: int64);
-var t: string;
+procedure WCTP(var f: text; const s: UnicodeString; n: int64);
+var t: UnicodeString; k: int64;
 begin
-  SetString(t, PChar(@s[0]), length(s));
-  t := TrimRight(t);
-  write(f, t);
-  while length(t) < n do begin write(f, ' '); t := t + ' '; end;
+  t := TrimRight(s);
+  write(f, W2U(t));
+  for k := length(t) + 1 to n do write(f, ' ');
 end;
 
-procedure WQ44_AT(var f: text; d: int64);
+procedure WCTP(var f: text; const s: array of WideChar; n: int64);
+var t: UnicodeString;
+begin
+  SetString(t, PWideChar(@s[0]), length(s));
+  WCTP(f, t, n);
+end;
+
+procedure WQ0414_AT(var f: text; d: int64);
 begin
   write(f, Format('%.2d.%.2d.%.2d', [d mod 100, d div 100 mod 100, d div 10000 mod 100]));
 end;
@@ -109,17 +124,19 @@ end;
 function ZZTLEN: int64;
 begin
   Flush(Output);
-  Result := length(pend);
+  pw := U2W(pend);
+  Result := length(pw);
 end;
 
-function ZZTCH(i: int64): char;
+function ZZTCH(i: int64): WideChar;
 begin
-  Result := pend[i];
+  Result := pw[i];
 end;
 
 procedure ZZTCLR;
 begin
   pend := '';
+  pw := '';
 end;
 
 initialization

@@ -29,7 +29,7 @@ A new guess goes here first and is checked afterwards.
   - the journal format and recovery from it;
   - the meaning of `КОНСИМ`, taken as a plain string.
 - **HYPOTHESIS**: the DB-key of the first record of a new area is `6000₈`; this is the only value observed. The step for the next records is not known; 64 is used.
-- **HYPOTHESIS**: MARS keys are ordered by the bytes of the internal code. With keys that mix digits, blanks and letters, GOST order and ASCII order differ.
+- **HYPOTHESIS**: the original ordered keys by the bytes of the GOST internal code, where Cyrillic look-alikes of Latin letters sorted with Latin (`С` before `З`). We order by Unicode code points (`З` before `С`), so ordered sets and the answers of the Severov sessions that follow them differ from 1988.
 
 ## Output formats of programs
 

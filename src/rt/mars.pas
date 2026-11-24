@@ -9,7 +9,10 @@ interface
 uses krt;
 
 type
-  TKey = packed array[0..5] of char;
+  { a key: bytes, ordered as bytes; a name is its UTF-8, blanks trimmed }
+  TKey = record
+    b: RawByteString;
+  end;
 
 var
   BDERRN0: int64;          { used when the program has no BDERRN }
@@ -24,22 +27,41 @@ procedure PASSETAR(i: int64);
 procedure pasbdi;
 procedure pasbd;
 
-procedure newd(const name: array of char; info: int64);
-procedure opend(const name: array of char);
-procedure putd(const key: array of char; const d: array of char; n: int64);
-procedure putd(const key: array of char; const d: array of int64; n: int64);
-procedure putd(const key: array of char; const d; n: int64);
-procedure getd(const key: array of char; var d: array of char; n: int64);
-procedure getd(const key: array of char; var d: array of int64; n: int64);
-procedure getd(const key: array of char; var d; n: int64);
-procedure modd(const key: array of char; const d: array of char; n: int64);
-procedure modd(const key: array of char; const d: array of int64; n: int64);
-procedure modd(const key: array of char; const d; n: int64);
-procedure deld(const key: array of char);
+function NameKey(const s: string): TKey;      { s in UTF-8 }
+function ByteKey(const b: RawByteString): TKey;
+
+procedure newd(const name: TKey; info: int64);
+procedure opend(const name: TKey);
+procedure putd(const key: TKey; const d: array of int64; n: int64);
+procedure putd(const key: TKey; const d; n: int64);
+procedure getd(const key: TKey; var d: array of int64; n: int64);
+procedure getd(const key: TKey; var d; n: int64);
+procedure modd(const key: TKey; const d: array of int64; n: int64);
+procedure modd(const key: TKey; const d; n: int64);
+procedure deld(const key: TKey);
+{ the same with a name of a program: alfa or a literal; d is n bytes }
+procedure newd(const name: array of WideChar; info: int64);
+procedure opend(const name: array of WideChar);
+procedure putd(const key: array of WideChar; const d: array of int64; n: int64);
+procedure putd(const key: array of WideChar; const d; n: int64);
+procedure getd(const key: array of WideChar; var d: array of int64; n: int64);
+procedure getd(const key: array of WideChar; var d; n: int64);
+procedure modd(const key: array of WideChar; const d: array of int64; n: int64);
+procedure modd(const key: array of WideChar; const d; n: int64);
+procedure deld(const key: array of WideChar);
+procedure newd(const name: UnicodeString; info: int64);
+procedure opend(const name: UnicodeString);
+procedure putd(const key: UnicodeString; const d: array of int64; n: int64);
+procedure putd(const key: UnicodeString; const d; n: int64);
+procedure getd(const key: UnicodeString; var d: array of int64; n: int64);
+procedure getd(const key: UnicodeString; var d; n: int64);
+procedure modd(const key: UnicodeString; const d: array of int64; n: int64);
+procedure modd(const key: UnicodeString; const d; n: int64);
+procedure deld(const key: UnicodeString);
 
 implementation
 
-uses SysUtils, Classes;
+uses SysUtils, Classes, kutf;
 
 type
   TEntry = record
@@ -120,26 +142,58 @@ begin
   if not Result then SetErr(eNoName);
 end;
 
-function MkKey(const s: array of char): TKey;
-var i: integer;
+function ByteKey(const b: RawByteString): TKey;
 begin
-  for i := 0 to 5 do
-    if i <= high(s) then Result[i] := s[i] else Result[i] := ' ';
+  Result.b := b;
+end;
+
+function NameKey(const s: string): TKey;
+begin
+  Result.b := TrimRight(s);
+end;
+
+function MkKey(const s: UnicodeString): TKey;
+begin
+  Result := NameKey(W2U(s));
+end;
+
+function MkKey(const s: array of WideChar): TKey;
+begin
+  if length(s) = 0 then Result.b := ''
+  else Result := NameKey(BufU(@s[0], length(s)));
 end;
 
 function KeyFile(const k: TKey): string;
 var i: integer;
 begin
   Result := '';
-  for i := 0 to 5 do Result := Result + IntToHex(ord(k[i]), 2);
+  for i := 1 to length(k.b) do Result := Result + IntToHex(ord(k.b[i]), 2);
 end;
 
 function Cmp(const a, b: TKey): integer;
-var i: integer;
+var i, n: integer;
 begin
-  for i := 0 to 5 do
-    if a[i] <> b[i] then exit(ord(a[i]) - ord(b[i]));
-  Result := 0;
+  n := length(a.b);
+  if length(b.b) < n then n := length(b.b);
+  for i := 1 to n do
+    if a.b[i] <> b.b[i] then exit(ord(a.b[i]) - ord(b.b[i]));
+  Result := length(a.b) - length(b.b);
+end;
+
+procedure WriteKey(f: TStream; const k: TKey);
+var n: int64;
+begin
+  n := length(k.b);
+  f.WriteBuffer(n, 8);
+  if n > 0 then f.WriteBuffer(k.b[1], n);
+end;
+
+procedure ReadKey(f: TStream; var k: TKey);
+var n: int64;
+begin
+  f.ReadBuffer(n, 8);
+  SetLength(k.b, n);
+  if n > 0 then f.ReadBuffer(k.b[1], n);
 end;
 
 procedure SaveArea(a: integer);
@@ -154,7 +208,7 @@ begin
     f.WriteBuffer(n, 8);
     for i := 0 to high(areas[a].ent) do
       with areas[a].ent[i] do begin
-        f.WriteBuffer(key, 6);
+        WriteKey(f, key);
         f.WriteBuffer(words, 8);
         f.WriteBuffer(handle, 8);
         n := length(data);
@@ -184,7 +238,7 @@ begin
     SetLength(areas[i].ent, n);
     for j := 0 to n - 1 do
       with areas[i].ent[j] do begin
-        f.ReadBuffer(key, 6);
+        ReadKey(f, key);
         f.ReadBuffer(words, 8);
         f.ReadBuffer(handle, 8);
         f.ReadBuffer(m, 8);
@@ -214,7 +268,10 @@ begin
   vec^[sCurKey] := 0;
   if (cur < 0) or (pos < 0) then exit;
   with areas[cur].ent[pos] do begin
-    Move(key, vec^[sCurKey], 6);
+    { the first 8 bytes of the key }
+    if length(key.b) > 0 then
+      if length(key.b) < 8 then Move(key.b[1], vec^[sCurKey], length(key.b))
+      else Move(key.b[1], vec^[sCurKey], 8);
     vec^[sCurLen] := words;
     vec^[sHandle] := handle;
   end;
@@ -335,9 +392,16 @@ begin
   SetErr(0);
 end;
 
+{ a key of up to 8 bytes in vec[8], zero padded }
 function KeyArg: TKey;
+var b: RawByteString; n: integer;
 begin
-  Move(vec^[sKey], Result, 6);
+  SetLength(b, 8);
+  Move(vec^[sKey], b[1], 8);
+  n := 8;
+  while (n > 0) and (b[n] = #0) do dec(n);
+  SetLength(b, n);
+  Result := NameKey(b);
 end;
 
 function Matches: boolean;
@@ -427,24 +491,23 @@ begin
   ShowCursor;
 end;
 
-procedure newd(const name: array of char; info: int64);
-var k: TKey; i: integer;
+procedure newd(const name: TKey; info: int64);
+var i: integer;
 begin
-  k := MkKey(name);
-  if FindArea(k) >= 0 then begin SetErr(eExists); exit; end;
+  if FindArea(name) >= 0 then begin SetErr(eExists); exit; end;
   i := length(areas);
   SetLength(areas, i + 1);
-  areas[i].name := k;
+  areas[i].name := name;
   areas[i].info := info;
   areas[i].nexth := FirstHandle;
   SaveArea(i);
   SetErr(0);
 end;
 
-procedure opend(const name: array of char);
+procedure opend(const name: TKey);
 var i: integer;
 begin
-  i := FindArea(MkKey(name));
+  i := FindArea(name);
   if i < 0 then begin SetErr(eNoName); exit; end;
   cur := i;
   pos := -1;
@@ -453,39 +516,67 @@ begin
   SetErr(0);
 end;
 
+procedure putd(const key: TKey; const d: array of int64; n: int64);
+begin Store(key, @d, n, n div 8, false); end;
+procedure putd(const key: TKey; const d; n: int64);
+begin Store(key, @d, n, (n + 7) div 8, false); end;
+procedure getd(const key: TKey; var d: array of int64; n: int64);
+begin Fetch(key, @d, n); end;
+procedure getd(const key: TKey; var d; n: int64);
+begin Fetch(key, @d, n); end;
+procedure modd(const key: TKey; const d: array of int64; n: int64);
+begin Store(key, @d, n, n div 8, true); end;
+procedure modd(const key: TKey; const d; n: int64);
+begin Store(key, @d, n, (n + 7) div 8, true); end;
 
-procedure putd(const key: array of char; const d: array of char; n: int64);
-begin Store(MkKey(key), @d, n, (n + 5) div 6, false); end;
-procedure putd(const key: array of char; const d: array of int64; n: int64);
-begin Store(MkKey(key), @d, n, n div 8, false); end;
-procedure putd(const key: array of char; const d; n: int64);
-begin Store(MkKey(key), @d, n, (n + 7) div 8, false); end;
-
-procedure getd(const key: array of char; var d: array of char; n: int64);
-begin Fetch(MkKey(key), @d, n); end;
-procedure getd(const key: array of char; var d: array of int64; n: int64);
-begin Fetch(MkKey(key), @d, n); end;
-procedure getd(const key: array of char; var d; n: int64);
-begin Fetch(MkKey(key), @d, n); end;
-
-procedure modd(const key: array of char; const d: array of char; n: int64);
-begin Store(MkKey(key), @d, n, (n + 5) div 6, true); end;
-procedure modd(const key: array of char; const d: array of int64; n: int64);
-begin Store(MkKey(key), @d, n, n div 8, true); end;
-procedure modd(const key: array of char; const d; n: int64);
-begin Store(MkKey(key), @d, n, (n + 7) div 8, true); end;
-
-procedure deld(const key: array of char);
-var i: integer; k: TKey;
+procedure deld(const key: TKey);
+var i: integer;
 begin
-  k := MkKey(key);
-  i := Floor(k);
-  if (i < 0) or (Cmp(areas[cur].ent[i].key, k) <> 0) then begin
+  i := Floor(key);
+  if (i < 0) or (Cmp(areas[cur].ent[i].key, key) <> 0) then begin
     SetErr(eNoRec); exit;
   end;
   Remove(i);
   SetErr(0);
 end;
+
+procedure newd(const name: array of WideChar; info: int64);
+begin newd(MkKey(name), info); end;
+procedure opend(const name: array of WideChar);
+begin opend(MkKey(name)); end;
+procedure putd(const key: array of WideChar; const d: array of int64; n: int64);
+begin putd(MkKey(key), d, n); end;
+procedure putd(const key: array of WideChar; const d; n: int64);
+begin putd(MkKey(key), d, n); end;
+procedure getd(const key: array of WideChar; var d: array of int64; n: int64);
+begin getd(MkKey(key), d, n); end;
+procedure getd(const key: array of WideChar; var d; n: int64);
+begin getd(MkKey(key), d, n); end;
+procedure modd(const key: array of WideChar; const d: array of int64; n: int64);
+begin modd(MkKey(key), d, n); end;
+procedure modd(const key: array of WideChar; const d; n: int64);
+begin modd(MkKey(key), d, n); end;
+procedure deld(const key: array of WideChar);
+begin deld(MkKey(key)); end;
+
+procedure newd(const name: UnicodeString; info: int64);
+begin newd(MkKey(name), info); end;
+procedure opend(const name: UnicodeString);
+begin opend(MkKey(name)); end;
+procedure putd(const key: UnicodeString; const d: array of int64; n: int64);
+begin putd(MkKey(key), d, n); end;
+procedure putd(const key: UnicodeString; const d; n: int64);
+begin putd(MkKey(key), d, n); end;
+procedure getd(const key: UnicodeString; var d: array of int64; n: int64);
+begin getd(MkKey(key), d, n); end;
+procedure getd(const key: UnicodeString; var d; n: int64);
+begin getd(MkKey(key), d, n); end;
+procedure modd(const key: UnicodeString; const d: array of int64; n: int64);
+begin modd(MkKey(key), d, n); end;
+procedure modd(const key: UnicodeString; const d; n: int64);
+begin modd(MkKey(key), d, n); end;
+procedure deld(const key: UnicodeString);
+begin deld(MkKey(key)); end;
 
 initialization
   vec := @ownvec;

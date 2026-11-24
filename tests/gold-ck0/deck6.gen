@@ -1,13 +1,13 @@
-ПOДCXEMA CX-CK0
+ПОДСХЕМА СХ-СК0
 
-? .OГP
-OГPAHИЧ
-  ФOPMATA:[,];
-  ЭЛEMEHT:_;
-KOHEЦ
+? .ОГР
+ОГРАНИЧ
+  ФОРМАТА:[,];
+  ЭЛЕМЕНТ:_;
+КОНЕЦ
 
-? .ПPO
-ПPOЦEДYPЫ "
+? .ПРО
+ПРОЦЕДУРЫ "
 PROCEDURE PUTSYSTEM;
 TYPE ФЛAГ=(ФS,ПEЧATЬ,MOДИФ,AДMИH,OTЛAД,OTЧCKЛ,OTЧOTД,BXOД,ФF);
 VAR ФЛAГИ,ФЛAГИCOX:SET OF ФЛAГ;
@@ -17,7 +17,7 @@ SYSTEM.PEЖИMЫ:=LONGINT(ФЛAГИ);SYSTEM.XPAHИM:=LONGINT(ФЛAГИCOX);
 SYSTEM.ДATЧИC:=1;
 SYSTEM.ГOД:=88;SYSTEM.ДATЗП:=1;
 SYSTEM.BPEЗП:=0;SYSTEM.ПAPCИC:='0909  ';
-SYSTEM.ПAPOЛЬ:='CTAKAH';
+SYSTEM.ПAPOЛЬ:='СТАКАН';
 &&ЗAMEHИ SYSTEM&&
 END;
 (*HAЙДИ MAT ПO BEЩ*)
@@ -33,30 +33,30 @@ END;
 "
 
 ? .Ф
-ФOPMAT SYSTEM
-  ПACKAЛ "PUTSYSTEM;"
+ФОРМАТ SУSТЕМ
+  ПАСКАЛ "PUTSYSTEM;"
 
-ФOPMAT MATEP
-  MATEP.HAЧ_MATEP.KOH_MATEP.HAЗB*
-  &&ПOCTAB MATEP&&
+ФОРМАТ МАТЕР
+  МАТЕР.НАЧ_МАТЕР.КОН_МАТЕР.НАЗВ*
+  &&ПОСТАВ МАТЕР&&
 
-ФOPMAT OTДEЛ
-  OTДEЛ.HAЗB*
-  ПACKAЛ "&&ПOCTAB OTДEЛ;HAЙTИ ПEPBYЮ B SY-MAT&&"
+ФОРМАТ ОТДЕЛ
+  ОТДЕЛ.НАЗВ*
+  ПАСКАЛ "&&ПOCTAB OTДEЛ;HAЙTИ ПEPBYЮ B SY-MAT&&"
 
-ФOPMAT CYMMA
-  CYMMA.ЦEHA*
-  ПACKAЛ "&&ПOCTAB CYMMA;HAЙTИ CЛEДYЮ B SY-MAT&&"
+ФОРМАТ СУММА
+  СУММА.ЦЕНА*
+  ПАСКАЛ "&&ПOCTAB CYMMA;HAЙTИ CЛEДYЮ B SY-MAT&&"
 
-ФOPMAT BЗЯЛ
-  CYMMA.ЦEHA_BЗЯЛ.KOЛИЧ*
-  ПACKAЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
+ФОРМАТ ВЗЯЛ
+  СУММА.ЦЕНА_ВЗЯЛ.КОЛИЧ*
+  ПАСКАЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
     &&HAЙTИ ПO-KЛЮ B SY-BEЩ;ПOCTAB BЗЯЛ&&"
 
-ФOPMAT BEЩИ
-  CYMMA.ЦEHA_BEЩЬ.HAЗB_BEЩЬ.EД_
-  BEЩЬ.ЦEHA_BEЩЬ.OCTAT_BEЩЬ.ПPИXOД_BEЩЬ.PACXOД*
-  ПACKAЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
+ФОРМАТ ВЕЩИ
+  СУММА.ЦЕНА_ВЕЩЬ.НАЗВ_ВЕЩЬ.ЕД_
+  ВЕЩЬ.ЦЕНА_ВЕЩЬ.ОСТАТ_ВЕЩЬ.ПРИХОД_ВЕЩЬ.РАСХОД*
+  ПАСКАЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
     HAЙMAT;&&ПOCTAB BEЩЬ&&
     IF BEЩЬ.ЦEHA<0.01
       THEN BEGIN &&BKЛЮЧИ B SY-БEЗ&& END
@@ -64,50 +64,50 @@ END;
     IF (BEЩЬ.ЦEHA<0.01)OR(BEЩЬ.ПPИXOД+BEЩЬ.PACXOД>0.0001)
       THEN BEGIN &&BKЛЮЧИ B SY-ДBИ&& END;"
 
-KOHEЦ
+КОНЕЦ
 
-*REL:LP
-*READ:31017
-*PASC
-*C
-OCBOБO ЖY-CK0,ИH-CK0,ДA-CK0,BP-CK0;
-OЧИCTИ ЖY-CK0,ИH-CK0,ДA-CK0,BP-CK0;
-ЖYPHAЛ ЖY-CK0 CБPOCИ.
-? .E
-*ИПC
-*CALL CKЛЗAГ
-PEЖИM [[ПOBTOP]
+*RЕL:LР
+*RЕАD:31017
+*РАSС
+*С
+ОСВОБО ЖУ-СК0,ИН-СК0,ДА-СК0,ВР-СК0;
+ОЧИСТИ ЖУ-СК0,ИН-СК0,ДА-СК0,ВР-СК0;
+ЖУРНАЛ ЖУ-СК0 СБРОСИ.
+? .Е
+*ИПС
+*САLL СКЛЗАГ
+РЕЖИМ [[ПОВТОР]
 
-SYSTEM []
+SУSТЕМ []
 
-MATEP [ 2001000_ 2050000_ГCM*
-        2051000_ 9350000_MATEPИAЛЫ*
-        9351000_12850000_MAЛ.ИHBEHTAPЬ*
-       12851000_13050000_CПEЦ.OДEЖДA*]
+МАТЕР [ 2001000_ 2050000_ГСМ*
+        2051000_ 9350000_МАТЕРИАЛЫ*
+        9351000_12850000_МАЛ.ИНВЕНТАРЬ*
+       12851000_13050000_СПЕЦ.ОДЕЖДА*]
 
 
- BEЩИ [
- 2004.000_БEHЗИH AИ-93_Л _
+ ВЕЩИ [
+ 2004.000_БЕНЗИН АИ-93_Л _
     0.20_0.000_0.000_0.000*
- 2010.000_ДИЗ/MACЛO_Л _
+ 2010.000_ДИЗ/МАСЛО_Л _
     0.22_0.000_0.000_0.000*
- 13046.001_ШTOPЫ ШEЛKOBЫE_K _
+ 13046.001_ШТОРЫ ШЕЛКОВЫЕ_К _
     44.00_67.000_0.000_0.000*]
 
- OTДEЛ [ПPOФK *]
-   CYMMA [0.00*]
-   CYMMA [256.22*]
-   CYMMA [230.10*]
-   CYMMA [0.00*]
- OTДEЛ [ППO   *]
-   CYMMA [0.00*]
-   CYMMA [88.27*]
-   CYMMA [0.00*]
-   CYMMA [0.00*]
- OTДEЛ [ЭИO   *]
-   CYMMA [34.20*]
-   CYMMA [23953.01*]
-   CYMMA [837.67*]
-   CYMMA [2705.14*]
+ ОТДЕЛ [ПРОФК *]
+   СУММА [0.00*]
+   СУММА [256.22*]
+   СУММА [230.10*]
+   СУММА [0.00*]
+ ОТДЕЛ [ППО   *]
+   СУММА [0.00*]
+   СУММА [88.27*]
+   СУММА [0.00*]
+   СУММА [0.00*]
+ ОТДЕЛ [ЭИО   *]
+   СУММА [34.20*]
+   СУММА [23953.01*]
+   СУММА [837.67*]
+   СУММА [2705.14*]
 
-KOHEЦ ]
+КОНЕЦ ]

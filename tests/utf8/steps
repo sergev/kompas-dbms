@@ -1,0 +1,10 @@
+# UTF-8 transparency: data as written, names folded
+servis areas.srv
+ttc words.ddl
+gen load.gen
+mad list.mad
+prog word.pas жук
+prog word.pas Жук
+prog word.pas Ωμέγα
+prog word.pas über
+prog word.pas ЖУК

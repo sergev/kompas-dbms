@@ -14,7 +14,7 @@ type
   RecT = XT0;
   LinT = packed array[1..72] of char;
 var
-  BDVECT: array [0..167] of word;
+  BDVECT: array [0..167] of integer;
   BDERRN: integer;
   PIC: integer;
   ln: LinT;
@@ -556,7 +556,7 @@ begin
   mw[1] := caz[2]; putd('RC2ZN ', mw, sizeof(mw));
   mw[1] := cln[2]; putd('RC2LN ', mw, sizeof(mw));
   mw[1] := cof[2]; putd('RC2OF ', mw, sizeof(mw));
-  w.a := cnm[2];   mw[1] := w.i;        putd('RC2NM ', mw, sizeof(mw))
+  putd('RC2NM ', cnm[2], sizeof(alfa))
    end ;
 end;
 
@@ -577,7 +577,7 @@ begin
   mw[1] := caz[1]; putd('RC1ZN ', mw, sizeof(mw));
   mw[1] := cln[1]; putd('RC1LN ', mw, sizeof(mw));
   mw[1] := cof[1]; putd('RC1OF ', mw, sizeof(mw));
-  w.a := cnm[1];   mw[1] := w.i;        putd('RC1NM ', mw, sizeof(mw));
+  putd('RC1NM ', cnm[1], sizeof(alfa));
   RegPut;
   mw[1] := cln[1]; putd('C1LEN ', mw, sizeof(mw));
   mw[1] := cof[1]; putd('C1OFF ', mw, sizeof(mw));
@@ -617,7 +617,7 @@ begin
   getd('RC2KB ', mw, sizeof(mw)); ckz[2] := mw[1] - 135168;
   getd('RC2ZN ', mw, sizeof(mw)); caz[2] := mw[1];
   getd('RC2LN ', mw, sizeof(mw)); cln[2] := mw[1];
-  getd('RC2NM ', mw, sizeof(mw)); w.i := mw[1]; nm2 := w.a;
+  getd('RC2NM ', nm2, sizeof(alfa));
   kb2 := ckz[2]; zn2 := caz[2]; ln2 := cln[2]
    end ;
 end;
@@ -706,24 +706,24 @@ begin
        (ln[p] = '.') then p := 73
     else begin
       kw2 := Tok;
-      if (kw2 = 'ДЛИНА ') or (kw2 = 'ДЛИHA ') then begin
+      if (kw2 = 'ДЛИНА ') then begin
         v := Number;
         if (v < 1) or (v > 1750) then Err(76) else l := v
-      end else if (kw2 = 'НАПР  ') or (kw2 = 'HAПP  ') then
+      end else if (kw2 = 'НАПР  ') then
         d[9] := Number
-      else if (kw2 = 'НАЧАЛО') or (kw2 = 'HAЧAЛO') then
+      else if (kw2 = 'НАЧАЛО') then
         d[10] := Number
-      else if (kw2 = 'ВИД   ') or (kw2 = 'BИД   ') then begin
+      else if (kw2 = 'ВИД   ') then begin
         nm := Tok;
         if nm = 'ЖУРНАЛ' then d[4] := 2 else d[4] := 1
-      end else if (kw2 = 'ВАРИАН') or (kw2 = 'BAPИAH') then begin
+      end else if (kw2 = 'ВАРИАН') then begin
         GetName(nm);
         d[5] := CodeOf(nm)
-      end else if (kw2 = 'ДУБЛЬ ') or (kw2 = 'ДYБЬ  ') then begin
+      end else if (kw2 = 'ДУБЛЬ ') or (kw2 = 'ДУБЬ  ') then begin
         GetName(nm);
         d[5] := CodeOf(nm);
         d[4] := 4
-      end else if (kw2 = 'РЕЖИМ ') or (kw2 = 'PEЖИM ') then
+      end else if (kw2 = 'РЕЖИМ ') then
         d[8] := Number
       else if (kw2 = 'ПАРОЛЬ') then begin
         nm := Tok;
@@ -899,7 +899,7 @@ begin
       else if (kw = 'РЕГИСТ') then RegCreate
       else if (kw = 'КУСОК ') then ChunkNew
       else if (kw = 'СОБРАТ') then AsmOp
-      else if (kw = 'B     ') then p := 73
+      else if (kw = 'В     ') then p := 73
       else if (kw = 'КОНЕЦ ') or (kw = 'КОНЕЦ.') then p := 73
       else if k2 <> '      ' then begin
         p := 1;
@@ -917,8 +917,8 @@ var i,j:integer;
 begin
    begin 
   (* PASCOMPL 15.1 miscompiles a plain '= 0' test here. *)
-  if BDVECT[36].i + 0 = 0 then begin
-    for j := 0 to 167 do BDVECT[j].i := 0;
+  if BDVECT[36] + 0 = 0 then begin
+    for j := 0 to 167 do BDVECT[j] := 0;
     PASSETAR(94208)
   end;
   pasbdi;
@@ -953,6 +953,7 @@ begin MarsBind(@bdvect, @bderrn);
   writeln('ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН');
   while not eof(input) do begin
     RT_ReadLn(ln);
+    RT_Fold(ln);
     p := 1;
     repeat
       Stmt;
