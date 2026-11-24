@@ -64,6 +64,9 @@ A new guess goes here first and is checked afterwards.
   - The alignment `TABLE[j].F` is not known. It was chosen by the look of the table: `Ц` centre, `П` right (the line `ИТОГО`), otherwise left.
   - `REWRITE(INP);WRITE(INP,X);INPUTCON` (`ZATZAT`) is replaced by `INPUTCON(X)`, because the input line is not modelled as a buffer.
 - **FACT**: in `ZATTAB`, `BЫЧKOЭФ` calls `ЗАМЕНИ` of the record `ДЕЙ` without assigning it the value of parameter `I` (`PДEЙ`). So the coefficients `ZKПРОЧ`, `ZKНАКЛ` and `ZKЗАРН` stay 0.0 from deck 11.
+- **FACT**: in `ZATCOF`, `НОВ` stores the record `АЛФ` of the list `ИМ-КОЭ` without assigning `АЛФ.ЗН:=ПАР.ИМЯ` (deck 11 assigns it, format `ПА--АЛ`). So the new coefficient is listed under a blank name, and `ИСК` does not find it in `ПА-АЛФ`: its `УБРАТЬ` then erases the current record, the `ПАР` `ИМ-КОЭ`, and the list is lost.
+- **FACT**: `SKLCAR` checks the unit of measure by writing the units to `OUT`, then `RESET(OUT)` and `READ(OUT,ЕДИЗМ)`. It is converted like `ШАПКА` of `SKLOTC`: the line goes to a scratch file by `FCOPY`.
+- **HYPOTHESIS**: `FCBЯ(S1,S2,R)` (`SKLCAR`, module lost) finds among the members of the current occurrence of `S1` the one whose owner in `S2` is the current record of type `R`, makes it current and sets `СОСТ=0`; otherwise `СОСТ<>0`. Basis: its calls `FCBЯ(МА-СУМ,ОТ-СУМ,ОТДЕЛ)` and `FCBЯ(ВЕ-ВЗЯ,СУ-ВЗЯ,СУММА)`, followed by `IF МОЖНО THEN ВЗЯТЬ ВЗЯЛ` and `ПОСТАВИТЬ ВЗЯЛ`.
 - **FACT**: `ZATTAB` prints a trace of its calculation, because `INITTAB` sets `PRINTCALC:=TRUE`. Two parts of the trace depend on the rebuilt modules: the format `R:0:23`, and `CLF` as a line break in `HEADING`.
 
 ## Tools

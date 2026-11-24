@@ -129,8 +129,29 @@ FUNCTION STEP: BOOLEAN; BEGIN WRITELN; STEP:=FALSE END;
 
 (* FINLIN2: stub *)
 
-(* FCBЯ: link records through two sets (stub) *)
-PROCEDURE FCBЯ(S1, S2, R: INTEGER); BEGIN END;
+(* FCBЯ: find the member of S1 (of its current owner) whose owner in S2
+   is the current record of type R; it becomes current, СОСТ=0 *)
+PROCEDURE FCBЯ(S1, S2, R: INTEGER);
+VAR OT, MT, O, T, M: INTEGER; HIT: BOOLEAN;
+BEGIN
+  OT:=KSETOWNER(S1); MT:=KSETMEMBER(S1);
+  O:=KDBKEY(OT); T:=KDBKEY(R); M:=0; HIT:=FALSE;
+  IF (O<>0) AND (T<>0) THEN BEGIN
+    KSETCUR(OT,O); KFINDFIRST(S1);
+    WHILE (KSTAT=0) AND NOT HIT DO BEGIN
+      M:=KDBKEY(0);
+      KFINDOWNER(S2); HIT:=(KSTAT=0) AND (KDBKEY(0)=T);
+      KSETCUR(MT,M);
+      IF NOT HIT THEN KFINDNEXT(S1)
+    END
+  END;
+  IF HIT THEN BEGIN KSETCUR(R,T); KSETCUR(MT,M); СОСТ:=0 END
+  ELSE BEGIN
+    IF O<>0 THEN KSETCUR(OT,O);
+    IF T<>0 THEN KSETCUR(R,T);
+    СОСТ:=2
+  END
+END;
 
 
 
@@ -270,7 +291,7 @@ END;
 
 
 PROCEDURE HOB;
-VAR EДИЗM:ALFA;
+VAR EДИЗM:ALFA;F:TEXT;
 {$goto on} label XX_Q66_E_3986; BEGIN
 WITH BEЩЬ DO REPEAT
 &&HAЙTИ ПEPBYЮ B SY-MAT;BЗЯTЬ MATEP.HAЧ;
@@ -296,10 +317,9 @@ ELSE begin IF HAЧ THEN EXIT;ЦEHA:=0.0 end ;
 WRITE(OUTPUT,'EДИHИЦA ИЗMEPEHИЯ (ШT,KГ,M,M2,M3,П,Л,T,ГP,K):');GETHAЧ;
 IF HAЧ THEN EXIT;begin RT_Read(EД) end;WRITE(OUTPUT,
 'ШT    KГ    M     M2    M3    П     Л     T     ГP    K     ');
-RESET(OUTPUT);
-WHILE NOT EOF(OUTPUT) DO begin 
-  READ(OUTPUT,EДИЗM);IF EДИЗM=EД THEN begin ZZTCLR;goto XX_Q66_E_3986  end  end ;
-ZZTCLR;
+FCOPY(F,OUTPUT);begin if RT_First(@F) then assign(F, RT_TmpName); RESET(F) end;ZZTCLR;
+WHILE NOT EOF(F) DO begin
+  READ(F,EДИЗM);IF EДИЗM=EД THEN begin goto XX_Q66_E_3986  end  end ;
 WRITE(OUTPUT,'TAKOЙ EДИHИЦЫ HET, ПOBTOPИTE');PUTT end ; XX_Q66_E_3986: ;
 (**)
 WRITE(OUTPUT,'ПPИXOД:');

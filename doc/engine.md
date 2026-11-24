@@ -111,16 +111,23 @@ The Pascal parts of the gold decks (`ПАСКАЛ "…"`, `ПРОЦЕДУРЫ`) 
 - Two modules were rebuilt from their use in `ZATZAT`, `ZATNAK`, `ZATRTE` and `ZATTAB`:
   - `LIST`: parameter cards. The list and its questions come from the records `ПАР`/`ТИП`/`АТР` of deck 11.
   - `TPUT`: a table row built from the cells of the unfinished output line.
+- `FCBЯ` (`SKLCAR`) was rebuilt from its two calls: it finds the link record of two owners (`СУММА` of a material and a department, `ВЗЯЛ` of an item and a `СУММА`).
 
-All 16 build. The sessions `tests/severov/*.in` run on a copy of the database loaded by the original loader, and their output is compared with `*.out`. The sessions of `ZATZAT` and `ZATTAB` run on the database after the sessions that give them data (`SETUP` in `tests/run.py`): deck 11 has no costs, months or stages.
+All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a copy of the database loaded by the original loader, and their output is compared with `*.out`. Some run on the database after the sessions that give them data (`SETUP` in `tests/run.py`): deck 11 has no costs, months or stages, and deck 7 has no devices or code groups.
 
 | Program | Session | Result |
 |---|---|---|
 | `SKLMON` | administrator login with the password `СТАКАН` of deck 6, date, `КОН` | greeting, data from `SYSTEM`, common block |
 | `SKLOTD` | list, add `ОТД-7`, rename it to `ОТД-8`, remove `ППО` | the department lists show each change |
 | `SKLOTC` | `ИТО` - the current total of the warehouse | stock of `СПЕЦ.ОДЕЖДА` 2948 = 44.00 × 67 (curtains of deck 6) |
-| `ZATMON`, `ZATOTD` | login, list | menu and the first department |
+| `SKLCAR` | list; `НОВ` card 2020 without a price; `ЦЕН`, `ПРИ`; `РАС` to `ППО` twice and to `ЭИО`; `ОТД`; `ИСК` | the issues of each department: `ППО` 15+5=20, `ЭИО` 7 |
+| `AMOMON` | administrator login, system block (password `0909` of deck 7), flag `ОТЛАД` on and off, `ЗАК`, `КОН` | menus and flags |
 | `AMOCAR` | `НОВ` - device 1001 with precious metals, `ПРО` | the metals pass through the file `ДР` into the database and back |
+| `AMOOTD` | after `AMOCAR`: add `ОТД-9`, add `ЭИО` again, rename to `ОТД-10`, remove `ОГИ`, remove `ОТД-10` | `ЭИО` is refused; `ОГИ` keeps its device 1001 |
+| `AMOGRU` | add groups 20000-29999 and 30000-39999, remove the second | the lists show each change |
+| `AMOOTC` | after `AMOCAR`, `AMOGRU`: all six reports for month 3 | device 1001: 1200 × 10% / 12 = 10 and 1200 × 5% / 12 = 5; metals 1.5 and 0.25 |
+| `ZATMON`, `ZATOTD` | login, list | menu and the first department |
+| `ZATCOF` | list the coefficients of deck 11; `НОВ` `ZКПРЕМ`; `ЗАМ`; `ИСК` | a bug of 1988 (`doc/open-questions.md`): the new coefficient is not in the list, and `ИСК` erases the list |
 | `ZATNAK` | `НОВ` - invoices for 01.89, `ПРО` | the card is read from `SY-НАК` |
 | `ZATRTE` | `НОВ` - topic 1300189: executor `ОГИ`, co-executor `ЭИО`, stages 1 and 2; `ПРО` of it and of topic 1021889 | questions by `АТР`; topic 1021889 is `НМОЭИ` with co-executors `ОМАТИ`, `ОГПС`, as in deck 11 |
 | `ZATZAT` | `НОВ` - costs of topic 1300189, stage 1, 01.89, `ПРО` | the card is found through `ЭТ-ЗАТ` |

@@ -40,7 +40,8 @@ PROGRAMS = {
     'ZATZAT': 'zt0', 'ZATNAK': 'zt0', 'ZATRTE': 'zt0', 'ZATTAB': 'zt0',
 }
 # sessions run before a program's own on the same database
-SETUP = {'ZATZAT': ['ZATRTE'], 'ZATTAB': ['ZATNAK', 'ZATRTE', 'ZATZAT']}
+SETUP = {'ZATZAT': ['ZATRTE'], 'ZATTAB': ['ZATNAK', 'ZATRTE', 'ZATZAT'],
+         'AMOOTD': ['AMOCAR'], 'AMOOTC': ['AMOCAR', 'AMOGRU']}
 
 
 def env(db):
@@ -162,8 +163,10 @@ def main():
         total += 1
         ok += compare(n, run_case(TESTS / n), TESTS / n / 'expected.txt', a.u, a.v)
     built = set()
+    # a named program brings the programs of its SETUP
+    need = want | {p for n in want for p in SETUP.get(n, [])}
     for n in PROGRAMS:
-        if want and n not in want and 'severov' not in want:
+        if want and n not in need and 'severov' not in want:
             continue
         total += 1
         if build_prog(n, a.v):
