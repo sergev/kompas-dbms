@@ -1,0 +1,19 @@
+== native txntest.pas
+commit: a=1 b=2
+inner commit wrote: FALSE, depth 1
+outer commit wrote: TRUE, depth 0
+nested: a=1 b=2 c=3 d=4
+after abort: depth 1, e: FALSE, f: FALSE, a: TRUE
+abort, then g: a=1 b=2 c=3 d=4 g=7
+top-level abort: depth 0, txnid kept TRUE, pages kept TRUE, file kept TRUE
+top-level abort: a=1 b=2 c=3 d=4 g=7
+empty transactions wrote: FALSE
+write in a read transaction: refused
+nested write in a read transaction: refused
+reader blocked by the writer, then saw the whole commit: exit 0
+i before the reader ends: FALSE
+writer blocked by the reader: exit 0
+i seen in a new transaction: TRUE 9
+a after another process changed it: changed
+reopen gives the same contents: TRUE
+entries 140, free pages 186

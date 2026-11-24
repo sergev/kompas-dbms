@@ -1,0 +1,162 @@
+== native apitest.pas
+== catalogue
+PASACD: err=0 info=94208
+PASSETAR: err=0 info=94209
+== areas
+newd AREA1: err=0
+newd AREA1 again: err=9
+newd AREA2 blanks: err=0
+opend NONE: err=8
+opend AREA2: err=0
+opend AREA1: err=0
+== put/get
+putd 42 2 20: err=0
+putd 41 1 10: err=0
+putd 432020 3 30: err=0
+putd D096 4 40: err=0
+putd 0001 5 50: err=0
+putd - 6 60: err=0
+putd 4142 7 70: err=0
+putd 42 9 90: err=9
+getd 42 16: err=0 2 20 len=2
+getd 43 16: err=3 0 0 len=2
+getd D096 16: err=0 4 40 len=2
+getd 0001 16: err=0 5 50 len=2
+getd - 16: err=0 6 60 len=2
+getd 4142 8: err=0 7 0 len=2
+getd 5A 16: err=3 0 0 len=2
+modd A: err=0
+modd D (new): err=0
+getd 41 16: err=0 11 110 len=2
+getd 44 16: err=0 11 0 len=1
+putd E 3 bytes: err=0
+getd 45 16: err=0 11 0 len=0
+deld AB: err=0
+deld AB again: err=3
+-- scan AREA1
+  next: err=0 key=- len=2 h=3392
+  next: err=0 key=0001 len=2 h=3328
+  next: err=0 key=41 len=2 h=3136
+  next: err=0 key=42 len=2 h=3072
+  next: err=0 key=432020 len=2 h=3200
+  next: err=0 key=44 len=1 h=3520
+  next: err=0 key=45 len=0 h=3584
+  next: err=0 key=D096 len=2 h=3264
+  end err=16
+  last: err=0 key=D096 len=2 h=3264
+  prev: err=0 key=45 len=0 h=3584
+  prev: err=0 key=44 len=1 h=3520
+  prev: err=0 key=432020 len=2 h=3200
+  prev: err=0 key=42 len=2 h=3072
+  prev: err=0 key=41 len=2 h=3136
+  prev: err=0 key=0001 len=2 h=3328
+  prev: err=0 key=- len=2 h=3392
+  prev: err=0 key=- len=2 h=3392
+  prev: err=15 key=- len=2 h=3392
+== find, match
+find B: err=0 key=42 len=2 h=3072
+find BB: err=0 key=42 len=2 h=3072
+find #0: err=0 key=- len=2 h=3392
+find Z: err=0 key=45 len=0 h=3584
+find B match: err=0 key=42 len=2 h=3072
+find BB match: err=0 key=42 len=2 h=3072
+find B nomatch: err=0 key=42 len=2 h=3072
+find BB nomatch: err=0 key=42 len=2 h=3072
+== get, update, alloc, addkey, delkey
+find C get: err=0 key=42 len=2 h=3072
+  buf 2 20
+find C update: err=0 key=42 len=3 h=3072
+getd 43 16: err=3 0 0 len=3
+  len 3
+find F nomatch? alloc addkey: err=0 key=46 len=2 h=3648
+getd 46 16: err=0 55 550 len=2
+find F nomatch? alloc addkey (exists): err=0 key=46 len=2 h=3648
+getd 46 16: err=0 55 550 len=2
+find F match? get: err=0 key=46 len=2 h=3648
+find G match? get (absent): err=0 key=D096 len=2 h=3264
+find F delkey: err=0 key=45 len=0 h=3584
+getd 46 16: err=3 0 0 len=0
+find F free stop next: err=0 key=45 len=0 h=3584
+bad op 5: err=11 key=45 len=0 h=3584
+begin prev: err=15 key=- len=0 h=3584
+last next: err=16 key=D096 len=2 h=3264
+== handles
+putd 4B31 1 0: err=0
+putd 4B32 2 0: err=0
+putd 4B30 0 0: err=0
+find K0: err=0 key=4B30 len=2 h=3200
+find K1: err=0 key=4B31 len=2 h=3072
+find K2: err=0 key=4B32 len=2 h=3136
+putd 4B32 2 0: err=0
+find K2 re-added: err=0 key=4B32 len=2 h=3264
+find K1 modified: err=0 key=4B31 len=2 h=3072
+find K0 assign h:=12345: err=0 key=4B30 len=2 h=12345
+find K0: err=0 key=4B30 len=2 h=12345
+find K1: err=0 key=4B31 len=2 h=3072
+stalloc K1 999: err=0 key=4B31 len=2 h=999
+find K1: err=0 key=4B31 len=2 h=999
+stalloc bad token: err=0 key=4B31 len=2 h=999
+find K1: err=0 key=4B31 len=2 h=999
+find K2: err=0 key=4B32 len=2 h=3264
+find K0 stale token: err=0 key=4B30 len=2 h=12345
+find K2: err=0 key=4B32 len=2 h=3264
+putd 4B33 3 0: err=0
+== spoiled descriptor
+getd 41 16: err=8 0 0 len=2
+putd 51 1 1: err=8
+next: err=8 key=- len=2 h=3264
+nop: err=0 key=- len=2 h=3264
+opend: err=0
+getd 41 16: err=0 11 110 len=2
+== names
+newd unicode: err=0
+opend widechar: err=0
+putd widechar key: err=0
+getd unicode key: err=0 11 110
+deld unicode key: err=0
+== second catalogue
+PASSETAR: err=0 info=593921
+opend AREA1: err=8
+newd AREA1: err=0
+putd 58 1 2: err=0
+back, opend AREA1: err=0
+-- scan AREA1 reloaded
+  next: err=0 key=- len=2 h=3392
+  next: err=0 key=0001 len=2 h=3328
+  next: err=0 key=41 len=2 h=3136
+  next: err=0 key=42 len=3 h=3072
+  next: err=0 key=432020 len=2 h=3200
+  next: err=0 key=44 len=1 h=3520
+  next: err=0 key=45 len=0 h=3584
+  next: err=0 key=D096 len=2 h=3264
+  end err=16
+  last: err=0 key=D096 len=2 h=3264
+  prev: err=0 key=45 len=0 h=3584
+  prev: err=0 key=44 len=1 h=3520
+  prev: err=0 key=432020 len=2 h=3200
+  prev: err=0 key=42 len=3 h=3072
+  prev: err=0 key=41 len=2 h=3136
+  prev: err=0 key=0001 len=2 h=3328
+  prev: err=0 key=- len=2 h=3392
+  prev: err=0 key=- len=2 h=3392
+  prev: err=15 key=- len=2 h=3392
+PASACD 2210000: err=0
+opend AREA1: err=8
+== native reopen.pas
+-- AREA1 err=0
+  - len=2 h=3392 6 60 0
+  0001 len=2 h=3328 5 50 0
+  41 len=2 h=3136 11 110 0
+  42 len=3 h=3072 33 330 3300
+  432020 len=2 h=3200 3 30 0
+  44 len=1 h=3520 11 0 0
+  45 len=0 h=3584 11 0 0
+  D096 len=2 h=3264 4 40 0
+-- AREA2 err=0
+-- H err=0
+  4B30 len=2 h=12345 0 0 0
+  4B31 len=2 h=999 11 110 0
+  4B32 len=2 h=3264 2 0 0
+  4B33 len=2 h=3328 3 0 0
+-- ЖУРНАЛ err=0
+-- AREA1 err=8

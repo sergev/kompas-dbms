@@ -1,0 +1,11 @@
+== native treetest.pas
+seq        ops=15039 entries=2502 pages=185 over=337 free=21 depth=2
+reverse    ops=15005 entries=4971 pages=388 over=675 free=36 depth=3
+random     ops=40022 entries=11394 pages=722 over=1600 free=44 depth=3
+prefix     ops=20021 entries=14772 pages=1522 over=2100 free=66 depth=4
+long       ops=15021 entries=17384 pages=2056 over=2422 free=68 depth=4
+drain      entries=0 pages=0 file=5030 free=5023
+again      ops=30012 entries=5164 pages=310 over=671 free=4043 depth=3
+drain2     entries=0 pages=0 file=5030 free=5023
+steady     file stops growing: yes
+checks 232, failures 0

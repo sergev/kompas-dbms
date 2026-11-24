@@ -1,0 +1,11 @@
+== native crashtest.pas
+setup: 600 entries, 43 tree pages, 71 overflow pages
+kill      sync=True  commit I/Os=83: 83 killed, old state 82, new state 2
+kill      sync=False commit I/Os=81: 81 killed, old state 81, new state 1
+torn page sync=True  commit I/Os=83: 81 killed, old state 80, new state 4
+torn page sync=False commit I/Os=81: 81 killed, old state 80, new state 2
+bad newest meta: previous commit used: TRUE, check: TRUE
+next commit: new state: TRUE, check: TRUE
+bad root page: check: page 117 damaged
+bad root page: get: page 117 damaged
+both metas bad: no valid meta page

@@ -1,0 +1,6 @@
+== native locktest.pas
+all processes ended normally: TRUE
+broken read transactions: 0
+counters: 1500 1500 1500 1500, total 6000
+accounts sum to 1000
+check: ok, entries 215
