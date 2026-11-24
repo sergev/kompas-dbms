@@ -151,7 +151,7 @@ var
   slot: integer;
 
 begin
-  path := GetEnvironmentVariable('MARS_DIR') + '/crash.db';
+  path := 'crash.db';
   PgOpen(path);
   PgSync := false;
   RandSeed := 1;

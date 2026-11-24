@@ -73,7 +73,7 @@ var
   ok: boolean;
 
 begin
-  path := GetEnvironmentVariable('MARS_DIR') + '/lock.db';
+  path := 'lock.db';
   PgOpen(path);
   TxnBegin(true);
   PutI('acct0', 1000);

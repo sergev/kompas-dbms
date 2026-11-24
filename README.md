@@ -15,7 +15,7 @@ The control languages stay Russian, as in the original: the schema language (DDL
 | `predt` | turns a Pascal program with `&&…&&` DML and Russian names into plain Free Pascal |
 | `kpc` | `predt`, then `fpc`: makes a program |
 
-A database is a directory, given by `MARS_DIR`; its data are in one file there, `mars.db`, changed in crash-safe transactions.
+A database is one file, given by `MARS_DB`, changed in crash-safe transactions.
 
 ## Text
 

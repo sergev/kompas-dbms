@@ -277,7 +277,7 @@ begin
 end;
 
 begin
-  PgOpen(GetEnvironmentVariable('MARS_DIR') + '/tree.db');
+  PgOpen('tree.db');
   PgSync := false;
   Phase('seq', 0, 1, 15000, 20);
   Phase('reverse', 1, 2, 15000, 20);
@@ -289,7 +289,7 @@ begin
   Drain('drain2');
   Steady;
   PgClose;
-  PgOpen(GetEnvironmentVariable('MARS_DIR') + '/tree.db');
+  PgOpen('tree.db');
   Check('reopen');
   writeln('checks ', checks, ', failures ', failures);
 end.

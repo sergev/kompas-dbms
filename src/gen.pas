@@ -12,7 +12,7 @@ program gen;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, Process, kdb, kutf;
+uses SysUtils, Classes, Process, kdb, kutf, mars;
 
 type
   TFmt = record
@@ -355,7 +355,7 @@ begin
   text := f.Text;
   n := length(text); i := 1; line := 1;
   if not KSchemaOk then begin
-    writeln('ГЕН: НЕТ СХЕМЫ (servis и ttc) В ', GetEnvironmentVariable('MARS_DIR'));
+    writeln('ГЕН: НЕТ СХЕМЫ (servis и ttc) В ', MarsPath);
     halt(2);
   end;
   procs := ''; vars := ''; loader := 'ZG'; schema := '';

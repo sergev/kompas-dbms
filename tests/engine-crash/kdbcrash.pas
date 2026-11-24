@@ -5,7 +5,7 @@ program kdbcrash;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, BaseUnix, kdb, mpage;
+uses SysUtils, Classes, BaseUnix, kdb, mpage, mars;
 
 var
   path: string;
@@ -159,7 +159,7 @@ var
 
 begin
   if not KSchemaOk then Die('no schema');
-  path := GetEnvironmentVariable('MARS_DIR') + '/mars.db';
+  path := MarsPath;
   Setup;
   s0 := Dump;
   writeln('setup: ', KRecCount, ' record types, check ok');

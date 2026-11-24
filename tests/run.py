@@ -46,7 +46,7 @@ SETUP = {'ZATZAT': ['ZATRTE'], 'ZATTAB': ['ZATNAK', 'ZATRTE', 'ZATZAT'],
 
 def env(db):
     # no fsync: tests need no durability against power loss (mars-crash sets its own)
-    return dict(os.environ, MARS_DIR=str(db), MARS_SYNC='0',
+    return dict(os.environ, MARS_DB=str(db), MARS_SYNC='0',
                 PATH=f'{BIN}:{os.environ["PATH"]}')
 
 
@@ -63,7 +63,7 @@ def run_case(case):
     w.mkdir(parents=True)
     for f in case.iterdir():
         shutil.copy(f, w / f.name)
-    e = env(w / 'db')
+    e = env(w / 'kompas.db')
     out = []
     for step in (case / 'steps').read_text(encoding='utf-8').splitlines():
         if not step.strip() or step.startswith('#'):
@@ -110,7 +110,7 @@ def build_prog(name, verbose):
     w = WORK / 'severov' / name
     w.mkdir(parents=True, exist_ok=True)
     shutil.copy(SEVEROV / (name + '.pas'), w / 'prog.pas')
-    db = WORK / f'gold-{PROGRAMS[name]}' / 'db'
+    db = WORK / f'gold-{PROGRAMS[name]}' / 'kompas.db'
     if not db.exists():
         print(f'{name:24s} NO DATABASE (run the gold-{PROGRAMS[name]} case)')
         return False
@@ -129,8 +129,8 @@ def run_session(name, update, verbose):
     if w.exists():
         shutil.rmtree(w)
     w.mkdir(parents=True)
-    shutil.copytree(WORK / f'gold-{PROGRAMS[name]}' / 'db', w / 'db')
-    e = env(w / 'db')
+    shutil.copy(WORK / f'gold-{PROGRAMS[name]}' / 'kompas.db', w / 'kompas.db')
+    e = env(w / 'kompas.db')
     for pre in SETUP.get(name, []):
         subprocess.run([str(WORK / 'severov' / pre / 'prog')], cwd=w, env=e,
                        input=(SEVEROV / (pre + '.in')).read_bytes(),

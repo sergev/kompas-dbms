@@ -70,15 +70,14 @@ make
 export PATH=$PWD/build/bin:$PATH
 ```
 
-The database is a directory, given by `MARS_DIR`. All its areas are in one file there, `mars.db`. All tools work on the same database, also at the same time:
+The database is one file, given by `MARS_DB` (without it: `mars.db` in the current directory). The first tool that opens it creates it. All tools work on the same database, also at the same time:
 
 ```sh
-export MARS_DIR=~/store/db
-mkdir -p $MARS_DIR
+export MARS_DB=~/store/store.db
 servis < areas.srv
 ```
 
-To back up a database, copy the directory.
+To back up a database, copy the file.
 
 The examples of sections 5 and 6 are in `tests/` (`gold-ck0`, `cd`), with their output; `make test` runs them all.
 
@@ -251,11 +250,11 @@ In the 1988 decks these statements stand before the data of a GEN deck, to clear
 
 Here we build a new database from scratch: a home collection of music CDs. We keep artists, their discs, and the tracks of each disc. All files of this example are in `tests/cd/`.
 
-Make a working directory and point `MARS_DIR` at it:
+Make a working directory and point `MARS_DB` at a database file in it:
 
 ```sh
 mkdir -p ~/cd && cd ~/cd
-export MARS_DIR=~/cd/db
+export MARS_DB=~/cd/cd.db
 ```
 
 Every step is one input file and one command.
@@ -487,7 +486,7 @@ Output:
 ```
 
 - `ВЫДАТЬ` prints one line: `'text'`, `.FIELD` of the current record, `REC.FIELD` of the current record of type `REC`, and `/` for a line break.
-- `РЕЖИМ`, `ЖУРНАЛ`, `ПОДСХЕ`, `СБРОСИ`, `ЗАВЕРШ` are accepted; the database is the one in `MARS_DIR`.
+- `РЕЖИМ`, `ЖУРНАЛ`, `ПОДСХЕ`, `СБРОСИ`, `ЗАВЕРШ` are accepted; the database is the one in `MARS_DB`.
 
 One disc with its artist and tracks. File `tracks.mad`:
 
@@ -592,7 +591,7 @@ predt cdtime.pas cdtime_fpc.pas         # DML and Russian names -> plain Free Pa
 fpc -Fu$KOMPAS/build/lib -ocdtime cdtime_fpc.pas
 ```
 
-`predt` reads the schema from `MARS_DIR`, so the database must exist. Output:
+`predt` reads the schema from `MARS_DB`, so the database must exist. Output:
 
 ```
 Кино
@@ -616,14 +615,14 @@ The disc found by key is the current owner, so the new track joins its `ДИ-Т�
 
 ### Step 6. Maintenance
 
-The database is the file `mars.db` in `MARS_DIR`. Each statement that changes data is committed whole, so a crash or a power failure leaves the database as after the last statement (a `gen` load: its last 1000 records). Back up and restore it as files, when no tool is running:
+The database is the file `MARS_DB`. Each statement that changes data is committed whole, so a crash or a power failure leaves the database as after the last statement (a `gen` load: its last 1000 records). Back up and restore it as files, when no tool is running:
 
 ```sh
-tar czf ~/cd-$(date +%F).tgz -C ~/cd db                 # back up
-rm -rf ~/cd/db && tar xzf ~/cd-2026-11-20.tgz -C ~/cd   # restore
+cp ~/cd/cd.db ~/cd-$(date +%F).db     # back up
+cp ~/cd-2026-11-20.db ~/cd/cd.db      # restore
 ```
 
-To reload from scratch: remove the directory and repeat steps 1-3. To change the schema (for example a new element `ЖАНР`): unload the data with a MAD query in GEN format (as `tests/gold-zt0/deck9.mad` does), fix `cd.ddl`, and reload.
+To reload from scratch: remove the file and repeat steps 1-3. To change the schema (for example a new element `ЖАНР`): unload the data with a MAD query in GEN format (as `tests/gold-zt0/deck9.mad` does), fix `cd.ddl`, and reload.
 
 `servis` statements on areas made by an earlier run (`ОЧИСТИ`, `ОСВОБО`, `ВОССТА`) are not available yet: `servis` keeps its list of areas only while it runs, and answers `ОБЛАСТЬ НЕ ОПРЕДЕЛЕНА`. The database itself is not touched.
 
@@ -632,7 +631,7 @@ A simple routine:
 | When | What |
 |---|---|
 | after each load or big change | `mad < discs.mad` to check |
-| weekly | back up the directory |
+| weekly | back up the file |
 | after a failure of the disk (`page N damaged`) | restore the last backup, repeat the changes since |
 
 ### Step 7. Typical tasks
@@ -654,14 +653,14 @@ A simple routine:
 
 | Task | What to do |
 |---|---|
-| Create a new database | steps 1, 2, 3 with the same `MARS_DIR` |
+| Create a new database | steps 1, 2, 3 with the same `MARS_DB` |
 | Get a report | a MAD query (step 4) |
 | Find one record | `НАЙТИ ПО-КЛЮ` |
 | Walk linked records | `НАЙТИ ПЕРВУЮ В <set>`, then `НАЙТИ СЛЕДУЮ` |
 | Find who owns a record | `НАЙТИ ВЛАДЕЛ В <set>` |
 | Change a field | `ВЗЯТЬ`, change the field, `ЗАМЕНИ` |
 | Delete a record | `НАЙТИ ...`, then `УБРАТЬ` |
-| `mars.db: page N damaged` | the disk spoiled the file: restore the backup of `MARS_DIR` (section 6, step 6) |
+| `...: page N damaged` | the disk spoiled the file: restore the backup of `MARS_DB` (section 6, step 6) |
 
 ## 8. Text: UTF-8 and mixed case
 
@@ -738,12 +737,12 @@ ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.Б
 | `СОСТ` is not 0 | 1 end of set, 2 no such record, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema |
 | `ГЕН: ОШИБКА ДУБЛИКАТ КЛЮЧА` | the key is already in an ordered set without `ДУБЛИК РАЗРЕШ` |
 | `ГЕН: ОШИБКА НЕТ ТЕКУЩЕЙ` | no current owner for an automatic set: load the owner first |
-| `НЕТ СХЕМЫ` | no `ttc` run in this `MARS_DIR` |
+| `НЕТ СХЕМЫ` | no `ttc` run on this `MARS_DB` |
 | `ОШИБКА ПАМЯТИ` | the area named in the schema was not made by `servis` (step 1) |
 | `predt: нет набора X` | the name is not in the schema; a name is cut to 6 characters |
 | `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |
-| The database is empty in a later step | `MARS_DIR` points to another directory |
-| `mars: ... areas of the old format` | the database was made by an older version (one file per area): rebuild it with steps 1-3 |
+| The database is empty in a later step | `MARS_DB` names another file (or is not set in this shell) |
+| `mars: ... areas of the old format` | `MARS_DIR` names a database of an older version (one file per area): rebuild it with steps 1-3 |
 | Loading is slow | each commit waits for the disk twice; for a scratch database `export MARS_SYNC=0` (safe if a program is killed, not on power failure) |
 
 See section 8 on letters and case.

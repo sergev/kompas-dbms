@@ -307,7 +307,7 @@ begin
   fpath := path;
   headOk := false;
   PgSync := GetEnvironmentVariable('MARS_SYNC') <> '0';
-  ForceDirectories(ExtractFileDir(path));
+  if ExtractFileDir(path) <> '' then ForceDirectories(ExtractFileDir(path));
   fd := fpOpen(path, O_RDWR or O_CREAT, &644);
   if fd < 0 then Fail('cannot open');
   Lock(LOCK_SH);

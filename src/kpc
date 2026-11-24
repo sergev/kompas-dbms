@@ -1,7 +1,7 @@
 #!/bin/sh
 # kpc: compile a KOMPAS Pascal program (Free Pascal with Russian names
 # and &&DML&&).  Usage: kpc prog.pas [fpc options]
-# The schema is read from $MARS_DIR, so the database must exist.
+# The schema is read from the database ($MARS_DB), so it must exist.
 set -e
 [ $# -ge 1 ] || { echo "usage: kpc prog.pas [fpc options]" >&2; exit 2; }
 src=$1; shift

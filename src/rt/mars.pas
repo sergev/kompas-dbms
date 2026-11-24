@@ -1,6 +1,6 @@
 { MARS: the storage of KOMPAS (keyed data in areas).
-  The whole database is one file, $MARS_DIR/mars.db (default ./mars), a
-  copy-on-write B+tree (mpage, mtree).  Tree keys:
+  The whole database is one file, $MARS_DB (else $MARS_DIR/mars.db, else
+  ./mars.db), a copy-on-write B+tree (mpage, mtree).  Tree keys:
     #0 kobla(3) name       an area: id u32, info i64, next handle i64
     #1 id(4, big-endian) key   an entry: words i64, handle i64, datum
     #2                     the next area id
@@ -33,6 +33,8 @@ procedure MarsCommit;
 procedure MarsAbort;
 { structure of the database file: '' if sound }
 function MarsCheck: string;
+{ the database file: $MARS_DB, else $MARS_DIR/mars.db, else mars.db }
+function MarsPath: string;
 
 procedure PASACD(var i: int64);
 procedure PASSETAR(i: int64);
@@ -125,19 +127,28 @@ var
 
 { --- the file --- }
 
+function MarsPath: string;
+var dir: string;
+begin
+  Result := GetEnvironmentVariable('MARS_DB');
+  if Result <> '' then exit;
+  dir := GetEnvironmentVariable('MARS_DIR');
+  if dir <> '' then Result := dir + '/mars.db' else Result := 'mars.db';
+end;
+
 procedure Open;
 var dir: string; sr: TSearchRec;
 begin
   if PgIsOpen then exit;
   dir := GetEnvironmentVariable('MARS_DIR');
-  if dir = '' then dir := 'mars';
-  if not warned and (FindFirst(dir + '/k*', faDirectory, sr) = 0) then begin
+  if not warned and (GetEnvironmentVariable('MARS_DB') = '') and (dir <> '') and
+     (FindFirst(dir + '/k*', faDirectory, sr) = 0) then begin
     warned := true;
     writeln(stderr, 'mars: ', dir, ' has areas of the old format (k*/*.area), ',
       'they are not used: rebuild the database');
     FindClose(sr);
   end;
-  PgOpen(dir + '/mars.db');
+  PgOpen(MarsPath);
 end;
 
 procedure WBegin;

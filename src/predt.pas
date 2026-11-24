@@ -6,7 +6,7 @@
   Output: plain Free Pascal, compiled with fpc -Fu<kompas lib>.
 
   Every &&…&& fragment is replaced by Pascal.  &&ПОДСХЕ X&& declares the
-  records of the schema in $MARS_DIR: types ZZ<rec>, variables <rec>,
+  records of the schema in the database ($MARS_DB): types ZZ<rec>, variables <rec>,
   ZZBDKEY, СОСТ and transfer procedures.  A statement fragment becomes
   begin … СОСТ:=KSTAT end; НАБ s and ЗП r become the numbers of a set and
   a record.  Then non-ASCII identifiers become ASCII names, char becomes
@@ -17,7 +17,7 @@ program predt;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, kdb, kutf;
+uses SysUtils, Classes, kdb, kutf, mars;
 
 type
   TTok = record
@@ -387,7 +387,7 @@ begin
   if IsKw('ПОДСХЕ') or IsKw('ЯЗЫК') then begin
     if IsKw('ЯЗЫК') then Error('ЯЗЫК не поддерживается');
     if not KSchemaOk then begin
-      Error('нет схемы в MARS_DIR (сначала servis и ttc)');
+      Error('нет схемы в ' + MarsPath + ' (сначала servis и ttc)');
       exit;
     end;
     if not declared then Result := Declarations + 'var ZZJNAME: alfa;'#10;

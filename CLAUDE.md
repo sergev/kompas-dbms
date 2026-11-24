@@ -17,9 +17,9 @@ python3 tests/run.py severov  # all Severov programs (build + sessions)
 python3 tests/run.py SKLMON   # one Severov program
 ```
 
-- A case is `tests/<case>/` with a `steps` file; each step runs on a fresh database in `build/test/<case>/db` and output is compared with `expected.txt`. Step forms: `servis|ttc|gen|mad FILE` (FILE on stdin), `prog FILE.pas [INPUT]` (via `kpc`), `native FILE.pas` (plain fpc against `kdb`).
+- A case is `tests/<case>/` with a `steps` file; each step of a case runs on one database, `build/test/<case>/kompas.db`, made fresh for the case and output is compared with `expected.txt`. Step forms: `servis|ttc|gen|mad FILE` (FILE on stdin), `prog FILE.pas [INPUT]` (via `kpc`), `native FILE.pas` (plain fpc against `kdb`).
 - Severov programs (`tests/severov/*.pas`) compile and run against the database left by the matching `gold-*` case in `build/test/` (`PROGRAMS` map in `tests/run.py`), so run the gold case first or together. `SETUP` there lists sessions that must run first to create data.
-- A database is a directory named by `MARS_DIR`; all areas are in one file, `mars.db`. Tests run with `MARS_SYNC=0` (no fsync).
+- A database is one file named by `MARS_DB` (fallback `$MARS_DIR/mars.db`, then `./mars.db`; `MarsPath` in `mars.pas`). Tests run with `MARS_SYNC=0` (no fsync).
 
 ## Architecture
 
@@ -27,7 +27,7 @@ python3 tests/run.py SKLMON   # one Severov program
 - `src/rt/mars.pas` — MARS keyed storage under the engine; a record's key is its DB-key. DB-key 1 is the anchor holding singular `SY-*` sets, per-record-type chains, and `SYSTEM`. Areas are key ranges of one B+tree (`src/rt/mtree.pas`) on copy-on-write pages (`src/rt/mpage.pas`: two meta pages, freelist, per-transaction `flock`). Every MARS call is a transaction unless `MarsBegin`/`MarsCommit` wraps several; `kdb` wraps each changing DML statement, `servis`/`ttc` a whole run, the `gen` loader every 1000 records. `tests/mars-api` pins MARS behaviour; `mars-tree`/`-txn`/`-crash`/`-lock`/`engine-crash` test the store.
 - `src/kutf.pas` — text is UTF-8 outside and `WideChar` inside (program chars, char fields stored as UTF-16, catalogue rows). Names and keywords are folded (upper case, Latin look-alikes as Cyrillic, `Ё` as `Е`); data never. MARS keys are bytes: names as UTF-8, DB-keys binary.
 - `src/rt/krt.pas` — runtime for KOMPAS Pascal programs (`integer` is 64-bit, `alfa`, write formats).
-- `src/predt.pas` — front end of "KOMPAS Pascal": Free Pascal plus Russian identifiers and `&&…&&` DML. Translates to plain FPC: `&&ПОДСХЕ X&&` generates record types/vars from the schema in `$MARS_DIR` (so the database must exist at compile time); non-ASCII names map to ASCII with Latin/Cyrillic homoglyphs and case folded together; `char` becomes `WideChar`, `string[n]` `UnicodeString`, literals stay UTF-8 under `{$codepage utf8}`; write/read of char arrays go through `RT_S`/`RT_Rd`; `packed array[1..N] of char` becomes named type `ZZC<N>`; default mode `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}` and `uses krt, kio, kdb`.
+- `src/predt.pas` — front end of "KOMPAS Pascal": Free Pascal plus Russian identifiers and `&&…&&` DML. Translates to plain FPC: `&&ПОДСХЕ X&&` generates record types/vars from the schema in `$MARS_DB` (so the database must exist at compile time); non-ASCII names map to ASCII with Latin/Cyrillic homoglyphs and case folded together; `char` becomes `WideChar`, `string[n]` `UnicodeString`, literals stay UTF-8 under `{$codepage utf8}`; write/read of char arrays go through `RT_S`/`RT_Rd`; `packed array[1..N] of char` becomes named type `ZZC<N>`; default mode `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}` and `uses krt, kio, kdb`.
 - `src/kpc` — shell script: `predt` then `fpc` against `build/lib`.
 - `src/servis.pas`, `src/ttc.pas` are themselves KOMPAS Pascal: the Makefile builds them through `predt` (so `predt` and the units must build first).
 - `src/gen.pas` + `src/kgenrt.pas` — `gen` generates a loader program from a deck (formats become procedures), runs it through `predt`/`fpc`, then executes it; `-k` keeps the work dir.

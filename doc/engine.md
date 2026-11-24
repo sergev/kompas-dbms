@@ -10,7 +10,7 @@ No historical outputs survive. So the check is consistency and review by hand, n
 |---|---|
 | `src/kdb.pas` | the engine: schema, records, sets, currency, DML |
 | `src/kutf.pas` | text: UTF-8 outside, WideChar inside; folding of names |
-| `src/rt/mars.pas` | MARS: keyed storage of areas, all in one file `$MARS_DIR/mars.db` |
+| `src/rt/mars.pas` | MARS: keyed storage of areas, all in one file `$MARS_DB` |
 | `src/rt/mtree.pas` | the B+tree under MARS: byte keys, cursors, structural check |
 | `src/rt/mpage.pas` | pages of `mars.db`: copy-on-write transactions, freelist, locking |
 | `src/rt/krt.pas` | runtime of KOMPAS Pascal programs: `integer` = 64 bits, `alfa`, write formats |
@@ -29,7 +29,7 @@ No historical outputs survive. So the check is consistency and review by hand, n
 
 Programs with DML are Free Pascal with two additions: Russian identifiers, and DML statements between `&&` and `&&`. `predt` turns such a program into plain Free Pascal:
 
-- `&&ПОДСХЕ X&&` declares the records of the schema in `$MARS_DIR`: types `ZZ<record>`, variables named as the records, `ZZBDKEY`, `СОСТ`, and procedures that move fields between the variables and the engine.
+- `&&ПОДСХЕ X&&` declares the records of the schema in `$MARS_DB`: types `ZZ<record>`, variables named as the records, `ZZBDKEY`, `СОСТ`, and procedures that move fields between the variables and the engine.
 - Every statement fragment becomes `begin … СОСТ:=KSTAT end` with its own `;` (except before `ELSE`). `НАБ s` and `ЗП r` become the numbers of a set and of a record.
 - Names with non-ASCII letters become ASCII names. Latin and Cyrillic homoglyphs give the same name (`С` and `C`), and so do lower and upper case: Cyrillic look-alikes become Latin letters, other letters `Q<hex code>_` (`ФЛАГ` is `Q0424_Q041B_AQ0413_`).
 - A `char` is a `WideChar`: one element of `alfa` or of a char array is one letter, whatever the alphabet. `chr` becomes `WideChar`, `string[n]` becomes `UnicodeString`.
@@ -77,7 +77,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
 ## 4. The tools
 
-- **`servis`.** It creates areas in `$MARS_DIR/mars.db`. A run is one transaction.
+- **`servis`.** It creates areas in `$MARS_DB`. A run is one transaction.
 - **`ttc`.** It reads a schema in DDL and stores it. A run is one transaction.
 - **`gen`.** It works as the original GEN: it builds a loader program (formats become procedures; `kgenrt` reads the data), passes it through `predt` and `fpc`, and runs it.
   - Job cards (`*…`) and editor labels (`? …`) are skipped.
@@ -154,7 +154,7 @@ All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a
 
 The original MARS is lost; this one keeps its interface (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `pasbd` microprograms, the `BDVECT` slots, the handles) on a design like LMDB, cut down:
 
-- **One file**, `$MARS_DIR/mars.db`, pages of 4 KB. All catalogues and areas are key ranges of one B+tree: `#0 catalogue name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
+- **One file**, `$MARS_DB` (without it `$MARS_DIR/mars.db`, the name of earlier versions, else `mars.db`), pages of 4 KB. All catalogues and areas are key ranges of one B+tree: `#0 catalogue name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
 - **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
 - **Freelist.** Pages freed by a commit are reused by the next transactions, so the file stops growing when the data stop growing.
 - **Locking.** `flock` on the file, per transaction: shared for reading, exclusive for writing. Readers and the writer exclude each other, so freed pages can be reused at once; a reader re-reads the meta pages and drops its cache when another process has committed.

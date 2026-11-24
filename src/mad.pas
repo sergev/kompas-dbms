@@ -10,7 +10,7 @@ program mad;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, kdb, kutf;
+uses SysUtils, Classes, kdb, kutf, mars;
 
 type
   TTok = record
@@ -435,7 +435,7 @@ begin
     text := text + s + #10;
   end;
   if not KSchemaOk then begin
-    writeln('ОШИБКА: НЕТ СХЕМЫ (ttc) В ', GetEnvironmentVariable('MARS_DIR'));
+    writeln('ОШИБКА: НЕТ СХЕМЫ (ttc) В ', MarsPath);
     halt(2);
   end;
   labels := TStringList.Create;

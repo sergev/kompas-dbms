@@ -71,7 +71,7 @@ var
   sz: int64;
 
 begin
-  path := GetEnvironmentVariable('MARS_DIR') + '/txn.db';
+  path := 'txn.db';
   PgOpen(path);
 
   TxnBegin(true);
