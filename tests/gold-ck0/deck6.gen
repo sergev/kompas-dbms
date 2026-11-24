@@ -1,0 +1,113 @@
+ПOДCXEMA CX-CK0
+
+? .OГP
+OГPAHИЧ
+  ФOPMATA:[,];
+  ЭЛEMEHT:_;
+KOHEЦ
+
+? .ПPO
+ПPOЦEДYPЫ "
+PROCEDURE PUTSYSTEM;
+TYPE ФЛAГ=(ФS,ПEЧATЬ,MOДИФ,AДMИH,OTЛAД,OTЧCKЛ,OTЧOTД,BXOД,ФF);
+VAR ФЛAГИ,ФЛAГИCOX:SET OF ФЛAГ;
+BEGIN
+ФЛAГИ:=[BXOД];ФЛAГИCOX:=[OTЛAД,OTЧCKЛ,OTЧOTД,BXOД];
+SYSTEM.PEЖИMЫ:=LONGINT(ФЛAГИ);SYSTEM.XPAHИM:=LONGINT(ФЛAГИCOX);
+SYSTEM.ДATЧИC:=1;
+SYSTEM.ГOД:=88;SYSTEM.ДATЗП:=1;
+SYSTEM.BPEЗП:=0;SYSTEM.ПAPCИC:='0909  ';
+SYSTEM.ПAPOЛЬ:='CTAKAH';
+&&ЗAMEHИ SYSTEM&&
+END;
+(*HAЙДИ MAT ПO BEЩ*)
+PROCEDURE HAЙMAT;
+BEGIN
+&&HAЙTИ ПEPBYЮ B SY-MAT&&
+REPEAT
+  &&BЗЯTЬ&&
+  IF (BEЩЬ.HOMEP>=MATEP.HAЧ) AND (BEЩЬ.HOMEP<=MATEP.KOH) THEN EXIT;
+  &&HAЙTИ CЛEДYЮ&&
+  UNTIL FALSE;
+END;
+"
+
+? .Ф
+ФOPMAT SYSTEM
+  ПACKAЛ "PUTSYSTEM;"
+
+ФOPMAT MATEP
+  MATEP.HAЧ_MATEP.KOH_MATEP.HAЗB*
+  &&ПOCTAB MATEP&&
+
+ФOPMAT OTДEЛ
+  OTДEЛ.HAЗB*
+  ПACKAЛ "&&ПOCTAB OTДEЛ;HAЙTИ ПEPBYЮ B SY-MAT&&"
+
+ФOPMAT CYMMA
+  CYMMA.ЦEHA*
+  ПACKAЛ "&&ПOCTAB CYMMA;HAЙTИ CЛEДYЮ B SY-MAT&&"
+
+ФOPMAT BЗЯЛ
+  CYMMA.ЦEHA_BЗЯЛ.KOЛИЧ*
+  ПACKAЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
+    &&HAЙTИ ПO-KЛЮ B SY-BEЩ;ПOCTAB BЗЯЛ&&"
+
+ФOPMAT BEЩИ
+  CYMMA.ЦEHA_BEЩЬ.HAЗB_BEЩЬ.EД_
+  BEЩЬ.ЦEHA_BEЩЬ.OCTAT_BEЩЬ.ПPИXOД_BEЩЬ.PACXOД*
+  ПACKAЛ "BEЩЬ.HOMEP:=ROUND(CYMMA.ЦEHA*1000);
+    HAЙMAT;&&ПOCTAB BEЩЬ&&
+    IF BEЩЬ.ЦEHA<0.01
+      THEN BEGIN &&BKЛЮЧИ B SY-БEЗ&& END
+      ELSE BEGIN &&BKЛЮЧИ B SY-ЦEH&& END;
+    IF (BEЩЬ.ЦEHA<0.01)OR(BEЩЬ.ПPИXOД+BEЩЬ.PACXOД>0.0001)
+      THEN BEGIN &&BKЛЮЧИ B SY-ДBИ&& END;"
+
+KOHEЦ
+
+*REL:LP
+*READ:31017
+*PASC
+*C
+OCBOБO ЖY-CK0,ИH-CK0,ДA-CK0,BP-CK0;
+OЧИCTИ ЖY-CK0,ИH-CK0,ДA-CK0,BP-CK0;
+ЖYPHAЛ ЖY-CK0 CБPOCИ.
+? .E
+*ИПC
+*CALL CKЛЗAГ
+PEЖИM [[ПOBTOP]
+
+SYSTEM []
+
+MATEP [ 2001000_ 2050000_ГCM*
+        2051000_ 9350000_MATEPИAЛЫ*
+        9351000_12850000_MAЛ.ИHBEHTAPЬ*
+       12851000_13050000_CПEЦ.OДEЖДA*]
+
+
+ BEЩИ [
+ 2004.000_БEHЗИH AИ-93_Л _
+    0.20_0.000_0.000_0.000*
+ 2010.000_ДИЗ/MACЛO_Л _
+    0.22_0.000_0.000_0.000*
+ 13046.001_ШTOPЫ ШEЛKOBЫE_K _
+    44.00_67.000_0.000_0.000*]
+
+ OTДEЛ [ПPOФK *]
+   CYMMA [0.00*]
+   CYMMA [256.22*]
+   CYMMA [230.10*]
+   CYMMA [0.00*]
+ OTДEЛ [ППO   *]
+   CYMMA [0.00*]
+   CYMMA [88.27*]
+   CYMMA [0.00*]
+   CYMMA [0.00*]
+ OTДEЛ [ЭИO   *]
+   CYMMA [34.20*]
+   CYMMA [23953.01*]
+   CYMMA [837.67*]
+   CYMMA [2705.14*]
+
+KOHEЦ ]

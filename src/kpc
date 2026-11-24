@@ -1,0 +1,14 @@
+#!/bin/sh
+# kpc: compile a KOMPAS Pascal program (Free Pascal with Russian names
+# and &&DML&&).  Usage: kpc prog.pas [fpc options]
+# The schema is read from $MARS_DIR, so the database must exist.
+set -e
+[ $# -ge 1 ] || { echo "usage: kpc prog.pas [fpc options]" >&2; exit 2; }
+src=$1; shift
+home=$(cd "$(dirname "$0")/.." && pwd)
+base=${src%.pas}
+case $base in /*) ;; *) base=$PWD/$base ;; esac
+work=$(mktemp -d "${TMPDIR:-/tmp}/kpc.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+"$home/bin/predt" "$src" "$work/prog.pas"
+fpc -O1 -v0e -l- -Fu"$home/lib" -FU"$work" -o"$base" "$@" "$work/prog.pas"

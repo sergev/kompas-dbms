@@ -1,0 +1,128 @@
+ИMЯ-ЗA AMOЗAГ
+ПOДCXEMA CX-AM0
+
+? .ПEP
+ПEPEMEHHЫE
+  HH CИMBOЛ 84,
+  ЦЦ ДEЙCTB,
+  BB ДEЙCTB,
+  KK ДEЙCTB,
+  HAШЛИ ЛOГИЧE,
+KOHEЦ
+
+? .OГP
+OГPAHИЧ
+  ФOPMATA:[,];
+  ЭЛEMEHT:_;
+KOHEЦ
+
+? .ПPO
+ПPOЦEДYPЫ "
+PROCEDURE PUTSYSTEM;
+TYPE ФЛAГ=(ФS,ПEЧATЬ,MOДИФ,AДMИH,OTЛAД,OTЧCKЛ,OTЧOTД,BXOД,ФF);
+VAR ФЛAГИ,ФЛAГИCOX:SET OF ФЛAГ;
+BEGIN
+ФЛAГИ:=[BXOД];ФЛAГИCOX:=[OTЛAД,BXOД];
+SYSTEM.PEЖИMЫ:=LONGINT(ФЛAГИ);SYSTEM.XPAHИM:=LONGINT(ФЛAГИCOX);
+SYSTEM.ГOД:=88;SYSTEM.ДATЗП:=1;
+SYSTEM.BPEЗП:=0;SYSTEM.ПAPCИC:='0909  ';
+SYSTEM.ПAPOЛЬ:='CTAKAH';
+&&ЗAMEHИ SYSTEM&&
+END;
+"
+
+? .Ф
+ФOPMAT SYSTEM
+  ПACKAЛ "PUTSYSTEM;"
+
+ФOPMAT METAЛ
+  METAЛ.HAЗB*
+  &&ПOCTAB METAЛ&&
+
+ФOPMAT OTДEЛЫ
+  OTДEЛ.HAЗB*  ПACKAЛ "&&ПOCTAB OTДEЛ&&"
+
+ФOPMAT ШИФP
+  ШИФP.HOMEP*  ПACKAЛ "&&ПOCTAB ШИФP&&"
+
+ФOPMAT ДPAГOЦ
+ METAЛ.HAЗB_ИHB.HOMEP_COДEPЖ.KOЛИЧ*
+ ПACKAЛ "
+    &&HAЙTИ ПO-KЛЮ B SY-MET;
+    HAЙTИ ПO-KЛЮ B SY-ИHB;HAЙTИ BЛAДEЛ B ПP-ИHB;
+    ПOCTAB COДEPЖ&&
+  "
+
+ФOPMAT ПPИБOP
+  ПPИБOP.HAЗB_ИHB.HOMEP_
+  ПPИБOP.ЦEHA_ПPИБOP.BOC_ПPИБOP.KAП_
+  OTДEЛ.HAЗB_CTOИT.ПPИHЯЛ*
+  ПACKAЛ "
+    WITH ПPИБOP DO BEGIN 
+      HH:=HAЗB;ЦЦ:=ЦEHA;BB:=BOC;KK:=KAП;
+    CTOИT.CПИCAЛ:=0;
+    &&HAЙTИ ПO-KЛЮ B SY-OTД&&
+    (**)
+    &&HAЙTИ ПO-KЛЮ B ШИ-ПPИ&&;HAШЛИ:=FALSE;
+    WHILE (COCT=0) AND NOT HAШЛИ DO BEGIN 
+      &&BЗЯTЬ&&
+      IF (HAЗB=HH) AND (ЦEHA=ЦЦ) AND (BOC=BB) AND (KAП=KK) THEN BEGIN 
+        HAШЛИ:=TRUE;BREAK END;
+      &&HAЙTИ ПPEДЫД B SY-ШИФ&& END;
+    (**)
+    IF NOT HAШЛИ THEN BEGIN 
+      HAЗB:=HH;ЦEHA:=ЦЦ;BOC:=BB;KAП:=KK;
+      &&ПOCTAB ПPИБOP&& END;
+    (**)
+    &&ПOCTAB ИHB;ПOCTAB CTOИT&& END;
+    "
+
+KOHEЦ
+
+*READ:31017
+*REL:LP
+*PASC
+*C
+OCBOБO ЖY-AM0,ИH-AM0,ДA-AM0,BP-AM0;
+OЧИCTИ ЖY-AM0,ИH-AM0,ДA-AM0,BP-AM0.
+? .E
+*ИПC
+*CALL AMOЗAГ
+PEЖИM [[ПOBTOP]
+
+SYSTEM []
+
+METAЛ [ЗOЛOTO*CEPEБPO*ПЛATИHA*ПAЛЛAДИЙ*ПЛAT.ГP.
+*ПAЛЛ.XЛOPИCT.*CEP.AЗOT-KИC*CEP.ПPИПOЙ*POДИЙ*ИHДИЙ*]
+
+OTДEЛЫ [
+ATX *
+AXO *
+HMOЭИ *
+O.K *
+OAИC *
+OBП *
+OHBЭ *
+OHИ *
+OKOИC *
+OMATИ *
+OMOИ *
+OMИ *
+OБC *
+OГИ *
+OГПC *
+OИCM *
+OИO *
+OИЖK *
+OПИP *
+OЭPC *
+OЭИ1 *
+OЭИ2 *
+PEAЛ *
+PYK-BO*
+БYXГ *
+ППO *
+ЭИO *
+]
+
+KOHEЦ]

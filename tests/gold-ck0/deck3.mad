@@ -1,0 +1,12 @@
+PEЖИM 2;ЖYPHAЛ ЖY-CK0;ПOДCXE CX-CK0;
+
+HAЙTИ ПEPBYЮ B SY-OTД;
+Б:BЗЯTЬ;BЫДATЬ .HAЗB,'*';HAЙTИ CЛEДYЮ;ECЛИ COC=0 TO HA Б;
+
+HAЙTИ ПEPBYЮ B SY-BEЩЬ;
+A:BЗЯTЬ;
+  BЫДATЬ .HOMEP,'_',.EД,'_',.ЦEHA,'_',
+         .OCTAT,'_',.ПPИXOД,'_',.PACXOД;
+  BЫДATЬ '         _',.HAЗB,'*';
+  HAЙTИ CЛEДYЮ B SY-BEЩЬ;ECЛИ COC=0 TO HA A;
+CБPOCИ;ЗABEPШ;KOHEЦ

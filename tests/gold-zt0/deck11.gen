@@ -1,0 +1,226 @@
+ИMЯ-ЗA ZATNZG
+ПOДCXEMA CX-ЗT0
+
+? .ПEP *)
+ПEPEMEHHHЫE
+  TEKИCП ЦEЛOE,TEKCOИ ЦEЛOE,
+  TEKCПИ CИMBOЛ 6,
+  ПYCTO CИMBOЛ 84,
+  KOHEЦ
+
+? .OГP *)
+OГPAHИЧ
+  ФOPMATA:[,];
+  ЭЛEMEHT:_;
+KOHEЦ
+
+? .ПPO *)
+ПPOЦEДYPЫ "
+PROCEDURE PUTSYSTEM;
+TYPE ФЛAГ=(ФS,ПEЧATЬ,MOДИФ,AДMИH,OTЛAД,OTЧCKЛ,OTЧOTД,BXOД,ФF);
+VAR ФЛAГИ,ФЛAГИCOX:SET OF ФЛAГ;
+BEGIN
+ФЛAГИ:=[OTЛAД,BXOД];ФЛAГИCOX:=[OTЛAД,BXOД];
+&&HAЙTИ ПO-KЛЮ 'ФЛAГИ' B SY-ПAP;HAЙTИ ПEPBYЮ B ПA-ЦEЛ;
+ЗAMEHИ ЦEЛ.ЗH HA ФЛAГИ;
+HAЙTИ ПO-KЛЮ 'XPAHИM' B SY-ПAP;HAЙTИ ПEPBYЮ B ПA-ЦEЛ;
+ЗAMEHИ ЦEЛ.ЗH HA ФЛAГИCOX&&
+(**)
+ПYCTO[1]:=' ';ПYCTO[2]:=#255;
+END;
+"
+
+? .ФOP *)
+
+ФOPMAT ФЛAГИ
+  ПACKAЛ "PUTSYSTEM;"
+
+ФOPMAT ПAPAM
+  ПAP.ИMЯ_ПAP.HAЗB*
+  ПACKAЛ "ПAP.COKP:=ПYCTO;&&ПOCTAB ПAP&&"
+
+ФOPMAT ПA-ЦEЛ
+  ПAP.ИMЯ_ПAP.HAЗB_ЦEЛ.ЗH*
+  ПACKAЛ "ПAP.COKP:=ПYCTO;
+    &&ПOCTAB ПAP;ПOCTAB ЦEЛ;BKЛЮЧИ B ПA-ЦEЛ&&"
+
+ФOPMAT ПA-ДEЙ
+  ПAP.ИMЯ_ПAP.HAЗB_ДEЙ.ЗH*
+  ПACKAЛ "ПAP.COKP:=ПYCTO;
+    &&ПOCTAB ПAP;ПOCTAB ДEЙ;BKЛЮЧИ B ПA-ДEЙ&&"
+
+ФOPMAT ПA-AЛФ
+  ПAP.ИMЯ_ПAP.HAЗB_AЛФ.ЗH*
+  ПACKAЛ "ПAP.COKP:=ПYCTO;
+    &&ПOCTAB ПAP;ПOCTAB AЛФ;BKЛЮЧИ B ПA-AЛФ&&"
+
+ФOPMAT ПA--AЛ
+  AЛФ.ЗH*
+  &&ПOCTAB AЛФ&& &&BKЛЮЧИ B ПA-AЛФ&&
+
+ФOPMAT OTДEЛЫ
+  OTДEЛ.HAЗB* ПACKAЛ "&&ПOCTAB OTДEЛ&&"
+
+ФOPMAT CYБПOД
+  ПACKAЛ "OTДEЛ.HAЗB:='CYБПOД';&&ПOCTAB OTДEЛ&&"
+
+ФOPMAT YCTCПИ
+  AЛФ.ЗH*  ПACKAЛ "TEKCПИ:=AЛФ.ЗH;ПAP.HOMEP:=0;"
+
+ФOPMAT ПAP
+  ПAP.ИMЯ_ПAP.HAЗB_ПAP.COKP_TИП.ИMЯ*
+  ПACKAЛ "AЛФ.ЗH:=TEKCПИ;ПAP.HOMEP:=ПAP.HOMEP+10;
+    &&ПOCTAB ПAP;ПOCTAB TИП;BKЛЮЧИ B ПA-ПAP&&"
+
+ФOPMAT ATP
+  ATP.ИMЯ_ATP.ЗH*
+  ПACKAЛ "&&ПOCTAB ATP&&"
+
+ФOPMAT TEMA
+  TEMA.HOMEP_OTДEЛ.HAЗB*
+  ПACKAЛ "
+    WITH ИCПOЛH DO BEGIN HOMEP:=0;YPOB:=-1;TEKИCП:=HOMEP END;
+    &&ПOCTAB TEMA;HAЙTИ ПO-KЛЮ B SY-OTД;ПOCTAB ИCПOЛH&&"
+
+ФOPMAT COИCП
+  OTДEЛ.HAЗB*
+  ПACKAЛ "WITH ИCПOЛH DO BEGIN HOMEP:=HOMEP+1;TEKCOИ:=HOMEP END;
+    ЦEЛ.ЗH:=TEKИCП;
+    &&HAЙTИ ПO-KЛЮ B SY-OTД;ПOCTAB ИCПOЛH;BKЛЮЧИ B ИC-ИCП&&"
+
+   ФOPMAT ПOДИCП
+   OTДEЛ.HAЗB*
+   ПACKAЛ "WITH ИCПOЛH DO HOMEP:=HOMEP+1;
+     ЦEЛ.ЗH:=TEKCOИ;
+     &&HAЙTИ ПO-KЛЮ B SY-OTД;ПOCTAB ИCПOЛH;BKЛЮЧИ B ИC-ИCП&&"
+
+KOHEЦ
+*REL:LP
+*READ:31017
+*PASC
+*C
+OCBOБO ЖY-ЗT0,ИH-ЗT0,ДA-ЗT0,BP-ЗT0;
+OЧИCTИ ЖY-ЗT0,ИH-ЗT0,ДA-ЗT0,BP-ЗT0;
+ЖYPHAЛ ЖY-ЗT0 CБPOCИ.
+
+? .E *)
+*ИПC
+*CALL ZATNZG
+PEЖИM [[ПOBTOP]
+ПA-ЦEЛ [ФЛAГИ _XPAHИMЫE ФЛAГИ CИCTEMЫ_0*]
+ПA-ЦEЛ [XPAHИM_KAKИE ФЛAГИ XPAHИM_0*]
+ФЛAГИ  []
+ПA-ЦEЛ [ДATЗП _ДATA ЗAПИCИ ДAHHЫX_0*]
+ПA-AЛФ [ПAPCИC_ПAPOЛЬ HA BXOД B CИC.БЛOK_0909*]
+ПA-AЛФ [ПAPOЛЬ_ПAPOЛЬ HA PEЖИM AДMИHИCTPATOPA_CTAKAH*]
+
+? .K *)
+ПAPAM  [ИM-KOЭ_ИMEHA KOЭФФИЦИEHTOB*]
+ПA--AЛ [ZKCC*ZKЭФЗ*ZKФPEЗ*ZKФMП*ZKФHT*MИHYC
+       *ZKПPOЧ*ZKHAKЛ*ZKBTЧЗ*]
+ПA-ДEЙ [ZKCC  _KOЭФ COЦ.CTPAXOBAHИЯ (ЗATPATЫ)_0.14*]
+ПA-ДEЙ [ZKЭФЗ _KOЭФ ЭKOHOMИИ ФOHДA ЗAPПЛ (ЗATPATЫ)_0.3747*]
+ПA-ДEЙ [ZKФPEЗ_KOЭФ ФИHAHCOBOГO PEЗEPBA (ЗATPATЫ)_0.1*]
+ПA-ДEЙ [ZKФMП _KOЭФ ФMП (ЗATPATЫ)_0.6584*]
+ПA-ДEЙ [ZKФHT _KOЭФ ФHTCP (ЗATPATЫ)_0.2416*]
+ПA-ДEЙ [MИHYC _MИHYC EДEHИЦA_-1.0*]
+ПA-ДEЙ [ZKПPOЧ_KOЭФ ПPOЧ.ПPЯM.ЗATP (ЗATPATЫ/BЫЧ)_0.0*]
+ПA-ДEЙ [ZKHAKЛ_KOЭФ HAKЛ.PACXOДOB  (ЗATPATЫ/BЫЧ)_0.0*]
+ПA-ДEЙ [ZKBTЧЗ_KOЭФ B T.Ч. ЗAPПЛ   (ЗATPATЫ/BЫЧ)_0.0*]
+
+ПA-ДEЙ [OA    _OБЩEHИC.AMOPTИЗAЦИЯ_273.1*]
+ПA-ДEЙ [OБ    _CYMMA OTЧ.B БЮДЖET_0*]
+ПA-ДEЙ [OФ    _OБЩEHИC.ФOHДЫ_127.7*]
+
+? .T *)
+ПAPAM [CП-TEM_YPEЗAHHЫЙ CПИCOK ПAPAMETPOB TEMЫ*]
+YCTCПИ [CП-TEM*]
+ПAP [THOMK_HOMEP KAЛЬKYЛЯЦИИ_HOM.KAЛ_ЦEЛ*]
+ПAP [TИCП_ИCПOЛHИTEЛЬ_ИCП_AЛФ*]
+ПAP [TCOИ_COИCПOЛHИTEЛЬ_COИ_AЛФ*]
+    ATP [ПEPEД_TЭTAП  H ECTЬ ЛИ COИCПOЛHИTEЛИ*]
+ПAP [TПOД_ПOДИCПOЛHИTEЛЬ_ПOД_AЛФ*]
+    ATP [ПEPEД_TCOИ   H ECTЬ ЛИ ПOДИCПOЛHИTEЛИ*]
+    ATP [YXOД_TПOД*]
+ПAP [TЭTAП_HOMEP ЭTAПA_ЭT_ЦEЛ*]
+    ATP [ПOCЛE_ЭTOBCE H ECTЬ ЛИ EЩE ЭTAПЫ*]
+    ATP [YXOД_TЭTAП*]
+
+? .H *)
+ПAPAM [CП-HAK_CПИCOK ПAPAMETPOB HAKЛAДHЫX*]
+YCTCПИ [CП-HAK*]
+ПAP [NMEC_MECЯЦ И ГOД_MEC_MEC*]
+ПAP [NПPOЧ_ПPOЧИE ПPЯMЫE ЗATPATЫ_ПPOЧ.ПP_ДEЙ*]
+ПAP [NHAKЛ_HAKЛAДHЫE PACXOДЫ_HAKЛ_ДEЙ*]
+ПAP [NЗAHAK_ЗAPПЛATA HAKЛAДHЫX_ЗAPП.HAKЛ_ДEЙ*]
+ПAP [NЗAPП_ЗAPПЛATA OCH.ИCПOЛHИTEЛEЙ_ЗAPП_ДEЙ*]
+
+? .З *)
+ПAPAM [CП-ЗAT_CПИCOK ПAPAMETPOB ЗATPAT ПO TEME*]
+YCTCПИ [CП-ЗAT*]
+ПAP [ZMEC_MECЯЦ И ГOД_MEC_MEC*]
+ПAP [ZTEMA_HOMEP KAЛЬKYЛЯЦИИ TEMЫ_TEMA_ЦEЛ*]
+ПAP [ZOTД_HOMEP ИCПOЛHИTEЛЯ_N.ИCП_ЦEЛ*]
+ПAP [ZЭTAП_HOMEP ЭTAПA_ЭT_ЦEЛ*]
+ПAP [ZBЫП_BЫПOЛHEHИE ПO TEME_BЫП_ДEЙ*]
+ПAP [ZOЗAPП_ЗAPПЛATA OCHOBHЫX ИCПOЛHИTEЛEЙ_ЗAPП_ДEЙ*]
+ПAP [ZДЗAPП_ДOП. ЗAPПЛATA OCHOBHЫX ИCПOЛHИTEЛEЙ_ДOП.ЗAPП_ДEЙ*]
+ПAP [ZMATEP_MATEPИAЛЫ_MAT_ДEЙ*]
+ПAP [ZKOMAH_KOMAHДИPOBKИ_KOM_ДEЙ*]
+ПAP [ZCПEЦ_CПEЦOБOPYДOBAHИE_CПEЦOБ_ДEЙ*]
+ПAP [ZAMOP_AMOPT.OTЧИCЛ.HA ПOЛHOE BOCCTAHOBЛEHИE_AMOPT_ДEЙ*]
+ПAP [ZCTOP_OПЛATA PAБOT CTOPOHHИX OPГAHИЗAЦИЙ_CTOP_ДEЙ*]
+ПAP [ZПOCH_ПЛATA ЗA OCHOBHЫE ФOHДЫ_OCH.Ф_ДEЙ*]
+ПAP [ZПTPEC_ПЛATA ЗA TPYДOBЫE PECYPCЫ_TPYД.P_ДEЙ*]
+ПAP [ZПPБK_ПPOЦEHTЫ ЗA БAHKOBCKИЙ KPEДИT_!БAHK.KP_ДEЙ*]
+ПAP [ZOBЫШ_OTЧИCЛEHИЯ B BЫШECTOЯЩYЮ OPГAHИЗAЦИЮ_OTЧ.BЫШ_ДEЙ*]
+ПAP [ZOГOC_OTЧИCЛEHИЯ B ГOCБЮДЖET B T.Ч.B MECTHЫЙ_OTЧ.ГOC_ДEЙ*]
+ПAP [ZHEПЛ_CAЛЬДO HEПЛAHИPYEMЫX ДOXOДOB И PACXOДOB_HEПЛ_ДEЙ*]
+
+? .O *)
+OTДEЛЫ [
+OГИ*
+OБC*
+OГПC*
+OИCM*
+OBП*
+OAИC*
+OHИ*
+OИЖK*
+ЛBЭ*
+OЭИ*
+OHBЭ*
+BOИ*
+OMATИ*
+HMOЭИ*
+OMOИ*
+OПИ*
+ЭИO*
+OMИ*
+OЭPИCP*
+AXO*
+BOXP*
+OИO*
+AYП*]
+
+CYБПOД []
+
+TEMA [   1021889_HMOЭИ *]
+                COИCП [OMATИ *]
+                COИCП [OГПC  *]
+TEMA [   1021989_HMOЭИ *]
+TEMA [   1200489_OГИ   *]
+TEMA [   1207189_OГИ   *]
+                COИCП [ЭИO   *]
+TEMA [   1207289_OГИ   *]
+TEMA [   1208089_OГИ   *]
+TEMA [   1210989_OГИ   *]
+TEMA [   1211089_OГИ   *]
+TEMA [   1211389_OГИ   *]
+                COИCП [ЭИO   *]
+TEMA [   1211489_OГИ   *]
+TEMA [   1215689_OГИ   *]
+                COИCП [ЭИO   *]
+                COИCП [OMATИ *]
+
+KOHEЦ]

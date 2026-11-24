@@ -1,0 +1,22 @@
+ДЛЯ-BЫ;ПOДCXE CXE-ПЛ;
+HAЙTИ ПEPBYЮ B SY-TEM;
+
+  T:HAЙTИ ПEPBYЮ B TE-ИCП;
+  BЗЯTЬ TEMA;HAЙTИ BЛAДEЛ B OT-ИCП;BЗЯTЬ OTДEЛ;
+  BЫДATЬ 'TEMA [',TEMA.HOMEP,'_',OTДEЛ.HAЗB,'*]';
+  HAЙTИ ПEPBYЮ B ИC-ИCП;  ECЛИ COC<>0 TO HA П;
+
+    C:BЗЯTЬ БД-KЛЮ ИCПOЛH HA ЦEЛ.ЗH;
+    HAЙTИ BЛAДEЛ B OT-ИCП;BЗЯTЬ OTДEЛ;
+    BЫДATЬ '                COИCП [',OTДEЛ.HAЗB,'*]';
+    HAЙTИ ПEPBYЮ B ИC-ИCП;
+    ECЛИ COC<>0 TO_(D:ЗAMEHИ БД-KЛЮ ИCПOЛH HA ЦEЛ.ЗH;
+      HAЙTИ CЛEДYЮ B ИC-ИCП;ECЛИ COC=0 TO_(HA C_)ИHAЧE HA П_)
+    ИHAЧE_(
+
+      E:HAЙTИ BЛAДEЛ B OT-ИCП;BЗЯTЬ OTДEЛ;
+      BЫДATЬ '                         ПOДИCП [',OTДEЛ.HAЗB,'*]';
+      HAЙTИ CЛEДYЮ B ИC-ИCП;ECЛИ COC=0 TO_(HA E_)ИHAЧE HA D_);
+
+  П:HAЙTИ CЛEДYЮ B SY-TEM;ECЛИ COC=0 TO HA T;
+K;

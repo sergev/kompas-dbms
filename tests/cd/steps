@@ -1,0 +1,8 @@
+servis areas.srv
+ttc cd.ddl
+gen load.gen
+mad discs.mad
+mad tracks.mad
+mad artists.mad
+prog cdtime.pas 1002
+prog cdtime.pas 1777
