@@ -175,4 +175,3 @@ Notes for reading their output:
 - The write format `X:9:22` prints 22 decimals; what it meant in 1988 is not known.
 - `КОНСИМ` of a text element is taken as a plain string; its meaning is not known.
 - A `gen` load that does not empty a journal is not journaled, so `ВОССТА` cannot repeat it.
-- Only Linux was tested; macOS should work (the build needs only `fpc` and `/bin/sh`).

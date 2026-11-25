@@ -27,7 +27,7 @@ The tools write their messages in Russian, in sentence case: `Ошибка в с
 
 ## Build and test
 
-Free Pascal 3.2 (`fpc`) is required; the tests also need Python 3.
+Free Pascal 3.2 (`fpc`) is required; the tests also need Python 3. Linux and macOS are supported: install `fpc` with the system's package manager (`apt install fpc`) or with Homebrew on macOS (`brew install fpc`).
 
 ```sh
 make          # tools into build/bin, units for programs into build/lib
