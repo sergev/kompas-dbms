@@ -45,6 +45,6 @@ make install  # tools into ~/.local/bin, units into ~/.local/lib/kompas
 | `tests/` | cases with expected output (`tests/run.py`), Severov's programs (`tests/severov`) |
 | `doc/tutorial.md` | how to use KOMPAS: a CD collection built step by step |
 | `doc/engine.md` | how the engine works, from the file up; the tools; what is tested |
-| `doc/open-questions.md` | what is a guess |
+| `doc/guesses.md` | what is a guess |
 
 See `NOTICE.md` on the third-party material in `tests/`.

@@ -40,5 +40,5 @@ python3 tests/run.py SKLMON   # one Severov program
 
 - `doc/engine.md` — engine/tool internals, supported DML forms, what each test proves, known gaps. Keep its test tables in sync when adding cases.
 - `doc/tutorial.md` — user walkthrough; `tests/cd` is its example and must match it.
-- `doc/open-questions.md` — guesses about the original (e.g. `СОСТ`/`KSTAT` status codes). Record new guesses here.
+- `doc/guesses.md` — guesses about the original (e.g. `СОСТ`/`KSTAT` status codes). Record new guesses here.
 - `NOTICE.md` — provenance of third-party material in `tests/`.

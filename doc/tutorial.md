@@ -508,5 +508,5 @@ The tests hold the schemas, loader decks and queries of an accounting system of 
 ## 13. Further reading
 
 - `doc/engine.md`: how the engine and the tools work, and what in them is a guess.
-- `doc/open-questions.md`: where the original is not known, the choices made.
+- `doc/guesses.md`: where the original is not known, the choices made.
 - `tests/`: every example with its output.

@@ -103,7 +103,7 @@ A field `ЦЕЛОЕ` is one word, `ДЕЙСТВ` one word (a double), `СИМВ�
 
 **Current records** are what a program "stands on". The engine keeps one for the program as a whole, one per record type, and one per set. Finding a record makes it current for the program, for its type, and for every set it belongs to or owns. So after `НАЙТИ ПО-КЛЮ 1002 В SY-ДИС` the disc is current in `АР-ДИС` and `ДИ-ТРЕ` too: `НАЙТИ ВЛАДЕЛ В АР-ДИС` goes to its artist, `НАЙТИ ПЕРВУЮ В ДИ-ТРЕ` to its first track. `НАЙТИ СЛЕДУЮ В s` moves from the current of `s` along its chain.
 
-**Status.** Every DML statement sets `СОСТ` (`KSTAT`): 0 ok, 1 end of set, 2 not found, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema. The numbers are a guess (`doc/open-questions.md`).
+**Status.** Every DML statement sets `СОСТ` (`KSTAT`): 0 ok, 1 end of set, 2 not found, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema. The numbers are a guess (`doc/guesses.md`).
 
 **Each changing statement is one transaction** (`ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`): the record, its neighbours in the chains, its owners and the journal entry change together or not at all.
 
@@ -167,7 +167,7 @@ Notes for reading their output:
 - Two bugs of 1988 show. `ZATTAB` changes the record `ДЕЙ` without assigning it the value of the parameter, so the coefficients `ZKПРОЧ`, `ZKНАКЛ`, `ZKЗАРН` stay 0.0. `ZATCOF` stores a new coefficient without its name, so it is listed blank, and `ИСК` then erases the list itself.
 - `ZATTAB` prints a trace of its calculation: its source sets `PRINTCALC:=TRUE`.
 - `SKLCAR` checks a unit of measure by writing it to `OUT` and reading it back; it goes through a scratch file (`FCOPY`), as `ШАПКА` of `SKLOTC` does.
-- The guesses behind the rebuilt library modules are in `doc/open-questions.md`.
+- The guesses behind the rebuilt library modules are in `doc/guesses.md`.
 
 ## 8. Not done
 

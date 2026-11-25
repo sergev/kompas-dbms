@@ -10,7 +10,7 @@
   SYSTEM record, then (first, last) of every set (singular sets) and of
   every type chain.
 
-  Status KSTAT (HYPOTHESIS, doc/open-questions.md): 0 ok, 1 end of set, 2 not
+  Status KSTAT (HYPOTHESIS, doc/guesses.md): 0 ok, 1 end of set, 2 not
   found, 3 duplicate key, 4 no current record, 5 membership error,
   6 bad record/set/field, 7 storage error, 8 no schema. }
 unit kdb;
