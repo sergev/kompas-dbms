@@ -293,38 +293,38 @@ File `artists.mad`, nested walks and a branch:
 For computing and dialog, write a Free Pascal program with DML statements between `&&` and `&&`. File `cdtime.pas` reads a disc number and prints the artist, the title and the total playing time:
 
 ```
-PROGRAM CDTIME(INPUT,OUTPUT);
-&& ПОДСХЕ СХ-ДИС &&
-VAR N, S: INTEGER;
-BEGIN
-  READ(N);
-  &&ЖУРНАЛ ЖУ-ДИС&&
-  ДИСК.НОМЕР := N;
-  &&НАЙТИ ПО-КЛЮ В SY-ДИС&&
-  IF СОСТ <> 0 THEN WRITELN('НЕТ ДИСКА ', N:1)
-  ELSE BEGIN
-    &&ВЗЯТЬ; НАЙТИ ВЛАДЕЛ В АР-ДИС; ВЗЯТЬ&&
-    WRITELN(АРТИСТ.ИМЯ);
-    WRITELN(ДИСК.НАЗВ);
-    S := 0;
-    &&НАЙТИ ПЕРВУЮ В ДИ-ТРЕ&&
-    WHILE СОСТ = 0 DO BEGIN
-      &&ВЗЯТЬ&&
-      S := S + ТРЕК.ДЛИТ;
-      &&НАЙТИ СЛЕДУЮ В ДИ-ТРЕ&&
-    END;
-    WRITELN('ВСЕГО ', S DIV 60:1, ' МИН ', S MOD 60:1, ' СЕК')
-  END;
-  &&ЗАВЕРШ&&
-END.
+program cdtime(input, output);
+&& подсхе сх-дис &&
+var n, s: integer;
+begin
+  read(n);
+  &&журнал жу-дис&&
+  диск.номер := n;
+  &&найти по-клю в sy-дис&&
+  if сост <> 0 then writeln('Нет диска ', n:1)
+  else begin
+    &&взять; найти владел в ар-дис; взять&&
+    writeln(артист.имя);
+    writeln(диск.назв);
+    s := 0;
+    &&найти первую в ди-тре&&
+    while сост = 0 do begin
+      &&взять&&
+      s := s + трек.длит;
+      &&найти следую в ди-тре&&
+    end;
+    writeln('Всего ', s div 60:1, ' мин ', s mod 60:1, ' сек')
+  end;
+  &&заверш&&
+end.
 ```
 
-- `&& ПОДСХЕ СХ-ДИС &&` declares a variable for each record type of the schema (`АРТИСТ`, `ДИСК`, `ТРЕК`) and the status `СОСТ`.
+- `&& подсхе сх-дис &&` declares a variable for each record type of the schema (`артист`, `диск`, `трек`) and the status `сост`.
 - `ВЗЯТЬ` copies the current record into its variable; `ПОСТАВ` and `ЗАМЕНИ` copy the variable into the database.
-- To find by key, put the key into the variable (`ДИСК.НОМЕР := N`) and call `НАЙТИ ПО-КЛЮ`, or give the key: `НАЙТИ ПО-КЛЮ N В SY-ДИС`.
+- To find by key, put the key into the variable (`диск.номер := n`) and call `найти по-клю`, or give the key: `найти по-клю n в sy-дис`.
 - `ЖУРНАЛ ЖУ-ДИС` writes the changes of the program to the journal (section 9).
-- `СОСТ` is the status of the last DML statement, `0` on success (the codes are in section 12).
-- Names may be Russian, like those of the schema. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `INTEGER`.
+- `сост` is the status of the last DML statement, `0` on success (the codes are in section 12).
+- Case does not matter in names and DML, so a program may be written in lower case, as here, or in upper case, as the programs of 1988. Names may be Russian, like those of the schema. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `integer`.
 
 ```sh
 kpc cdtime.pas
@@ -334,21 +334,21 @@ echo 1002 | ./cdtime
 ```
 Кино
 Звезда по имени Солнце
-ВСЕГО 12 МИН 3 СЕК
+Всего 12 мин 3 сек
 ```
 
-With a number not in the database, `echo 1777 | ./cdtime` prints `НЕТ ДИСКА 1777`.
+With a number not in the database, `echo 1777 | ./cdtime` prints `Нет диска 1777`.
 
 `kpc` runs `predt`, which turns the DML and the Russian names into plain Free Pascal, then `fpc`. `predt` reads the schema from `MARS_DB`, so the database must exist when you compile.
 
 To add a track to disc 1002:
 
 ```
-ДИСК.НОМЕР := 1002;
-&&НАЙТИ ПО-КЛЮ В SY-ДИС&&
-ТРЕК.НОМЕР := 4; ТРЕК.ДЛИТ := 250; ТРЕК.НАЗВ := 'Кино';
-&&ПОСТАВ ТРЕК&&
-IF СОСТ <> 0 THEN WRITELN('ОШИБКА ', СОСТ:1);
+диск.номер := 1002;
+&&найти по-клю в sy-дис&&
+трек.номер := 4; трек.длит := 250; трек.назв := 'Кино';
+&&постав трек&&
+if сост <> 0 then writeln('Ошибка ', сост:1);
 ```
 
 The disc found is the current owner of `ДИ-ТРЕ`, so the track joins it, in order of `НОМЕР`.
@@ -459,12 +459,12 @@ apple       |яблоко                  |a|
 - **Keys are exact.** `НАЙТИ ПО-КЛЮ 'Ёж'` finds the record, `'ёж'` does not. To find a key whatever its case, store it in one case.
 - **Length counts letters.** `СИМВОЛ 12` holds 12 letters of any alphabet, and columns line up.
 
-In a program a `CHAR` holds one letter of any alphabet, and so does each element of a `PACKED ARRAY OF CHAR`; `READ` and `WRITELN` work as usual, and `ORD` gives the Unicode code (`ORD('ü')` is 252):
+In a program a `char` holds one letter of any alphabet, and so does each element of a `packed array of char`; `read` and `writeln` work as usual, and `ord` gives the Unicode code (`ord('ü')` is 252):
 
 ```
-IF СЛОВО.БУКВА = 'ж' THEN WRITELN('СТРОЧНАЯ ж')
-ELSE IF СЛОВО.БУКВА = 'Ж' THEN WRITELN('ПРОПИСНАЯ Ж')
-ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.БУКВА):1);
+if слово.буква = 'ж' then writeln('Строчная ж')
+else if слово.буква = 'Ж' then writeln('Прописная Ж')
+else writeln('Буква ', слово.буква, ', код ', ord(слово.буква):1);
 ```
 
 ## 11. The decks of 1988
