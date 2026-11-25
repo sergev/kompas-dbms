@@ -102,7 +102,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 | `gold-ck0` | schema CX-CK0, loader deck 6 (its `servis` statements run, the load journaled), query deck 3; then `ОСВОБО`/`ОЧИСТИ` of the data areas, query 3, `ВОССТА`, query 3 | 23 records, 0 errors; the unload equals the data of deck 6; empty after `ОЧИСТИ`; after `ВОССТА` equal to the first again |
 | `gold-am0` | schema CX-AM0, loader deck 7 | 38 records, 0 errors |
 | `gold-zt0` | schema CX-ЗТ0, loader deck 11, query deck 9 | 108 records, 0 errors; topics and co-executors equal the data of deck 11 |
-| `mars-api` | every MARS call and every `pasbd` operation; recorded on the old MARS, so it fixes its behaviour | as recorded, plus `ADDKEY` of an existing key |
+| `mars-api` | every MARS call: areas, entries, scans in both directions, error codes, clear and drop; a second process sees the same; without a database file every call fails and none makes it | as recorded |
 | `mars-tree` | the B+tree against a sorted-array model: 135 000 random puts, deletes, gets and seeks; sequential, reverse, random, long-prefix and 255-byte keys; values up to 6 KB (overflow pages); emptying the tree; repeated fill and empty | `TCheck` sound after every 20 commits; the file stops growing |
 | `mars-txn` | nesting, abort, empty transactions, writes refused in a read transaction, a reader waiting for a writer and the other way, another process's commit, reopen | as expected |
 | `mars-crash` | a commit killed before each of its writes and syncs, or with each page write torn in half, with fsync on and off; a damaged newest meta page, root page, both meta pages | always exactly the old or the new state; damage reported |
@@ -159,7 +159,7 @@ All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a
 
 ## 6a. MARS storage
 
-The original MARS is lost; this one keeps its interface (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `pasbd` microprograms, the `BDVECT` slots, the handles) on a design like LMDB, cut down:
+The original MARS is lost; this one keeps the names of its calls (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `cleard`, `dropd`), with `firstd`, `lastd`, `nextd`, `prevd` for scans and `MErr` for the error of the last call. There are no catalogues, info words, `BDVECT` microprograms or entry handles of the BESM-6 MARS. It is built on a design like LMDB, cut down:
 
 - **One file**, `$MARS_DB` (without it `$MARS_DIR/mars.db`, the name of earlier versions, else `mars.db`), pages of 4 KB. All areas are key ranges of one B+tree: `#0 name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
 - **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
@@ -172,11 +172,11 @@ Timing (`tests/bench/marsbench.pas`, 8-byte keys, 80-byte data, `MARS_SYNC=0`):
 
 | | old MARS | new MARS |
 |---|---|---|
-| 5 000 `putd` | 34 s | 0.35 s |
-| 100 000 `putd`, a transaction each | — | 6.1 s |
-| 100 000 `putd` in one transaction | — | 0.50 s |
-| 100 000 random `getd` | — | 0.21 s |
-| scan of 100 000 (`pasbd` NEXT) | — | 0.27 s |
+| 5 000 `putd` | 34 s | 0.18 s |
+| 100 000 `putd`, a transaction each | — | 4.2 s |
+| 100 000 `putd` in one transaction | — | 0.30 s |
+| 100 000 random `getd` | — | 0.20 s |
+| scan of 100 000 (`nextd`) | — | 0.17 s |
 
 With `fsync`, a commit costs what the disk takes for two `fsync`s (60 ms on the machine of these numbers), so batch work belongs in one transaction: `servis`, `ttc` and the `gen` loader do so.
 

@@ -174,14 +174,9 @@ end;
 
 { --- MARS access --- }
 
-function MErr: int64;
-begin
-  Result := PInt64(MarsErr)^;
-end;
-
 procedure MClr;
 begin
-  PInt64(MarsErr)^ := 0;
+  MErr := 0;
 end;
 
 function K6(const s: string): TKey;
@@ -248,29 +243,13 @@ end;
   Entry: op 'W' or 'D', area name (length byte, UTF-8), MARS key (length
   byte, bytes), datum length (4 bytes), datum (the record words). }
 
-type
-  PVec = ^TVec;
-  TVec = array[0..167] of int64;
-
-const
-  vCode = 3; vData = 11; vLen = 13; vCurKey = 31; vCurLen = 39;
-  opBegin = 1; opLast = 2; opNext = 4; opGet = 18;
-
 { the sequence of the last entry of the open journal area }
 function LastSeq: int64;
-var v: PVec; save: TVec; b: array[0..7] of byte; i: integer;
+var k, d: RawByteString; i: integer;
 begin
   Result := 0;
-  v := MarsVec;
-  save := v^;
-  v^[vCode] := opLast;
-  pasbd;
-  if MErr = 0 then begin
-    Move(v^[vCurKey], b, 8);
-    if b[0] = ord('J') then
-      for i := 1 to 5 do Result := (Result shl 8) or b[i];
-  end;
-  v^ := save;
+  if lastd(k, d) and (length(k) = 6) and (k[1] = 'J') then
+    for i := 2 to 6 do Result := (Result shl 8) or ord(k[i]);
   MClr;
 end;
 
@@ -1500,39 +1479,27 @@ begin
 end;
 
 function KREPLAY(const journal, area: string): int64;
-var v: PVec; save: TVec; d: TWords; ents: array of RawByteString;
-    e, nm, want, key: RawByteString; i, at, n: integer; len: longword;
+var ents: array of RawByteString;
+    e, nm, want, key: RawByteString; i, at: integer; len: longword; ok: boolean;
 begin
   Result := -1;
   want := K6(FoldName(area)).b;
   MClr;
   opend(K6(FoldName(journal)));
   if MErr <> 0 then exit;
-  { collect first: the MARS cursor is one }
-  v := MarsVec;
-  save := v^;
+  { collect first: the replay opens the area }
   ents := nil;
-  v^[vCode] := opBegin;
-  pasbd;
-  repeat
-    v^[vCode] := opNext;
-    pasbd;
-    if MErr <> 0 then break;
-    n := v^[vCurLen];
-    SetLength(d, n + 1);
-    v^[vData] := PtrInt(@d[0]);
-    v^[vLen] := n;
-    v^[vCode] := opGet;
-    pasbd;
-    SetLength(e, n * 8);
-    if n > 0 then Move(d[0], e[1], n * 8);
-    nm := Copy(e, 3, ord(e[2]));
-    if (e <> '') and (e[1] in ['W', 'D']) and (nm = want) then begin
-      SetLength(ents, length(ents) + 1);
-      ents[high(ents)] := e;
+  ok := firstd(key, e);
+  while ok do begin
+    if (length(e) > 2) and (e[1] in ['W', 'D']) then begin
+      nm := Copy(e, 3, ord(e[2]));
+      if nm = want then begin
+        SetLength(ents, length(ents) + 1);
+        ents[high(ents)] := e;
+      end;
     end;
-  until false;
-  v^ := save;
+    ok := nextd(key, e);
+  end;
   Result := 0;
   for i := 0 to high(ents) do begin
     e := ents[i];

@@ -53,8 +53,8 @@ EXN=         0
 == native kdbcrash.pas
 setup: 3 record types, check ok
 store disc     commit I/Os=9: old state 9, new state 1, chains sound
-store track    commit I/Os=6: old state 6, new state 1, chains sound
-modify key     commit I/Os=7: old state 7, new state 1, chains sound
+store track    commit I/Os=7: old state 7, new state 1, chains sound
+modify key     commit I/Os=6: old state 6, new state 1, chains sound
 disconnect     commit I/Os=6: old state 6, new state 1, chains sound
 erase members  commit I/Os=6: old state 6, new state 1, chains sound
 erase disc     commit I/Os=6: old state 6, new state 1, chains sound

@@ -5,49 +5,34 @@ program reopen;
 
 uses SysUtils, mars;
 
-type
-  TV = array[0..167] of int64;
-  PV = ^TV;
-
-var
-  v: PV;
-  e: ^int64;
-
-function Hex(x: int64): string;
-var b: RawByteString; i, n: integer;
+function Hex(const s: RawByteString): string;
+var i: integer;
 begin
-  SetLength(b, 8);
-  Move(x, b[1], 8);
-  n := 8;
-  while (n > 0) and (b[n] = #0) do dec(n);
   Result := '';
-  for i := 1 to n do Result := Result + IntToHex(ord(b[i]), 2);
+  for i := 1 to length(s) do Result := Result + IntToHex(ord(s[i]), 2);
   if Result = '' then Result := '-';
 end;
 
 procedure Dump(const area: string);
-var d: array[0..3] of int64;
+var k, d: RawByteString; w: array[0..1] of int64; ok: boolean;
 begin
   opend(NameKey(area));
-  writeln('-- ', area, ' err=', e^);
-  if e^ <> 0 then exit;
-  v^[3] := 1; pasbd;
-  repeat
-    v^[3] := 4; pasbd;
-    if e^ <> 0 then break;
-    write('  ', Hex(v^[31]), ' len=', v^[39], ' h=', v^[29]);
-    FillChar(d, sizeof(d), 0);
-    v^[11] := PtrInt(@d); v^[13] := 4;
-    v^[3] := 18; pasbd;
-    writeln(' ', d[0], ' ', d[1], ' ', d[2]);
-  until false;
+  writeln('-- ', area, ' err=', MErr);
+  if MErr <> 0 then exit;
+  ok := firstd(k, d);
+  while ok do begin
+    FillChar(w, sizeof(w), 0);
+    if length(d) > 0 then
+      if length(d) < 16 then Move(d[1], w, length(d)) else Move(d[1], w, 16);
+    writeln('  ', Hex(k), ' len=', length(d), ' ', w[0], ' ', w[1]);
+    ok := nextd(k, d);
+  end;
 end;
 
 begin
-  v := PV(MarsVec);
-  e := MarsErr;
   Dump('AREA1');
   Dump('AREA2');
-  Dump('H');
+  Dump('CL');
   Dump('ЖУРНАЛ');
+  Dump('NONE');
 end.

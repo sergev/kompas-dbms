@@ -9,8 +9,6 @@ type
   RecT = XT0;
   LinT = packed array[1..72] of char;
 var
-  BDVECT: array [0..167] of integer;
-  BDERRN: integer;
   PIC: integer;
   ln: LinT;
   r, ur: RecT;
@@ -30,15 +28,13 @@ var
 
 function EXN:integer;
 begin
-  EXN := BDERRN
+  EXN := MErr
 end;
 
-(* PASBDI clears the sticky MARS error word. *)
 procedure ClrErr;
 begin
    begin 
-  pasbdi;
-  BDERRN := 0
+  MErr := 0
    end ;
 end;
 
@@ -688,7 +684,7 @@ begin
   ClrErr;
   opend('SERVIS');
   getd('#NCNT ', nn, sizeof(nn));
-  if BDERRN = 0 then begin
+  if MErr = 0 then begin
     ncnt := nn[1];
     ncode := nn[2];
     getd('#NMS  ', nms, sizeof(nms));
@@ -716,8 +712,7 @@ procedure Init;
 var j:integer;
 begin
    begin 
-  pasbdi;
-  BDERRN := 0;
+  MErr := 0;
   newd('ADA   ');
   ClrErr;
   opend('ADA   ');
@@ -737,7 +732,7 @@ begin
    end ;
 end;
 
-begin MarsBind(@bdvect, @bderrn);
+begin
   MarsCreate := true;  (* servis makes the database *)
   MarsBegin;  (* the whole run is one transaction *)
   Init;

@@ -10,8 +10,6 @@ type
   Dta  = packed array[1..48] of char;
   Num8 = packed array[1..10] of char;
 var
-  BDVECT: array [0..167] of integer;
-  BDERRN: integer;
   PIC: integer;
   ln: Lint;
   p, i, j, k: integer;
@@ -131,16 +129,16 @@ begin
   newd('CXHD  ');
   newd('CXFL  ');
   newd('CXAT  ');
-  pasbdi; BDERRN := 0
+  MErr := 0
 end;
 procedure PutHere(key:alfa);
 begin
   modd(key, d, sizeof(d));
-  if BDERRN <> 0 then begin
+  if MErr <> 0 then begin
     nerr := nerr+1;
-    writeln('MARS ERR ',RT_W( BDERRN), ' KEY=',RT_W( key))
+    writeln('MARS ERR ',RT_W( MErr), ' KEY=',RT_W( key))
   end;
-  pasbdi; BDERRN := 0
+  MErr := 0
 end;
 procedure AddType;
 begin
@@ -291,7 +289,7 @@ begin
     end
   end
 end;
-begin MarsBind(@bdvect, @bderrn);
+begin
   MarsBegin;  (* the whole run is one transaction *)
   InitMars;
   tcnt := 0; rnum := 0; snum := 0; cur := 0; nerr := 0;
@@ -325,6 +323,6 @@ begin MarsBind(@bdvect, @bderrn);
   StoreAll;
   PrintAll;
   writeln('SAVED=',RT_W( tcnt+rnum+snum), ' MARSERR=',RT_W( nerr));
-  writeln('EXN=',RT_W( BDERRN));
+  writeln('EXN=',RT_W( MErr));
   MarsCommit
 end.

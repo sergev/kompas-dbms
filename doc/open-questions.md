@@ -28,9 +28,6 @@ A new guess goes here first and is checked afterwards.
   - the meaning of a subschema (`ПОДСХЕ`): the engine works with the whole schema;
   - the journal format and recovery from it;
   - the meaning of `КОНСИМ`, taken as a plain string.
-- **HYPOTHESIS**: `ADDKEY` of a key already in the area fails with error 9 (exists); the first MARS here inserted a second entry. The decks guard it with `NOMATCH` anyway.
-- **HYPOTHESIS**: `deld` on an area whose descriptor (`BDVECT[24]`) was spoiled fails with error 8, like the other calls.
-- **HYPOTHESIS**: the DB-key of the first record of a new area is `6000₈`; this is the only value observed. The step for the next records is not known; 64 is used.
 - **HYPOTHESIS**: the original ordered keys by the bytes of the GOST internal code, where Cyrillic look-alikes of Latin letters sorted with Latin (`С` before `З`). We order by Unicode code points (`З` before `С`), so ordered sets and the answers of the Severov sessions that follow them differ from 1988.
 
 ## Output formats of programs
