@@ -1,7 +1,7 @@
 { KOMPAS engine for Linux: CODASYL records and sets over MARS.
 
-  The schema is read from catalogue 270000 as ttc stores
-  it (CXHD/CXFL/CXAT).  Records live in the MARS containers of their areas
+  The schema is read from the areas CXHD/CXFL/CXAT, as ttc
+  stores it.  Records live in the MARS areas named in the schema
   (made by SERVIS); the MARS key of a record is its DB-key.
 
   Record words: [0] type, [1] next and [2] prior of the type chain, then
@@ -395,7 +395,6 @@ var d: TRow; a, v, first: string;
 begin
   loaded := true;
   failed := true;
-  PASSETAR(&270000);
   if not Row('CXHD', 'NUM', d) then exit;
   nt := Num(Copy(d, 1, 3)); nr := Num(Copy(d, 4, 3)); ns := Num(Copy(d, 7, 3));
   SetLength(tn, nt); SetLength(tb, nt); SetLength(tl, nt); SetLength(tz, nt);

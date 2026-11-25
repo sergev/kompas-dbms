@@ -101,7 +101,6 @@ var
   i: integer;
   d: array[0..1] of int64;
   name: UnicodeString;
-  cat: int64;
   w: array[0..5] of WideChar;
 
 begin
@@ -109,16 +108,10 @@ begin
   e := MarsErr;
   MarsCreate := true;
 
-  writeln('== catalogue');
-  cat := &270000; PASACD(cat);
-  writeln('PASACD: err=', e^, ' info=', v^[36]);
-  PASSETAR(&270000);
-  writeln('PASSETAR: err=', e^, ' info=', v^[36]);
-
   writeln('== areas');
-  newd(NameKey('AREA1'), 77); writeln('newd AREA1: err=', e^);
-  newd(NameKey('AREA1'), 78); writeln('newd AREA1 again: err=', e^);
-  newd(NameKey('AREA2  '), 88); writeln('newd AREA2 blanks: err=', e^);
+  newd(NameKey('AREA1')); writeln('newd AREA1: err=', e^);
+  newd(NameKey('AREA1')); writeln('newd AREA1 again: err=', e^);
+  newd(NameKey('AREA2  ')); writeln('newd AREA2 blanks: err=', e^);
   opend(NameKey('NONE')); writeln('opend NONE: err=', e^);
   opend(NameKey('AREA2')); writeln('opend AREA2: err=', e^);
   opend(NameKey('AREA1')); writeln('opend AREA1: err=', e^);
@@ -188,7 +181,7 @@ begin
   Run('last next', [oLAST, oNEXT]);
 
   writeln('== handles');
-  newd(NameKey('H'), 5); opend(NameKey('H'));
+  newd(NameKey('H')); opend(NameKey('H'));
   Put('K1', 1, 0); Put('K2', 2, 0); Put('K0', 0, 0);
   SetKey('K0'); Run('find K0', [oFIND]);
   SetKey('K1'); Run('find K1', [oFIND]);
@@ -225,7 +218,7 @@ begin
 
   writeln('== names');
   name := 'ЖУРНАЛ';
-  newd(name, 9); writeln('newd unicode: err=', e^);
+  newd(name); writeln('newd unicode: err=', e^);
   w[0] := #$0416; w[1] := #$0423; w[2] := #$0420; w[3] := #$041D; w[4] := #$0410; w[5] := #$041B;
   opend(w); writeln('opend widechar: err=', e^);
   putd(w, d, 16); writeln('putd widechar key: err=', e^);
@@ -233,7 +226,7 @@ begin
   deld(name); writeln('deld unicode key: err=', e^);
 
   writeln('== clear, drop');
-  newd(NameKey('CL'), 3); opend(NameKey('CL'));
+  newd(NameKey('CL')); opend(NameKey('CL'));
   Put('A', 1, 1); Put('B', 2, 2);
   SetKey('B'); Run('find B', [oFIND]);
   cleard(NameKey('CL')); writeln('cleard CL: err=', e^);
@@ -246,23 +239,9 @@ begin
   opend(NameKey('CL')); writeln('opend CL: err=', e^);
   cleard(NameKey('CL')); writeln('cleard CL: err=', e^);
   dropd(NameKey('CL')); writeln('dropd CL: err=', e^);
-  newd(NameKey('CL'), 3); writeln('newd CL: err=', e^);
+  newd(NameKey('CL')); writeln('newd CL: err=', e^);
   opend(NameKey('CL'));
   Put('C', 4, 4);
   SetKey('C'); Run('find C (a new area)', [oFIND]);
   Get('A', 16);
-
-  writeln('== second catalogue');
-  PASSETAR(&2210000);
-  writeln('PASSETAR: err=', e^, ' info=', v^[36]);
-  opend(NameKey('AREA1')); writeln('opend AREA1: err=', e^);
-  newd(NameKey('AREA1'), 1); writeln('newd AREA1: err=', e^);
-  opend(NameKey('AREA1'));
-  Put('X', 1, 2);
-  PASSETAR(&270001);
-  opend(NameKey('AREA1')); writeln('back, opend AREA1: err=', e^);
-  Scan('AREA1 reloaded');
-  cat := &2210000; PASACD(cat);
-  writeln('PASACD 2210000: err=', e^);
-  opend(NameKey('AREA1')); writeln('opend AREA1: err=', e^);
 end.

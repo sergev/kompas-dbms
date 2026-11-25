@@ -46,11 +46,8 @@ end;
 begin
   v := PV(MarsVec);
   e := MarsErr;
-  PASSETAR(&270000);
   Dump('AREA1');
   Dump('AREA2');
   Dump('H');
   Dump('ЖУРНАЛ');
-  PASSETAR(&2210000);
-  Dump('AREA1');
 end.

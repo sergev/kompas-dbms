@@ -1,11 +1,10 @@
 {$mode tp}{$H-}{$R-}{$Z4}
-program servis; uses krt, kio, mars, kdb; type XT0 = array[1..11] of integer; XT1 = array[1..64] of alfa; XT2 = array[0..7] of integer; XT3 = array[1..24] of integer; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer;
+program servis; uses krt, kio, mars, kdb; type XT0 = array[1..11] of integer; XT1 = array[1..64] of alfa; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer;
 (* SERVIS: allocation and maintenance of the database areas.
    Each SERVIS area is a separate MARS area named after the object.
    Descriptor: [1] code, [2] length, [3] capture, [4] kind,
    [5] head code, [6] journal state, [7] control, [8] mode,
-   [9] direction, [10] start, [11] reserved.
-   MARS info word: MMMMZZNNNN, MMMM = length in zones (octal). *)
+   [9] direction, [10] start, [11] reserved. *)
 type
   RecT = XT0;
   LinT = packed array[1..72] of char;
@@ -19,11 +18,8 @@ var
   p, ncode, ncnt, dl, cur, lasterr: integer;
   nms: XT1;
   ades: array [1..24] of RecT;
-  p0, p1, p2, p3: XT2;
-  zlo, zhi: XT3;
   unms, rnms, robj, rtyp: XT4;
   un, rn: integer;
-  lastinfo: integer;
   nxt: char;
   nn: XT5;
 
@@ -154,47 +150,6 @@ begin
    end ;
 end;
 
-(* Octal powers as literals: multiplication wraps at 2^24 here. *)
-procedure InitPows;
-begin
-   begin 
-  p0[0]:=0; p0[1]:=262144; p0[2]:=524288;
-  p0[3]:=786432; p0[4]:=1048576;
-  p0[5]:=1310720; p0[6]:=1572864; p0[7]:=1835008;
-  p1[0]:=0; p1[1]:=2097152; p1[2]:=4194304;
-  p1[3]:=6291456; p1[4]:=8388608;
-  p1[5]:=10485760; p1[6]:=12582912; p1[7]:=14680064;
-  p2[0]:=0; p2[1]:=16777216; p2[2]:=33554432;
-  p2[3]:=50331648; p2[4]:=67108864;
-  p2[5]:=83886080; p2[6]:=100663296; p2[7]:=117440512;
-  p3[0]:=0; p3[1]:=134217728; p3[2]:=268435456;
-  p3[3]:=402653184; p3[4]:=536870912;
-  p3[5]:=671088640; p3[6]:=805306368; p3[7]:=939524096;
-  zlo[1]:=1; zlo[2]:=65; zlo[3]:=129; zlo[4]:=193;
-  zlo[5]:=257; zlo[6]:=321; zlo[7]:=385; zlo[8]:=449;
-  zlo[9]:=513; zlo[10]:=577; zlo[11]:=641;
-  zlo[12]:=705; zlo[13]:=769; zlo[14]:=833;
-  zlo[15]:=897; zlo[16]:=961;
-  zhi[1]:=2049; zhi[2]:=2561; zhi[3]:=3073; zhi[4]:=3585;
-  zhi[5]:=2049; zhi[6]:=2561; zhi[7]:=3073; zhi[8]:=3585;
-  zhi[9]:=2049; zhi[10]:=2561; zhi[11]:=3073; zhi[12]:=3585;
-  zhi[13]:=2049; zhi[14]:=2561; zhi[15]:=3073; zhi[16]:=3585
-   end ;
-end;
-
-(* Build MARS info word for a decimal length in zones. *)
-function InfoWord(l,z:integer):integer;
-var q,d0,d1,d2,d3:integer;
-begin
-   begin 
-  q := l; d0 := q mod 8; q := q div 8;
-  d1 := q mod 8; q := q div 8;
-  d2 := q mod 8; q := q div 8;
-  d3 := q mod 8;
-  InfoWord := p3[d3] + p2[d2] + p1[d1] + p0[d0] + 94208 + z
-   end ;
-end;
-
 procedure Kadd(nm:alfa);
 begin
    begin 
@@ -295,7 +250,6 @@ begin
 end;
 
 procedure NewArea(nm:alfa; var d:RecT);
-var i,nz,zv:integer;
 begin
    begin 
   if Kfind(nm) then
@@ -304,16 +258,12 @@ begin
     ncode := ncode + 1;
     Kadd(nm);
     d[1] := ncode;
-    if d[2] > 64 then zv := zhi[ncode] else zv := zlo[ncode+1];
-    d[10] := zv;
-    lastinfo := InfoWord(d[2], zv);
-    i := lastinfo;
     ClrErr;
-    newd(nm, i);
+    newd(nm);
     ClrErr;
     ades[ncnt] := d;
     k := nm;
-    writeln('New Area N = ',RT_W( ncode), ' INFO=',RT_W( lastinfo))
+    writeln('New Area N = ',RT_W( ncode))
   end
    end ;
 end;
@@ -322,7 +272,6 @@ procedure AErase(nm:alfa);
 begin
    begin 
   if GetRec(nm, r) then begin
-    PASSETAR(94208);
     cleard(nm);
     ClrErr;
     write(RT_W(nm), ' ');
@@ -351,7 +300,6 @@ begin
    begin 
   if GetRec(nm, r) then begin
     writeln('ВОССТАНОВЛЕНИЕ ',RT_W( nm));
-    PASSETAR(94208);
     found := false;
     t := 0;
     for j := 1 to ncnt do
@@ -471,7 +419,6 @@ begin
         else begin
           r[6] := 1;
           PutRec(nm, r);
-          PASSETAR(94208);
           cleard(nm);
           ClrErr;
           writeln('ЖУРНАЛ ',RT_W( nm), ' СБРОШЕН')
@@ -508,7 +455,6 @@ begin
       else if r[3] <> 0 then Err(50)
       else begin
         Kdel(nm);
-        PASSETAR(94208);
         dropd(nm);
         ClrErr;
         writeln('ОБЛАСТЬ ',RT_W( nm), ' УБРАНА')
@@ -735,12 +681,10 @@ end;
 (* The descriptors of the areas live in the MARS area SERVIS:
    #NCNT = count and last code, #NMS = the names, <name> = its RecT. *)
 procedure LoadAreas;
-var i,j:integer;
+var j:integer;
 begin
    begin 
-  PASSETAR(94208);
-  i := 618497;
-  newd('SERVIS', i);
+  newd('SERVIS');
   ClrErr;
   opend('SERVIS');
   getd('#NCNT ', nn, sizeof(nn));
@@ -758,7 +702,6 @@ procedure SaveAreas;
 var j:integer;
 begin
    begin 
-  PASSETAR(94208);
   cleard('SERVIS');
   opend('SERVIS');
   nn[1] := ncnt; nn[2] := ncode; nn[3] := 0; nn[4] := 0;
@@ -770,19 +713,12 @@ begin
 end;
 
 procedure Init;
-var i,j:integer;
+var j:integer;
 begin
    begin 
-  (* PASCOMPL 15.1 miscompiles a plain '= 0' test here. *)
-  if BDVECT[36] + 0 = 0 then begin
-    for j := 0 to 167 do BDVECT[j] := 0;
-    PASSETAR(94208)
-  end;
   pasbdi;
   BDERRN := 0;
-  InitPows;
-  i := 618497;
-  newd('ADA   ', i);
+  newd('ADA   ');
   ClrErr;
   opend('ADA   ');
   for j := 1 to 11 do ur[j] := 0;

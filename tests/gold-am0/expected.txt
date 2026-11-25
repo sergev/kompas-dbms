@@ -1,11 +1,11 @@
 == servis areas.srv
 SERVIS PROCESSOR 15.1
 ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
-New Area N =          1 INFO=   1667137
-New Area N =          2 INFO=   3764353
-New Area N =          3 INFO=   1142977
-New Area N =          4 INFO=   3764481
-New Area N =          5 INFO=    618817
+New Area N =          1
+New Area N =          2
+New Area N =          3
+New Area N =          4
+New Area N =          5
 EXN=         0
 == ttc am0.ddl
 TTC15

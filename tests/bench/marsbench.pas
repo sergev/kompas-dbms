@@ -15,7 +15,6 @@ var
   d: array[0..9] of int64;
   t: TDateTime;
   v: ^TV;
-  cat: int64;
   batch: boolean;
 
 function Key(i: integer): TKey;
@@ -34,9 +33,7 @@ begin
   batch := ParamStr(2) = 'batch';
   v := MarsVec;
   {$ifdef NEWMARS} MarsCreate := true; {$endif}
-  cat := &270000;
-  PASACD(cat);
-  newd(NameKey('BENCH'), 1);
+  newd(NameKey('BENCH'));
   opend(NameKey('BENCH'));
   for i := 0 to 9 do d[i] := i;
   t := Now;

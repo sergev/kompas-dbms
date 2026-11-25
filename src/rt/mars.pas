@@ -1,9 +1,9 @@
 { MARS: the storage of KOMPAS (keyed data in areas).
   The whole database is one file, $MARS_DB (else $MARS_DIR/mars.db, else
   ./mars.db), a copy-on-write B+tree (mpage, mtree).  Tree keys:
-    #0 kobla(3) name       an area: id u32, info i64, next handle i64
+    #0 name                    an area: id u32, next handle i64
     #1 id(4, big-endian) key   an entry: words i64, handle i64, datum
-    #2                     the next area id
+    #2                         the next area id
   Every call is a transaction of its own unless MarsBegin opened one. }
 unit mars;
 
@@ -41,15 +41,13 @@ var
     otherwise every call fails with error 8 }
   MarsCreate: boolean = false;
 
-procedure PASACD(var i: int64);
-procedure PASSETAR(i: int64);
 procedure pasbdi;
 procedure pasbd;
 
 function NameKey(const s: string): TKey;      { s in UTF-8 }
 function ByteKey(const b: RawByteString): TKey;
 
-procedure newd(const name: TKey; info: int64);
+procedure newd(const name: TKey);
 procedure opend(const name: TKey);
 procedure putd(const key: TKey; const d: array of int64; n: int64);
 procedure putd(const key: TKey; const d; n: int64);
@@ -62,7 +60,7 @@ procedure deld(const key: TKey);
 procedure cleard(const name: TKey);
 procedure dropd(const name: TKey);
 { the same with a name of a program: alfa or a literal; d is n bytes }
-procedure newd(const name: array of WideChar; info: int64);
+procedure newd(const name: array of WideChar);
 procedure opend(const name: array of WideChar);
 procedure putd(const key: array of WideChar; const d: array of int64; n: int64);
 procedure putd(const key: array of WideChar; const d; n: int64);
@@ -73,7 +71,7 @@ procedure modd(const key: array of WideChar; const d; n: int64);
 procedure deld(const key: array of WideChar);
 procedure cleard(const name: array of WideChar);
 procedure dropd(const name: array of WideChar);
-procedure newd(const name: UnicodeString; info: int64);
+procedure newd(const name: UnicodeString);
 procedure opend(const name: UnicodeString);
 procedure putd(const key: UnicodeString; const d: array of int64; n: int64);
 procedure putd(const key: UnicodeString; const d; n: int64);
@@ -95,7 +93,6 @@ type
   TOpened = record
     name: RawByteString;
     id: longword;
-    info: int64;
   end;
   TEntry = record
     words, handle: int64;
@@ -106,8 +103,7 @@ var
   vec: PVec;
   err: ^int64;
   ownvec: TVec;
-  { areas opened in the current catalogue; desc[i] is the descriptor
-    word of opened[i], BDVECT[24] points at the current one (30 octal,
+  { areas opened; desc[i] is the descriptor word of opened[i] (its id), BDVECT[24] points at the current one (30 octal,
     DB file descriptor location).  A program that writes through slot 24
     spoils it. }
   opened: array of TOpened;
@@ -132,10 +128,7 @@ const
 
   { BDVECT slots (MARS README, octal offsets) }
   sCode = 3; sKey = 8; sStore = 10; sData = 11; sLen = 13;
-  sDesc = 24; sHandle = 29; sEntAdr = 30; sCurKey = 31; sInfo = 36; sCurLen = 39;
-
-var
-  kobla: int64 = 0;          { current catalogue: LU and zone of its info word }
+  sDesc = 24; sHandle = 29; sEntAdr = 30; sCurKey = 31; sCurLen = 39;
 
 { --- the file --- }
 
@@ -216,8 +209,7 @@ end;
 
 function AreaKey(const name: RawByteString): RawByteString;
 begin
-  Result := #0 + chr((kobla shr 16) and 255) + chr((kobla shr 8) and 255) +
-    chr(kobla and 255) + name;
+  Result := #0 + name;
 end;
 
 function Prefix(id: longword): RawByteString;
@@ -236,20 +228,19 @@ begin
   Move(x, Result[1], 8);
 end;
 
-function AreaVal(id: longword; info, nexth: int64): RawByteString;
+function AreaVal(id: longword; nexth: int64): RawByteString;
 begin
-  Result := BE32(id) + S64(info) + S64(nexth);
+  Result := BE32(id) + S64(nexth);
 end;
 
-function GetArea(const name: RawByteString; out id: longword; out info, nexth: int64): boolean;
+function GetArea(const name: RawByteString; out id: longword; out nexth: int64): boolean;
 var v: RawByteString;
 begin
   Result := TGet(AreaKey(name), v);
   if not Result then exit;
   id := (longword(ord(v[1])) shl 24) or (longword(ord(v[2])) shl 16) or
     (longword(ord(v[3])) shl 8) or longword(ord(v[4]));
-  info := I64(v, 5);
-  nexth := I64(v, 13);
+  nexth := I64(v, 5);
 end;
 
 function EntVal(const e: TEntry): RawByteString;
@@ -264,21 +255,7 @@ begin
   e.data := Copy(v, 17, length(v) - 16);
 end;
 
-{ --- catalogue and areas --- }
-
-{ catalogue key of an info word MMMMZZNNNN: ZZNNNN with the two low
-  octal digits of the zone cleared }
-procedure Select(i: int64);
-var k: int64;
-begin
-  k := (i and &777777) and not int64(&77);
-  if k <> kobla then begin
-    kobla := k;
-    opened := nil;
-    cur := -1;
-    hasPos := false;
-  end;
-end;
+{ --- areas --- }
 
 procedure SetErr(e: int64);
 begin
@@ -288,7 +265,7 @@ end;
 { the current area's descriptor is intact }
 function Intact: boolean;
 begin
-  Result := (cur >= 0) and (desc[cur] = opened[cur].info);
+  Result := (cur >= 0) and (desc[cur] = opened[cur].id);
   if not Result then SetErr(eNoName);
 end;
 
@@ -388,15 +365,15 @@ end;
 
 { a new entry with the next handle of the area }
 procedure Insert(const k: RawByteString; p: pointer; n, words: int64);
-var e: TEntry; id: longword; info, nexth: int64;
+var e: TEntry; id: longword; nexth: int64;
 begin
-  GetArea(opened[cur].name, id, info, nexth);
+  GetArea(opened[cur].name, id, nexth);
   if nexth = 0 then nexth := FirstHandle;
   e.words := words;
   e.handle := nexth;
   e.data := Datum(p, n);
   PutEnt(k, e);
-  TPut(AreaKey(opened[cur].name), AreaVal(id, info, nexth + HandleStep));
+  TPut(AreaKey(opened[cur].name), AreaVal(id, nexth + HandleStep));
   MoveTo(k);
 end;
 
@@ -484,41 +461,6 @@ procedure ClearId(id: longword);
 var k, v: RawByteString;
 begin
   while TSeekKey(Prefix(id), skGE, k, v) and (Copy(k, 1, 5) = Prefix(id)) do TDel(k);
-end;
-
-procedure PASACD(var i: int64);
-var pre, k, v, fk: RawByteString; id: longword; info, nexth: int64;
-begin
-  { fresh KOBLA at this LU and zone: forget its areas }
-  Select(i);
-  if not WBegin then exit;
-  try
-    pre := AreaKey('');
-    k := pre;
-    while TSeekKey(k, skGE, fk, v) and (Copy(fk, 1, 4) = pre) do begin
-      GetArea(Copy(fk, 5, length(fk) - 4), id, info, nexth);
-      ClearId(id);
-      TDel(fk);
-      k := pre;
-    end;
-    TxnCommit;
-  except
-    TxnAbort;
-    raise;
-  end;
-  opened := nil;
-  cur := -1;
-  hasPos := false;
-  vec^[sInfo] := i;
-  SetErr(0);
-end;
-
-procedure PASSETAR(i: int64);
-begin
-  Select(i);
-  { the real MARS leaves i+1 here: PASSETAR(270000c) -> 270001c (ZAT* etalons) }
-  vec^[sInfo] := i + 1;
-  SetErr(0);
 end;
 
 procedure pasbdi;
@@ -650,17 +592,17 @@ begin
   end;
 end;
 
-procedure newd(const name: TKey; info: int64);
-var id: longword; i, n: int64; v: RawByteString;
+procedure newd(const name: TKey);
+var id: longword; n: int64; v: RawByteString;
 begin
   if not WBegin then exit;
   try
-    if GetArea(name.b, id, i, n) then SetErr(eExists)
+    if GetArea(name.b, id, n) then SetErr(eExists)
     else begin
       id := 1;
       if TGet(#2, v) then id := I64(v, 1);
       TPut(#2, S64(id + 1));
-      TPut(AreaKey(name.b), AreaVal(id, info, FirstHandle));
+      TPut(AreaKey(name.b), AreaVal(id, FirstHandle));
       SetErr(0);
     end;
     TxnCommit;
@@ -672,11 +614,11 @@ end;
 
 { an area cleared (drop: and deleted) }
 procedure ClearArea(const name: TKey; drop: boolean);
-var id: longword; info, nexth: int64; i: integer;
+var id: longword; nexth: int64; i: integer;
 begin
   if not WBegin then exit;
   try
-    if not GetArea(name.b, id, info, nexth) then SetErr(eNoName)
+    if not GetArea(name.b, id, nexth) then SetErr(eNoName)
     else begin
       ClearId(id);
       if drop then TDel(AreaKey(name.b));
@@ -704,11 +646,11 @@ procedure dropd(const name: TKey);
 begin ClearArea(name, true); end;
 
 procedure opend(const name: TKey);
-var i: integer; id: longword; info, nexth: int64; found: boolean;
+var i: integer; id: longword; nexth: int64; found: boolean;
 begin
   if not RBegin then exit;
   try
-    found := GetArea(name.b, id, info, nexth);
+    found := GetArea(name.b, id, nexth);
   finally
     TxnCommit;
   end;
@@ -719,10 +661,9 @@ begin
   if i = length(opened) then SetLength(opened, i + 1);
   opened[i].name := name.b;
   opened[i].id := id;
-  opened[i].info := info;
   cur := i;
   hasPos := false;
-  desc[i] := info;
+  desc[i] := id;
   vec^[sDesc] := PtrInt(@desc[i]);
   SetErr(0);
 end;
@@ -759,8 +700,8 @@ begin
   end;
 end;
 
-procedure newd(const name: array of WideChar; info: int64);
-begin newd(MkKey(name), info); end;
+procedure newd(const name: array of WideChar);
+begin newd(MkKey(name)); end;
 procedure opend(const name: array of WideChar);
 begin opend(MkKey(name)); end;
 procedure putd(const key: array of WideChar; const d: array of int64; n: int64);
@@ -782,8 +723,8 @@ begin cleard(MkKey(name)); end;
 procedure dropd(const name: array of WideChar);
 begin dropd(MkKey(name)); end;
 
-procedure newd(const name: UnicodeString; info: int64);
-begin newd(MkKey(name), info); end;
+procedure newd(const name: UnicodeString);
+begin newd(MkKey(name)); end;
 procedure opend(const name: UnicodeString);
 begin opend(MkKey(name)); end;
 procedure putd(const key: UnicodeString; const d: array of int64; n: int64);

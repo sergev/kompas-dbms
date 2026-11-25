@@ -1,10 +1,10 @@
 == servis areas.srv
 SERVIS PROCESSOR 15.1
 ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
-New Area N =          1 INFO=    618561
-New Area N =          2 INFO=   1142913
-New Area N =          3 INFO=   1142977
-New Area N =          4 INFO=   2191617
+New Area N =          1
+New Area N =          2
+New Area N =          3
+New Area N =          4
 EXN=         0
 == ttc cd.ddl
 TTC15
@@ -57,4 +57,4 @@ store track    commit I/Os=6: old state 6, new state 1, chains sound
 modify key     commit I/Os=7: old state 7, new state 1, chains sound
 disconnect     commit I/Os=6: old state 6, new state 1, chains sound
 erase members  commit I/Os=6: old state 6, new state 1, chains sound
-erase disc     commit I/Os=7: old state 7, new state 1, chains sound
+erase disc     commit I/Os=6: old state 6, new state 1, chains sound

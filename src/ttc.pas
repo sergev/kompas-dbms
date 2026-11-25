@@ -2,7 +2,7 @@
 program ttc15; uses krt, kio, mars; type XT0 = array[1..40] of alfa; XT1 = array[1..1000] of alfa; XT2 = array[1..40] of integer;
 (* TTC: the schema translator (DDL).
    Reads YOD operators from INPUT and writes the schema into MARS
-   containers CXHD/CXFL/CXAT of catalogue 270000 for kdb.pas:
+   areas CXHD/CXFL/CXAT for kdb.pas:
    NUM: counts; Tnnn: type; Rnnn: record; Frrrff: field; Snnn: set;
    Asssaa: set attribute.  Sizes keep all digits; CИMBOЛ n keeps n. *)
 type
@@ -127,17 +127,11 @@ var j:integer;
 begin for j:=1 to 10 do d[o+j-1] := z[j] 
 end;
 procedure InitMars;
-var iw:integer;
 begin
-  (* the catalogue made by SERVIS is kept: no PASACD *)
-  PASSETAR(94208);
-  pasbdi; BDERRN := 0;
-  iw := 618496 + 1; newd('CXHD  ', iw);
-pasbdi; BDERRN := 0;
-  iw := 618496 + 2; newd('CXFL  ', iw);
-pasbdi; BDERRN := 0;
-  iw := 618496 + 3; newd('CXAT  ', iw);
-pasbdi; BDERRN := 0
+  newd('CXHD  ');
+  newd('CXFL  ');
+  newd('CXAT  ');
+  pasbdi; BDERRN := 0
 end;
 procedure PutHere(key:alfa);
 begin

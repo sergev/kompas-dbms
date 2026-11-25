@@ -16,7 +16,7 @@ No historical outputs survive. So the check is consistency and review by hand, n
 | `src/rt/krt.pas` | runtime of KOMPAS Pascal programs: `integer` = 64 bits, `alfa`, write formats |
 | `src/rt/kio.pas` | standard output of KOMPAS Pascal programs past its buffer (`sevlib`) |
 | `src/servis.pas` | `servis`: areas, journals |
-| `src/ttc.pas` | `ttc`: the schema (DDL) into catalogue 270000 (`CXHD`/`CXFL`/`CXAT`) |
+| `src/ttc.pas` | `ttc`: the schema (DDL) into the areas `CXHD`/`CXFL`/`CXAT` |
 | `src/gen.pas`, `src/kgenrt.pas` | `gen`: the loader generator and the runtime of its loaders |
 | `src/mad.pas` | `mad`: the query language |
 | `src/predt.pas` | `predt`: the front end of KOMPAS Pascal |
@@ -49,7 +49,7 @@ Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
 ## 3. The engine
 
-- **Schema.** It is read from catalogue 270000, where `ttc` writes it: records `NUM`, `Tnnn`, `Rnnn`, `Frrrff`, `Snnn`, `Asssaa`. What is kept:
+- **Schema.** It is read from the areas `CXHD`/`CXFL`/`CXAT`, where `ttc` writes it: records `NUM`, `Tnnn`, `Rnnn`, `Frrrff`, `Snnn`, `Asssaa`. What is kept:
   - the length of `СИМВОЛ n` and all digits of `РАЗМЕР`;
   - the area of each record;
   - the set attributes, including `ВЫБОР … ИСПОЛЬЗ`.
@@ -161,7 +161,7 @@ All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a
 
 The original MARS is lost; this one keeps its interface (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `pasbd` microprograms, the `BDVECT` slots, the handles) on a design like LMDB, cut down:
 
-- **One file**, `$MARS_DB` (without it `$MARS_DIR/mars.db`, the name of earlier versions, else `mars.db`), pages of 4 KB. All catalogues and areas are key ranges of one B+tree: `#0 catalogue name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
+- **One file**, `$MARS_DB` (without it `$MARS_DIR/mars.db`, the name of earlier versions, else `mars.db`), pages of 4 KB. All areas are key ranges of one B+tree: `#0 name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
 - **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
 - **Freelist.** Pages freed by a commit are reused by the next transactions, so the file stops growing when the data stop growing.
 - **Locking.** `flock` on the file, per transaction: shared for reading, exclusive for writing. Readers and the writer exclude each other, so freed pages can be reused at once; a reader re-reads the meta pages and drops its cache when another process has committed.

@@ -300,7 +300,7 @@ File `areas.srv`:
 КОНЕЦ.
 ```
 
-`ДЛИНА` is the size in zones of 1024 words.
+`ДЛИНА` was the size in zones of 1024 words. It is checked and kept, but an area grows as needed.
 
 ```sh
 servis < areas.srv
@@ -311,10 +311,10 @@ Output:
 ```
 SERVIS PROCESSOR 15.1
 ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
-New Area N =          1 INFO=    618561
-New Area N =          2 INFO=   1142913
-New Area N =          3 INFO=   1142977
-New Area N =          4 INFO=   2191617
+New Area N =          1
+New Area N =          2
+New Area N =          3
+New Area N =          4
 EXN=         0
 ```
 

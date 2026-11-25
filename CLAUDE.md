@@ -23,7 +23,7 @@ python3 tests/run.py SKLMON   # one Severov program
 
 ## Architecture
 
-- `src/kdb.pas` — the engine: schema loaded from catalogue 270000 (written by `ttc`), records, CODASYL set chains (owner first/last; member next/prior/owner), currency per run unit/record type/set, DML, journal. `KCheck` verifies chain integrity (used by `tests/engine/kdbtest.pas`).
+- `src/kdb.pas` — the engine: schema loaded from the areas `CXHD`/`CXFL`/`CXAT` (written by `ttc`), records, CODASYL set chains (owner first/last; member next/prior/owner), currency per run unit/record type/set, DML, journal. `KCheck` verifies chain integrity (used by `tests/engine/kdbtest.pas`).
 - `src/rt/mars.pas` — MARS keyed storage under the engine; a record's key is its DB-key. DB-key 1 is the anchor holding singular `SY-*` sets, per-record-type chains, and `SYSTEM`. Areas are key ranges of one B+tree (`src/rt/mtree.pas`) on copy-on-write pages (`src/rt/mpage.pas`: two meta pages, freelist, per-transaction `flock`). Every MARS call is a transaction unless `MarsBegin`/`MarsCommit` wraps several; `kdb` wraps each changing DML statement, `servis`/`ttc` a whole run, the `gen` loader every 1000 records. `tests/mars-api` pins MARS behaviour; `mars-tree`/`-txn`/`-crash`/`-lock`/`engine-crash` test the store.
 - `src/kutf.pas` — text is UTF-8 outside and `WideChar` inside (program chars, char fields stored as UTF-16, catalogue rows). Names and keywords are folded (upper case, Latin look-alikes as Cyrillic, `Ё` as `Е`); data never. MARS keys are bytes: names as UTF-8, DB-keys binary.
 - `src/rt/krt.pas` — runtime for KOMPAS Pascal programs (`integer` is 64-bit, `alfa`, write formats).
