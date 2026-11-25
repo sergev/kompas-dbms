@@ -1,237 +1,166 @@
-# The KOMPAS engine and tools
+# How KOMPAS works
 
-KOMPAS is a CODASYL (network) DBMS. The original sources of the engine and of its tools GEN, MAD and PREDT are lost. They are written here anew in Free Pascal. The language descriptions they follow are the original texts of 1988-89 by Pavel Severov: schemas, loader decks, queries and application programs (see `tests/`).
+The original KOMPAS of the 1980s is lost. Its engine and tools are written here anew in Free Pascal, following the texts of 1988-89 that survived: schemas, loader decks, queries and application programs by Pavel Severov (`tests/`). No output of the old system survived either, so the test is agreement: a loader deck of 1988 and a query of 1988 must give the same data, and the application programs must run.
 
-No historical outputs survive. So the check is consistency and review by hand, not comparison with a reference: a loader of 1988 and a query of 1988 must agree with each other, and the application programs must run their sessions.
+Section 1 shows the parts, sections 2-4 the engine from the bottom up, section 5 the tools, sections 6-7 the tests.
 
-## 1. Layout
+## 1. The parts
+
+```
+ servis   ttc   gen   mad   your program
+    \      |     |     |     /
+     kdb: records, sets, current records, DML      src/kdb.pas
+      |
+     MARS: named areas of keyed entries            src/rt/mars.pas
+      |
+     B+tree: sorted keys on pages                  src/rt/mtree.pas
+      |
+     pages: transactions, locking                  src/rt/mpage.pas
+      |
+     one file, $MARS_DB
+```
 
 | File | What |
 |---|---|
-| `src/kdb.pas` | the engine: schema, records, sets, currency, DML |
-| `src/kutf.pas` | text: UTF-8 outside, WideChar inside; folding of names |
-| `src/rt/mars.pas` | MARS: keyed storage of areas, all in one file `$MARS_DB` |
-| `src/rt/mtree.pas` | the B+tree under MARS: byte keys, cursors, structural check |
-| `src/rt/mpage.pas` | pages of `mars.db`: copy-on-write transactions, freelist, locking |
-| `src/rt/krt.pas` | runtime of KOMPAS Pascal programs: `integer` = 64 bits, `alfa`, write formats |
-| `src/rt/kio.pas` | standard output of KOMPAS Pascal programs past its buffer (`sevlib`) |
-| `src/servis.pas` | `servis`: areas, journals |
-| `src/ttc.pas` | `ttc`: the schema (DDL) into the areas `CXHD`/`CXFL`/`CXAT` |
-| `src/gen.pas`, `src/kgenrt.pas` | `gen`: the loader generator and the runtime of its loaders |
-| `src/mad.pas` | `mad`: the query language |
-| `src/predt.pas` | `predt`: the front end of KOMPAS Pascal |
-| `src/kpc` | `predt` + `fpc` in one command |
-| `src/sevlib.pas` | native parts of the lost library of the Severov programs |
+| `src/kdb.pas` | the engine |
+| `src/rt/mars.pas`, `mtree.pas`, `mpage.pas` | the storage |
+| `src/kutf.pas` | text: UTF-8 outside, 16-bit characters inside; folding of names |
+| `src/predt.pas`, `src/kpc` | programs with DML: translator and compile script |
+| `src/rt/krt.pas`, `kio.pas` | runtime of such programs |
+| `src/servis.pas`, `ttc.pas`, `gen.pas` + `kgenrt.pas`, `mad.pas` | the tools |
+| `src/sevlib.pas` | parts of the lost library of Severov's programs |
 
-`make` builds the tools into `build/bin` and the units for user programs into `build/lib`.
+`make` puts the tools into `build/bin` and the units for programs into `build/lib`.
 
-## 2. KOMPAS Pascal
+## 2. The file
 
-Programs with DML are Free Pascal with two additions: Russian identifiers, and DML statements between `&&` and `&&`. `predt` turns such a program into plain Free Pascal:
+The database is one file: `$MARS_DB`, else `$MARS_DIR/mars.db`, else `mars.db`. Only `servis` creates it.
 
-- `&&ПОДСХЕ X&&` declares the records of the schema in `$MARS_DB`: types `ZZ<record>`, variables named as the records, `ZZBDKEY`, `СОСТ`, and procedures that move fields between the variables and the engine.
-- Every statement fragment becomes `begin … СОСТ:=KSTAT end` with its own `;` (except before `ELSE`). `НАБ s` and `ЗП r` become the numbers of a set and of a record.
-- Names with non-ASCII letters become ASCII names. Latin and Cyrillic homoglyphs give the same name (`С` and `C`), and so do lower and upper case: Cyrillic look-alikes become Latin letters, other letters `Q<hex code>_` (`ФЛАГ` is `Q0424_Q041B_AQ0413_`).
-- A `char` is a `WideChar`: one element of `alfa` or of a char array is one letter, whatever the alphabet. `chr` becomes `WideChar`, `string[n]` becomes `UnicodeString`.
-- String literals stay as written; the program is compiled with `{$codepage utf8}`. Text files, standard input and output are UTF-8 (`kutf`).
-- FPC cannot write or read an array of `WideChar`. An argument of `write`/`writeln` that is a char array becomes `RT_S(…)`, and a `read`/`readln` with one reads it with `RT_Rd`. Char arrays are found by the names declared with such types; `RT_S` passes numbers through unchanged.
-- Each `packed array[1..N] of char` becomes one named type `ZZC<N>` (`alfa` for 6). In Turbo Pascal mode two arrays of the same shape are otherwise incompatible.
-- Without `{$mode}` the program gets `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}`, and it uses `krt`, `kio`, `kdb` (added to its own `uses` clause if it has one).
+**Pages.** The file is a row of 4 KB pages. Pages 0 and 1 are *meta pages*: they say which page is the root of the tree, where the list of free pages starts, and the number of the last commit. All other pages belong to the tree, to long values, or to the free list. Every page carries a checksum, so a page spoiled on disk is reported (`page N damaged`) instead of being read as data.
 
-DML forms supported (all those of the 1988 decks):
+**The B+tree** is a sorted dictionary on pages: byte keys (up to 255 bytes) with byte values. Leaf pages hold keys and values in order; branch pages above them say which page holds which range of keys. Finding a key reads one page per level, three or four pages even for a large database. A value over 1 KB is stored in a chain of overflow pages.
 
-- `НАЙТИ` of every kind, with the key from a literal, a variable or a field;
-- `ВЗЯТЬ [rec][.fld] [НА x]`, `ВЗЯТЬ`/`ЗАМЕНИ БД-КЛЮ`;
-- `ПОСТАВ[ИТЬ]`, `ВКЛЮЧИ`, `ИСКЛЮЧ[И]`, `УБРАТЬ`, `ЗАМЕНИ[ТЬ] [rec][.fld НА v]`;
-- `ЖУРНАЛ`, `КОМПАС`, `ЗАВЕРШ`.
+**Areas.** KOMPAS keeps data in named *areas*. Here an area is just a range of keys in the one tree:
 
-Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
-
-## 3. The engine
-
-- **Schema.** It is read from the areas `CXHD`/`CXFL`/`CXAT`, where `ttc` writes it: records `NUM`, `Tnnn`, `Rnnn`, `Frrrff`, `Snnn`, `Asssaa`. What is kept:
-  - the length of `СИМВОЛ n` and all digits of `РАЗМЕР`;
-  - the area of each record;
-  - the set attributes, including `ВЫБОР … ИСПОЛЬЗ`.
-- **Records.** They live in the MARS containers of their areas, which `servis` creates. The MARS key of a record is its DB-key.
-- **Sets.** They are CODASYL chains:
-  - an owner keeps first and last;
-  - a member keeps next, prior and owner.
-
-  Singular sets `SY-*` hang on an anchor (DB-key 1). The anchor also holds the chain of every record type (`НАЙТИ ПЕРВУЮ <record>`) and the record `SYSTEM`.
-- **Sets in detail:**
-  - ordering `ПО-ЭЛЕ` with a duplicate check (`ДУБЛИК РАЗРЕШ`);
-  - automatic membership on `ПОСТАВ`, except `ВКЛЮЧЕ ВРУЧНУ`;
-  - reordering when `ЗАМЕНИ` changes the key;
-  - recursive sets;
-  - choice of the owner by `ВЫБОР t ИСПОЛЬЗ r.f`.
-- **Currency.** It is kept for the run unit, for each record type and for each set.
-  - `НАЙТИ ПЕРВУЮ` takes the occurrence the current record owns, if that record is of the owner type.
-  - `НАЙТИ СЛЕДУЮ` goes to the next member. This is how a tree is walked in `tests/gold-zt0/deck9.mad`.
-- **Journal.** Once a program or query names it (`ЖУРНАЛ`, `KOPEN`), every record written or erased is logged there as an after-image: area, MARS key, new words (or erased), under key `J` + sequence, in the same transaction as the change. The sequence goes on from the last entry, across runs. `KREPLAY(journal, area)` applies the images of one area in order; `servis` `ВОССТА` uses it. Replaying is idempotent.
-- **Transactions.** Each changing statement (`ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`, erasing the members of an occurrence) is one MARS transaction: after a crash the record, its owners, its neighbours in the chains and the journal entry are all changed or none.
-- **Status.** `СОСТ` (`KSTAT`) codes are a hypothesis (`doc/open-questions.md`):
-  - 0 ok, 1 end of set, 2 not found, 3 duplicate key;
-  - 4 no current record, 5 membership error, 6 bad name, 7 storage error, 8 no schema.
-- **Integrity test.** `tests/engine` (`kdbtest`) checks the integrity of the chains after every step (`KCheck`).
-
-## 4. The tools
-
-- **`servis`.** It creates areas in `$MARS_DB`, and the file if it is missing; the other tools do not create it (`MarsCreate`). A run is one transaction. The descriptions of its areas are kept in the MARS area `SERVIS` (`#NCNT`, `#NMS`, one record per area), so every run knows the areas of the earlier ones.
-  - `ОСВОБО` releases an area (the flag that `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ` require).
-  - `ОЧИСТИ` erases the data of an area (`cleard`); `ЖУРНАЛ … СБРОСИ` empties the journal.
-  - `ВОССТА` replays the journals (areas `ВИД ЖУРНАЛ`) into the areas named.
-  - `УБРАТЬ ОБЛАСТЬ` deletes the MARS area too (`dropd`).
-- **`ttc`.** It reads a schema in DDL and stores it. A run is one transaction.
-- **`gen`.** It works as the original GEN: it builds a loader program (formats become procedures; `kgenrt` reads the data), passes it through `predt` and `fpc`, and runs it.
-  - Job cards (`*…`) and editor labels (`? …`) are skipped.
-  - Inside a block a line may start with `*`.
-  - `-k` keeps the work directory.
-  - The loader commits every 1000 data records and at the end: after a crash, a load is kept up to its last commit.
-  - `servis` statements before the data (`ОСВОБО`, `ОЧИСТИ`, `ЖУРНАЛ`, `ВОССТА`; in the 1988 decks a job step between `*С` and `*CALL` the loader) are run by `servis` before the loader. Later ones are reported as skipped.
-  - If the deck resets a journal (`ЖУРНАЛ x СБРОСИ`), the loader writes that journal (`&&ЖУРНАЛ x&&`), so the load can be replayed by `ВОССТА`. Other loads are not journaled.
-- **`mad`.** It runs a query text: labels, `ЕСЛИ … ТО_( … _)ИНАЧЕ`, `ВЫДАТЬ`/`ВВ`. `ВЫДАТЬ` prints a line in the data format of GEN, so an unload can be fed back to `gen`.
-- **`predt` and `kpc`.** They make programs (section 2).
-
-## 5. Tests (`make test`)
-
-| Case | What | Result |
+| Key | Value | Meaning |
 |---|---|---|
-| `engine` | `kdbtest`: order, duplicates, owner, key, `ЗАМЕНИ` of a key, DB-key, `ИСКЛЮЧ`/`ВКЛЮЧИ`, erase | `ALL OK` |
-| `cd` | the example of `doc/tutorial.md`: `servis`, `ttc`, `gen`, three MAD queries, the program `cdtime` | as in the tutorial |
-| `gold-ck0` | schema CX-CK0, loader deck 6 (its `servis` statements run, the load journaled), query deck 3; then `ОСВОБО`/`ОЧИСТИ` of the data areas, query 3, `ВОССТА`, query 3 | 23 records, 0 errors; the unload equals the data of deck 6; empty after `ОЧИСТИ`; after `ВОССТА` equal to the first again |
-| `gold-am0` | schema CX-AM0, loader deck 7 | 38 records, 0 errors |
-| `gold-zt0` | schema CX-ЗТ0, loader deck 11, query deck 9 | 108 records, 0 errors; topics and co-executors equal the data of deck 11 |
-| `mars-api` | every MARS call: areas, entries, scans in both directions, error codes, clear and drop; a second process sees the same; without a database file every call fails and none makes it | as recorded |
-| `mars-tree` | the B+tree against a sorted-array model: 135 000 random puts, deletes, gets and seeks; sequential, reverse, random, long-prefix and 255-byte keys; values up to 6 KB (overflow pages); emptying the tree; repeated fill and empty | `TCheck` sound after every 20 commits; the file stops growing |
-| `mars-txn` | nesting, abort, empty transactions, writes refused in a read transaction, a reader waiting for a writer and the other way, another process's commit, reopen | as expected |
-| `mars-crash` | a commit killed before each of its writes and syncs, or with each page write torn in half, with fsync on and off; a damaged newest meta page, root page, both meta pages | always exactly the old or the new state; damage reported |
-| `mars-lock` | 4 writer and 2 reader processes on one file | no update lost, no reader sees a half transaction |
-| `engine-crash` | six DML statements killed at each write of their commit | `KCheck` sound; the old or the new data |
-| `servis-maint` | a second `servis` run knows the areas; journaled stores, key change, move, erase; `ОСВОБО`/`ОЧИСТИ` empty the areas; `ВОССТА` (twice) rebuilds them; `УБРАТЬ ОБЛАСТЬ` needs `ОСВОБО`, no journal → error 70 | the dump after `ВОССТА` equals the dump after the load (MD5), `KCheck` sound |
-| `utf8` | lower case, `Ё`, Latin, German, Greek data through `gen`, `mad` and a program; names written with Latin look-alikes | data as written, sets in code order, exact keys |
+| `#0` + name | area id (4 bytes) | the area exists |
+| `#1` + id + key | the data | an entry of the area |
+| `#2` | next free id | |
 
-The decks and the Severov programs are transcriptions of 1988 texts in the GOST code, where Latin `A` and Cyrillic `А` were one letter. The transcriptions mix the two alphabets at random. Since data are now kept as written, their data and string literals were folded once into one form (Cyrillic look-alikes, upper case), the form the old system saw.
+All entries of an area share the prefix `#1`+id, so they lie together in key order. Clearing an area deletes that range. An area has no fixed size; the pages of all areas are mixed in the file.
 
-Queries 3 and 9 return exactly what decks 6 and 11 loaded, in the data format of GEN: the original loader and the original unload query of 1988 close on each other.
+**Transactions.** A change never overwrites a page in use. Changed pages are written to free places, then the file is synced, then the *other* meta page is written with the new root and a higher commit number, and synced again. On opening, the valid meta page with the higher number wins. So if the machine stops at any moment, the file shows either the old state or the new one, never a mix. Pages left unused by a commit go to the free list and are reused, so the file stops growing when the data do.
 
-The Pascal parts of the gold decks (`ПАСКАЛ "…"`, `ПРОЦЕДУРЫ`) were converted once from the dialect of 1988 to Free Pascal:
-- `_(`/`_)` became `BEGIN`/`END`;
-- `&` became `AND`;
-- `EXIT label` became `BREAK`;
-- a set stored into an integer element became `LONGINT(set)`;
-- `'_377'` became `#255`.
+`MARS_SYNC=0` skips the syncs: faster (the tests use it), still safe if a program is killed, but a power failure may lose the last commits. A sync costs a disk write, so bulk work goes in one transaction: a `servis` run, a `ttc` run, and every 1000 records of a `gen` load.
 
-## 6. Severov's application programs
+**Locking.** A transaction locks the whole file: shared for reading, exclusive for writing. Many tools can use one database at once; a reader that sees another process's commit drops its cached pages.
 
-`tests/severov/<PROG>.pas` are the 16 application programs of 1988-89 for the warehouse (`SKL*`), depreciation (`AMO*`) and cost (`ZAT*`) systems. They were converted once from the Pascal dialect of 1988 to KOMPAS Pascal, and their DML fragments are kept as they were.
-- Their lost library modules (`!INCLU:X`) were rebuilt from how the programs use them, as simple stand-ins, and are inlined in each program.
-- What is written in Free Pascal is in `src/sevlib.pas`:
-  - `FCOPY`, `FWRITE`, `ЖУРНАЛ`, `КОНЕЦ`, `УНАР`, `COUNT`;
-  - the pending output line used by `TPUT`.
-- Input is one line per answer; the end of input ends the program.
-- Two modules were rebuilt from their use in `ZATZAT`, `ZATNAK`, `ZATRTE` and `ZATTAB`:
-  - `LIST`: parameter cards. The list and its questions come from the records `ПАР`/`ТИП`/`АТР` of deck 11.
-  - `TPUT`: a table row built from the cells of the unfinished output line.
-- `FCBЯ` (`SKLCAR`) was rebuilt from its two calls: it finds the link record of two owners (`СУММА` of a material and a department, `ВЗЯЛ` of an item and a `СУММА`).
+**The MARS calls** (`mars.pas`) keep the names of the original:
 
-All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a copy of the database loaded by the original loader, and their output is compared with `*.out`. Some run on the database after the sessions that give them data (`SETUP` in `tests/run.py`): deck 11 has no costs, months or stages, and deck 7 has no devices or code groups.
+| Call | Does |
+|---|---|
+| `newd`, `opend`, `cleard`, `dropd` | create, open, empty, delete an area; the other calls work on the open area |
+| `putd`, `modd`, `getd`, `deld` | add, add or replace, read, delete an entry |
+| `firstd`, `lastd`, `nextd`, `prevd` | walk the entries in key order |
+| `MarsBegin`, `MarsCommit`, `MarsAbort` | group calls into one transaction; otherwise each call is one |
+| `MarsCheck` | read the whole file and check the tree, the chains of pages and the free list |
 
-| Program | Session | Result |
-|---|---|---|
-| `SKLMON` | administrator login with the password `СТАКАН` of deck 6, date, `КОН` | greeting, data from `SYSTEM`, common block |
-| `SKLOTD` | list, add `ОТД-7`, rename it to `ОТД-8`, remove `ППО` | the department lists show each change |
-| `SKLOTC` | `ИТО` - the current total of the warehouse | stock of `СПЕЦ.ОДЕЖДА` 2948 = 44.00 × 67 (curtains of deck 6) |
-| `SKLCAR` | list; `НОВ` card 2020 without a price; `ЦЕН`, `ПРИ`; `РАС` to `ППО` twice and to `ЭИО`; `ОТД`; `ИСК` | the issues of each department: `ППО` 15+5=20, `ЭИО` 7 |
-| `AMOMON` | administrator login, system block (password `0909` of deck 7), flag `ОТЛАД` on and off, `ЗАК`, `КОН` | menus and flags |
-| `AMOCAR` | `НОВ` - device 1001 with precious metals, `ПРО` | the metals pass through the file `ДР` into the database and back |
-| `AMOOTD` | after `AMOCAR`: add `ОТД-9`, add `ЭИО` again, rename to `ОТД-10`, remove `ОГИ`, remove `ОТД-10` | `ЭИО` is refused; `ОГИ` keeps its device 1001 |
-| `AMOGRU` | add groups 20000-29999 and 30000-39999, remove the second | the lists show each change |
-| `AMOOTC` | after `AMOCAR`, `AMOGRU`: all six reports for month 3 | device 1001: 1200 × 10% / 12 = 10 and 1200 × 5% / 12 = 5; metals 1.5 and 0.25 |
-| `ZATMON`, `ZATOTD` | login, list | menu and the first department |
-| `ZATCOF` | list the coefficients of deck 11; `НОВ` `ZКПРЕМ`; `ЗАМ`; `ИСК` | a bug of 1988 (`doc/open-questions.md`): the new coefficient is not in the list, and `ИСК` erases the list |
-| `ZATNAK` | `НОВ` - invoices for 01.89, `ПРО` | the card is read from `SY-НАК` |
-| `ZATRTE` | `НОВ` - topic 1300189: executor `ОГИ`, co-executor `ЭИО`, stages 1 and 2; `ПРО` of it and of topic 1021889 | questions by `АТР`; topic 1021889 is `НМОЭИ` with co-executors `ОМАТИ`, `ОГПС`, as in deck 11 |
-| `ZATZAT` | `НОВ` - costs of topic 1300189, stage 1, 01.89, `ПРО` | the card is found through `ЭТ-ЗАТ` |
-| `ZATTAB` | report for the last month | table: total salary 2300 = 2000+300, insurance 322 = 0.14×2300, cost 4542 |
+The error of the last call is in `MErr`: 0 ok, 3 no such entry, 8 no such area (or no file), 9 already exists.
 
-`ZATTAB` prints a trace of its calculation: the 1988 source sets `PRINTCALC:=TRUE` in `INITTAB`.
+## 3. Records and sets
 
-## 6a. MARS storage
+**The schema.** `ttc` stores it as text rows in the areas `CXHD`, `CXFL`, `CXAT`. `kdb` reads them when a program starts and keeps, for each record type, its fields and area, and for each set, its owner, member, key, and options.
 
-The original MARS is lost; this one keeps the names of its calls (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `cleard`, `dropd`), with `firstd`, `lastd`, `nextd`, `prevd` for scans and `MErr` for the error of the last call. There are no catalogues, info words, `BDVECT` microprograms or entry handles of the BESM-6 MARS. It is built on a design like LMDB, cut down.
+**A record** is an array of 8-byte words:
 
-### The file
+```
+[type] [next, prior in the list of its type]
+[first, last] for each set it owns
+[next, prior, owner] for each set it belongs to
+[fields...]
+```
 
-A database is one file: `$MARS_DB`, without it `$MARS_DIR/mars.db` (the name of earlier versions), else `mars.db`. It is a sequence of 4 KB pages; page N starts at byte N × 4096. Integers in pages are in the byte order of the machine (little-endian on x86-64 and ARM64); keys are compared as bytes.
+A field `ЦЕЛОЕ` is one word, `ДЕЙСТВ` one word (a double), `СИМВОЛ n` n 16-bit characters rounded up to words. Links are DB-keys; 0 means none.
 
-Every page starts with a header of 20 bytes:
+**The DB-key** is the number of a record: the index of its area in the top byte, a serial number below. The tree key of a record is the area index + 1 and the serial number, so a record is found in one tree lookup. Record 1 is the *anchor*: it holds the next serial number, the DB-key of the record `SYSTEM`, and first/last of every set owned by the system and of the list of every record type.
 
-| Offset | Size | Field |
-|---|---|---|
-| 0 | 4 | CRC-32 of bytes 4…4095 |
-| 4 | 2 | type: 1 meta, 2 branch, 3 leaf, 4 overflow, 5 freelist |
-| 6 | 2 | count: cells, bytes or page numbers, by type |
-| 8 | 4 | the page's own number |
-| 12 | 4 | next: the leftmost child (branch) or the next page of a chain (overflow, freelist) |
-| 16 | 4 | spare |
+**A set** is a doubly linked chain. Example from `tests/cd`, the set `АР-ДИС` (artist owns discs, ordered by year):
 
-- **Pages 0 and 1** are the meta pages: after the header, magic `KMARS1`, format version, page size, `txnid` (8 bytes), the root page of the tree, the first freelist page, the number of pages in the file. Commits write them in turn; the valid one with the higher `txnid` is current.
-- **Branch and leaf pages** hold the B+tree (`mtree.pas`). After the header come 2-byte offsets of the cells in key order; the cells are packed from the end of the page. A leaf cell is key length (1 byte), flag (1 byte), value length (4 bytes), key, then the value, or the first overflow page when the flag is 1. A branch cell is key length, child page, key: the child holds the keys from this key up to the next cell's.
-- **Overflow pages** hold a value longer than 1024 bytes, as a chain.
-- **Freelist pages** list free page numbers (4 bytes each), as a chain.
+```
+ Кино: first ─────────────┐           last ──────────────┐
+                          v                              v
+               1001 Группа крови  ── next ──>  1002 Звезда по имени Солнце
+                 prior: 0          <─ prior ──    next: 0
+                 owner: Кино                      owner: Кино
+```
 
-Where a page lies in the file says nothing: copy-on-write gives every changed page a new number, and freed pages are reused. The pages of all areas are mixed.
+- **Storing** (`ПОСТАВ`) puts the new record into every set it is a member of, under the *current* owner of that set, unless the set is `ВКЛЮЧЕ ВРУЧНУ` (then the program uses `ВКЛЮЧИ`). In an ordered set the engine walks the chain from the first member to the first one with a greater key and links the record before it. An equal key is refused unless `ДУБЛИК РАЗРЕШ`. If one set refuses, the record is not stored at all.
+- **Finding by key** (`НАЙТИ ПО-КЛЮ`) also walks the chain from the first member. There is no index: a long set means a long walk.
+- **Changing a key** (`ЗАМЕНИ`) unlinks the record and links it again at its new place.
+- **Erasing** (`УБРАТЬ`) unlinks the record from its sets; its own members are disconnected, not erased.
+- **`ВЫБОР s ИСПОЛЬЗ R.F`** makes `ВКЛЮЧИ` choose the owner by key: the owner is the member of set `s` whose key equals `R.F`.
 
-### The tree
+**Current records** are what a program "stands on". The engine keeps one for the program as a whole, one per record type, and one per set. Finding a record makes it current for the program, for its type, and for every set it belongs to or owns. So after `НАЙТИ ПО-КЛЮ 1002 В SY-ДИС` the disc is current in `АР-ДИС` and `ДИ-ТРЕ` too: `НАЙТИ ВЛАДЕЛ В АР-ДИС` goes to its artist, `НАЙТИ ПЕРВУЮ В ДИ-ТРЕ` to its first track. `НАЙТИ СЛЕДУЮ В s` moves from the current of `s` along its chain.
 
-Keys are at most 255 bytes. The first byte says what a key is:
+**Status.** Every DML statement sets `СОСТ` (`KSTAT`): 0 ok, 1 end of set, 2 not found, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema. The numbers are a guess (`doc/open-questions.md`).
 
-| Key | Value | |
-|---|---|---|
-| `#0` name | area id: 4 bytes, big-endian | an area (`newd`) |
-| `#1` id key | the datum | an entry of area id |
-| `#2` | the next area id: 4 bytes, big-endian | |
+**Each changing statement is one transaction** (`ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`): the record, its neighbours in the chains, its owners and the journal entry change together or not at all.
 
-The id is big-endian, so the entries of an area are one run of keys in key order. `cleard` deletes that run, `dropd` also the `#0` key, and `firstd` … `prevd` walk it. An area has no size: `ДЛИНА` of `servis` is only kept in the area's descriptor. As all areas are in one tree, one transaction can change several of them.
+**The journal.** After `ЖУРНАЛ x` (`KOPEN`), every record written or erased is also logged in area `x`: under key `J` + a serial number, the area, the record's key and its new words (or "erased"). `KREPLAY(x, area)` writes these images back in order; `servis ВОССТА` uses it to rebuild an area that was cleared. Replaying twice gives the same result.
 
-### A KOMPAS database
+**`KCheck`** walks every chain and checks that next/prior/owner agree; the engine tests call it after every step.
 
-| Area | Written by | Entries |
-|---|---|---|
-| `ADA` | `servis` | `ADMIN`: the administrator |
-| `SERVIS` | `servis` | `#NCNT` (count of areas, last code), `#NMS` (their names), one descriptor (11 words) per area |
-| `CXHD`, `CXFL`, `CXAT` | `ttc` | the schema: `NUM`, `Tnnn`, `Rnnn`, `Snnn`; `Frrrff`; `Asssaa`. Each is 48 characters |
-| data areas (`ОБЛАСТЬ` of `servis`, named by the records of the schema) | `kdb` | records |
-| journal areas (`ВИД ЖУРНАЛ`) | `kdb` | after-images |
+## 4. Programs with DML
 
-- **Records.** A DB-key is `area index × 2⁴⁰ + sequence number`. The area index is the order in which the records of the schema first name the areas (from 0); a record without an area goes to the first one. The sequence number comes from one counter for the whole database. In the tree, a record's key is 6 bytes: area index + 1, then the sequence number in 5 bytes, big-endian; its value is the record's words (8 bytes each): type, next and prior in the chain of its type, first and last of each set it owns, next, prior and owner of each set it is a member of, then the fields (`СИМВОЛ n` as n UTF-16 characters, padded to words).
-- **The anchor** is DB-key 1, in area 0: the next sequence number, the DB-key of the record `SYSTEM`, first and last of every singular set and of the chain of every record type.
-- **Journal entries.** Key `J` + sequence number (5 bytes, big-endian), so key order is the order of writing. Value: `W` (written) or `D` (erased), length and name of the area (UTF-8), length and bytes of the tree key of the record, datum length (4 bytes), datum.
+A program is Free Pascal with Russian names and DML between `&&` and `&&`. `predt` turns it into plain Free Pascal; `kpc` runs `predt`, then `fpc`.
 
-### Transactions and checks
+- `&&ПОДСХЕ X&&` reads the schema from `$MARS_DB` and declares a variable for each record type, the status `СОСТ`, and code that copies fields between the variables and the engine. So the database must exist when a program is compiled.
+- Each DML statement becomes calls of `kdb` (`KFINDKEY`, `KSTORE`, …) followed by `СОСТ := KSTAT`.
+- Russian names become ASCII names. Case does not matter, and Latin and Cyrillic letters that look alike (`C`/`С`) give the same name, as on the original machine, where they were one code.
+- A `char` is a 16-bit character, so one element of a char array holds one letter of any alphabet. Strings and files are UTF-8. Writing and reading char arrays goes through `RT_S`/`RT_Rd` of `krt`.
+- Without its own `{$mode}` a program is compiled as Turbo Pascal, with 64-bit `integer`.
 
-- **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
-- **Freelist.** Pages freed by a commit are reused by the next transactions, so the file stops growing when the data stop growing.
-- **Locking.** `flock` on the file, per transaction: shared for reading, exclusive for writing. Readers and the writer exclude each other, so freed pages can be reused at once; a reader re-reads the meta pages and drops its cache when another process has committed.
-- **Transactions.** Each MARS call is one, unless `MarsBegin` … `MarsCommit` (or `MarsAbort`) opens a longer one; nested ones join the outermost. `MARS_SYNC=0` leaves out the `fsync`s: a killed process still loses nothing committed, a power failure may lose the last commits. The tests run so.
-- **Check.** `MarsCheck` (`TCheck`) reads the whole file and checks key order, separators, fill, leaf depth, overflow lengths, and that every page is used exactly once (tree, overflow, freelist).
+All DML forms of the 1988 texts are supported: every `НАЙТИ`, `ВЗЯТЬ`, `ПОСТАВ`, `ЗАМЕНИ`, `УБРАТЬ`, `ВКЛЮЧИ`, `ИСКЛЮЧ`, `ВЗЯТЬ`/`ЗАМЕНИ БД-КЛЮ`, `ЖУРНАЛ`, `КОМПАС`, `ЗАВЕРШ`. Not supported: `ЯЗЫК`, `@var`, `*n`, `buf;oper`, `ЗАПРОС`.
 
-Timing (`tests/bench/marsbench.pas`, 8-byte keys, 80-byte data, `MARS_SYNC=0`):
+## 5. The tools
 
-| | old MARS | new MARS |
-|---|---|---|
-| 5 000 `putd` | 34 s | 0.18 s |
-| 100 000 `putd`, a transaction each | — | 4.2 s |
-| 100 000 `putd` in one transaction | — | 0.30 s |
-| 100 000 random `getd` | — | 0.20 s |
-| scan of 100 000 (`nextd`) | — | 0.17 s |
+- **`servis`** creates the file and the areas, and maintains them: `ОСВОБО` (release), `ОЧИСТИ` (empty: `cleard`), `ЖУРНАЛ x СБРОСИ` (empty a journal), `ВОССТА` (replay the journals), `УБРАТЬ ОБЛАСТЬ` (delete: `dropd`). It keeps a description of each area in its own area `SERVIS`, so a later run knows them. `ДЛИНА` (a size on the old machine) is stored and ignored. The administrator is recorded in area `ADA`.
+- **`ttc`** reads a schema and stores it (section 3).
+- **`gen`** loads data as the original GEN did: it turns the formats of a deck into a Pascal program, compiles it with `predt` and `fpc`, and runs it on the data (`kgenrt` reads the data lines). `-k` keeps that program. The `servis` statements found before the data run first; if one of them empties a journal, the load writes to that journal, so `ВОССТА` can repeat it.
+- **`mad`** runs a query: finds, labels, branches, `ВЫДАТЬ`. `ВЫДАТЬ` prints in the data format of GEN, so a query can unload data that `gen` loads back.
 
-With `fsync`, a commit costs what the disk takes for two `fsync`s (60 ms on the machine of these numbers), so batch work belongs in one transaction: `servis`, `ttc` and the `gen` loader do so.
+**Messages** are Russian in sentence case (the original had upper case only). A message about the input starts with the tool and the line: `gen: строка 7, формат ДИСК: дубликат ключа`. Other lines start with a capital: `Ошибка в строке 3: нет набора X`, `Область ДА-ДИС очищена`. Names and keywords keep their form. `servis`, `ttc` and `gen` end with `Ошибок: N`.
 
-## 7. Not done
+## 6. Tests
 
-- Deck 8 (MAD) is written for the subschema `CXE-AM`, which is not among the materials (the sets `ИМ-ПРИ`, `ПР-СТО` are not in CX-AM0).
-- The report format `X:9:22` prints 22 decimals. What it meant in 1988 is not known.
-- A `gen` load from a deck that does not reset a journal (an addition to a database) is not journaled, so `ВОССТА` cannot restore it.
-- Only Linux was tested. The build uses only `fpc`, `/bin/sh` and `TProcess`, so macOS is expected to work.
+`make test` runs every case of `tests/`. A case is a list of steps on a fresh database, and its output must equal `expected.txt`.
+
+| Case | Shows |
+|---|---|
+| `engine` | sets: order, duplicates, owners, key change, DB-keys, connect, disconnect, erase; `KCheck` after each step |
+| `cd` | the example of `doc/tutorial.md` |
+| `gold-ck0` | the 1988 warehouse: loader deck 6, then query deck 3 prints exactly the loaded data; after `ОЧИСТИ` it is empty, after `ВОССТА` the same again |
+| `gold-am0` | the 1988 depreciation system: loader deck 7 |
+| `gold-zt0` | the 1988 cost system: loader deck 11, and query deck 9 prints its data back |
+| `servis-maint` | a second `servis` run, journaled changes, clearing, replay twice; the data after replay equal the data before |
+| `utf8` | data in many alphabets and cases; names typed with Latin look-alikes |
+| `mars-api` | every MARS call and error |
+| `mars-tree` | 135 000 random operations on the tree, compared with a simple sorted list |
+| `mars-txn`, `mars-lock` | nested and aborted transactions; several processes writing and reading at once |
+| `mars-crash`, `engine-crash` | a commit killed at every write: always the old or the new state, chains sound |
+
+The decks were typed in from texts in the old code, where Latin `A` and Cyrillic `А` were one letter, and mix the two at random. Their data were folded once into one form (Cyrillic, upper case), as the old system saw them. Their Pascal parts were converted once to Free Pascal (`_(` `_)` → `BEGIN` `END`, `&` → `AND`, and so on).
+
+## 7. Severov's programs
+
+`tests/severov` holds 16 application programs of 1988-89: warehouse (`SKL*`), depreciation (`AMO*`), costs (`ZAT*`). They were converted once to KOMPAS Pascal, with their DML unchanged. Their lost library modules were rebuilt from how the programs call them; most are inlined in the programs, the rest is `src/sevlib.pas`.
+
+Each program runs a session: answers from `<PROG>.in` against the database of its `gold-*` case, output compared with `<PROG>.out`. Some sessions first need data made by others (`SETUP` in `tests/run.py`). `python3 tests/run.py severov` runs them all.
+
+## 8. Not done
+
+- Query deck 8 needs the subschema `CXE-AM`, which did not survive.
+- The write format `X:9:22` prints 22 decimals; what it meant in 1988 is not known.
+- A `gen` load that does not empty a journal is not journaled, so `ВОССТА` cannot repeat it.
+- Only Linux was tested; macOS should work (the build needs only `fpc` and `/bin/sh`).
