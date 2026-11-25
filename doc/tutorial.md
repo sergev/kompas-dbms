@@ -284,7 +284,7 @@ File `artists.mad`, nested walks and a branch:
    1989 Звезда по имени Солнце
 ```
 
-`ЕСЛИ … ТО_( … _)ИНАЧЕ …` is a branch with a block. `НАЙТИ ПОСЛЕД` (last) and `НАЙТИ ПРЕДЫД` (previous) walk a set backward. A mistake in a query is reported as `ОШИБКА В СТРОКЕ n: …`, and nothing is run.
+`ЕСЛИ … ТО_( … _)ИНАЧЕ …` is a branch with a block. `НАЙТИ ПОСЛЕД` (last) and `НАЙТИ ПРЕДЫД` (previous) walk a set backward. A mistake in a query is reported as `Ошибка в строке n: …`, and nothing is run.
 
 ## 8. Programs: DML in Pascal
 

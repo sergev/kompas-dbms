@@ -52,7 +52,7 @@ end;
 
 procedure Error(line: integer; const msg: string);
 begin
-  writeln('ОШИБКА В СТРОКЕ ', line, ': ', msg);
+  writeln('Ошибка в строке ', line, ': ', msg);
   inc(errors);
 end;
 
@@ -158,7 +158,7 @@ end;
 
 procedure DefLabel(const lab: string);
 begin
-  if labels.IndexOf(FoldName(lab)) >= 0 then Error(Tok.line, 'ПОВТОРНАЯ МЕТКА ' + lab);
+  if labels.IndexOf(FoldName(lab)) >= 0 then Error(Tok.line, 'повторная метка ' + lab);
   labels.AddObject(FoldName(lab), TObject(PtrInt(length(code))));
 end;
 
@@ -171,13 +171,13 @@ end;
 function SetOf(const t: TTok): integer;
 begin
   Result := KSetNo(t.s);
-  if Result = 0 then Error(t.line, 'НЕТ НАБОРА ' + t.s);
+  if Result = 0 then Error(t.line, 'нет набора ' + t.s);
 end;
 
 function RecOf(const t: TTok): integer;
 begin
   Result := KRecNo(t.s);
-  if Result = 0 then Error(t.line, 'НЕТ ЗАПИСИ ' + t.s);
+  if Result = 0 then Error(t.line, 'нет записи ' + t.s);
 end;
 
 procedure ParseStmts(stop: string); forward;
@@ -196,10 +196,10 @@ begin
       r := RecOf(t); Skip; Skip;
       it.kind := 'f'; it.rec := r; it.s := Tok.s;
       if (r > 0) and (KFieldNo(r, it.s) = 0) then
-        Error(Tok.line, 'НЕТ ПОЛЯ ' + Tok.s);
+        Error(Tok.line, 'нет поля ' + Tok.s);
       Skip;
     end else begin
-      Error(t.line, 'НЕВЕРНЫЙ ЭЛЕМЕНТ ВЫДАЧИ ' + t.s);
+      Error(t.line, 'неверный элемент выдачи ' + t.s);
       Skip;
     end;
     if it.kind <> ' ' then begin
@@ -250,10 +250,10 @@ begin
     else if IsKw(t, 'ПОСЛЕД') then code[i].sub := 4
     else if IsKw(t, 'ВЛАДЕЛ') then code[i].sub := 5
     else if IsKw(t, 'ПО-КЛЮ') then code[i].sub := 6
-    else Error(t.line, 'НЕВЕРНЫЙ НАЙТИ ' + t.s);
+    else Error(t.line, 'неверный НАЙТИ ' + t.s);
     Skip;
     if code[i].sub = 6 then begin
-      if IsKw(Tok, 'В') then Error(Tok.line, 'НЕТ КЛЮЧА')
+      if IsKw(Tok, 'В') then Error(Tok.line, 'нет ключа')
       else begin code[i].key := Tok.s; Skip; end;
     end;
     if IsKw(Tok, 'В') then begin
@@ -262,7 +262,7 @@ begin
       { НАЙТИ ПЕРВУЮ <rec>: the records of a type }
       code[i].target := RecOf(Tok); code[i].sub := code[i].sub + 6; Skip;
     end else if code[i].sub in [1, 4, 5, 6] then
-      Error(Tok.line, 'НЕТ НАБОРА');
+      Error(Tok.line, 'нет набора');
   end else if IsKw(t, 'ВЗЯТЬ') then begin
     Skip;
     if IsKw(Tok, 'БД-КЛЮ') then begin
@@ -281,14 +281,14 @@ begin
     Skip; i := Emit(oOut); ParseOut(i);
   end else if IsKw(t, 'ЕСЛИ') then begin
     Skip;
-    if not IsKw(Tok, 'СОС') then Error(Tok.line, 'ОЖИДАЕТСЯ СОС');
+    if not IsKw(Tok, 'СОС') then Error(Tok.line, 'ожидается СОС');
     Skip;
     neg := IsP(Tok, '<>');
-    if not (IsP(Tok, '=') or neg) then Error(Tok.line, 'ОЖИДАЕТСЯ = ИЛИ <>');
+    if not (IsP(Tok, '=') or neg) then Error(Tok.line, 'ожидается = или <>');
     Skip;
-    if Tok.s <> '0' then Error(Tok.line, 'ОЖИДАЕТСЯ 0');
+    if Tok.s <> '0' then Error(Tok.line, 'ожидается 0');
     Skip;
-    if not IsKw(Tok, 'ТО') then Error(Tok.line, 'ОЖИДАЕТСЯ ТО');
+    if not IsKw(Tok, 'ТО') then Error(Tok.line, 'ожидается ТО');
     Skip;
     l1 := NewLabel; l2 := NewLabel;
     { jump to else when the condition fails }
@@ -314,7 +314,7 @@ begin
   end else if IsKw(t, 'ДЛЯ-ВЫ') or IsKw(t, 'СБРОСИ') or IsKw(t, 'ЗАВЕРШ') then
     Skip
   else begin
-    Error(t.line, 'НЕИЗВЕСТНЫЙ ОПЕРАТОР ' + t.s);
+    Error(t.line, 'неизвестный оператор ' + t.s);
     while not (IsP(Tok, ';') or (Tok.kind = 'e')) do Skip;
   end;
 end;
@@ -328,7 +328,7 @@ begin
     else if (stop <> '') and IsP(Tok, stop) then exit
     else if Tok.kind <> 'e' then begin
       { statements may also be separated by a line break only }
-      if IsP(Tok, '_)') then begin Error(Tok.line, 'ЛИШНЯЯ _)'); Skip; end;
+      if IsP(Tok, '_)') then begin Error(Tok.line, 'лишняя _)'); Skip; end;
     end;
   end;
 end;
@@ -339,7 +339,7 @@ begin
   for i := 0 to fixups.Count - 1 do begin
     k := PtrInt(fixups.Objects[i]);
     j := labels.IndexOf(fixups[i]);
-    if j < 0 then Error(code[k].line, 'НЕТ МЕТКИ ' + fixups[i])
+    if j < 0 then Error(code[k].line, 'нет метки ' + fixups[i])
     else code[k].target := PtrInt(labels.Objects[j]);
   end;
 end;
@@ -435,7 +435,7 @@ begin
     text := text + s + #10;
   end;
   if not KSchemaOk then begin
-    writeln('ОШИБКА: НЕТ СХЕМЫ (ttc) В ', MarsPath);
+    writeln('mad: нет схемы в ', MarsPath, ' (сначала servis и ttc)');
     halt(2);
   end;
   labels := TStringList.Create;
