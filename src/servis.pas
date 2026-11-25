@@ -1,16 +1,12 @@
 {$mode tp}{$H-}{$R-}{$Z4}
-program servis; uses krt, kio, mars, kdb; type XT0 = array[1..72] of integer; XT1 = array[1..64] of alfa; XT2 = array[0..7] of integer; XT3 = array[1..24] of integer; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer; XT6 = array[1..4] of alfa; XT7 = array[1..1] of integer;
+program servis; uses krt, kio, mars, kdb; type XT0 = array[1..11] of integer; XT1 = array[1..64] of alfa; XT2 = array[0..7] of integer; XT3 = array[1..24] of integer; XT4 = array[1..16] of alfa; XT5 = array[1..4] of integer;
 (* SERVIS: allocation and maintenance of the database areas.
    Each SERVIS area is a separate MARS area named after the object.
    Descriptor: [1] code, [2] length, [3] capture, [4] kind,
    [5] head code, [6] journal state, [7] control, [8] mode,
-   [9] direction, [10] start, [11] reserved, [12..72] page table.
+   [9] direction, [10] start, [11] reserved.
    MARS info word: MMMMZZNNNN, MMMM = length in zones (octal). *)
 type
-  word = record case integer of
-    0:(i:integer);
-    1:(a:alfa)
-  end;
   RecT = XT0;
   LinT = packed array[1..72] of char;
 var
@@ -29,11 +25,6 @@ var
   un, rn: integer;
   lastinfo: integer;
   nxt: char;
-  (* chunk registry state *)
-  ckz, caz, cln, cof, cd0, cd1, cd2: XT5;
-  cnm: XT6;
-  gi: integer;
-  mw: XT7;
   nn: XT5;
 
 
@@ -243,7 +234,7 @@ procedure UstOBL(var d:RecT; l,kind:integer);
 var j:integer;
 begin
    begin 
-  for j := 1 to 72 do d[j] := 0;
+  for j := 1 to 11 do d[j] := 0;
   d[1] := ncode;
   d[2] := l;
   d[3] := 1;
@@ -253,8 +244,7 @@ begin
   d[7] := 0;
   d[8] := 0;
   d[9] := 0;
-  d[10] := 1;
-  for j := 1 to 61 do d[11+j] := 2040
+  d[10] := 1
    end ;
 end;
 
@@ -304,14 +294,6 @@ procedure CLFL(a:integer);
 begin
 end;
 
-(* MARS rejects huge containers here: clamp the physical call. *)
-function PhysLen(l:integer):integer;
-begin
-   begin 
-  if l > 1000 then PhysLen := 1000 else PhysLen := l
-   end ;
-end;
-
 procedure NewArea(nm:alfa; var d:RecT);
 var i,nz,zv:integer;
 begin
@@ -325,7 +307,7 @@ begin
     if d[2] > 64 then zv := zhi[ncode] else zv := zlo[ncode+1];
     d[10] := zv;
     lastinfo := InfoWord(d[2], zv);
-    i := InfoWord(PhysLen(d[2]), zv);
+    i := lastinfo;
     ClrErr;
     newd(nm, i);
     ClrErr;
@@ -337,13 +319,9 @@ begin
 end;
 
 procedure AErase(nm:alfa);
-var j,lim:integer;
 begin
    begin 
   if GetRec(nm, r) then begin
-    if r[2] > 61 then lim := 61 else lim := r[2];
-    for j := lim downto 1 do r[11+j] := 2040;
-    PutRec(nm, r);
     PASSETAR(94208);
     cleard(nm);
     ClrErr;
@@ -413,7 +391,7 @@ begin
 end;
 
 procedure Dubl;
-var n3,n4:alfa; c3,c4,j:integer;
+var n3,n4:alfa; c3,c4:integer;
 begin
    begin 
   kw2 := Tok;
@@ -436,8 +414,6 @@ begin
     else begin
       if ur[2] > r[2] then Err(58)
       else begin
-        for j := 1 to 61 do r[11+j] := ur[11+j];
-        PutRec(nms[cur], r);
         writeln('ДУБЛЬ С ',RT_W( n4), ' ВЫПОЛНЕН')
       end
     end
@@ -457,7 +433,6 @@ begin
           NewArea(n3, r);
           if GetRec(n3, r) then begin
             r[5] := c3;
-            for j := 1 to 61 do r[11+j] := ur[11+j];
             PutRec(n3, r)
           end;
           writeln('ДУБЛЬ ',RT_W( n3), ' СОЗДАН')
@@ -543,187 +518,6 @@ begin
    end ;
 end;
 
-
-(* ---------- chunk registry, six-character MARS keys ----------
-   RGLEN = full logical length, RGNCHK = number of chunks.
-   RCcKB = TAR (LU<<12 | KOBLA zone), RCcZN = area zone,
-   RCcLN = chunk length, RCcOF = offset, RCcNM = area name (alfa bits).
-   C<c>LEN / C<c>OFF / C<c>D0..D2 hold per-chunk data.
-   PUTD records are one word; a 72-word record breaks the catalog. *)
-
-function Info41(l,z:integer):integer;
-var q,d0,d1,d2,d3:integer;
-begin
-   begin 
-  q := l; d0 := q mod 8; q := q div 8;
-  d1 := q mod 8; q := q div 8;
-  d2 := q mod 8; q := q div 8;
-  d3 := q mod 8;
-  Info41 := p3[d3] + p2[d2] + p1[d1] + p0[d0] + 135168 + z
-   end ;
-end;
-
-procedure InitLayout;
-begin
-   begin 
-  ckz[1] := 2112; caz[1] := 2177; cnm[1] := 'REGIST';
-  cln[1] := 1000;  cof[1] := 0;
-  cd0[1] := 101; cd1[1] := 102; cd2[1] := 103;
-  ckz[2] := 3072; caz[2] := 3137; cnm[2] := 'SCL2  ';
-  cln[2] := 750;   cof[2] := 1000;
-  cd0[2] := 201; cd1[2] := 202; cd2[2] := 203
-   end ;
-end;
-
-(* MARS accepts at most 14 PUTD calls in one Pascal block here; the
-   registry is written in two procedures while REGIST stays open. *)
-procedure RegPut;
-var w:word;
-begin
-   begin 
-  w.i := 135168 + ckz[2]; mw[1] := w.i; putd('RC2KB ', mw, sizeof(mw));
-  mw[1] := caz[2]; putd('RC2ZN ', mw, sizeof(mw));
-  mw[1] := cln[2]; putd('RC2LN ', mw, sizeof(mw));
-  mw[1] := cof[2]; putd('RC2OF ', mw, sizeof(mw));
-  putd('RC2NM ', cnm[2], sizeof(alfa))
-   end ;
-end;
-
-procedure RegCreate;
-var w:word;
-begin
-   begin 
-  gi := Info41(16, ckz[1]);
-  PASACD(gi);
-  gi := 135168 + ckz[1];
-  PASSETAR(gi);
-  gi := Info41(14, caz[1]);   (* 14-zone catalog root holds 17 keys *)
-  newd('REGIST', gi);
-  opend('REGIST');
-  mw[1] := 1750;  putd('RGLEN ', mw, sizeof(mw));
-  mw[1] := 2;     putd('RGNCHK', mw, sizeof(mw));
-  w.i := 135168 + ckz[1]; mw[1] := w.i; putd('RC1KB ', mw, sizeof(mw));
-  mw[1] := caz[1]; putd('RC1ZN ', mw, sizeof(mw));
-  mw[1] := cln[1]; putd('RC1LN ', mw, sizeof(mw));
-  mw[1] := cof[1]; putd('RC1OF ', mw, sizeof(mw));
-  putd('RC1NM ', cnm[1], sizeof(alfa));
-  RegPut;
-  mw[1] := cln[1]; putd('C1LEN ', mw, sizeof(mw));
-  mw[1] := cof[1]; putd('C1OFF ', mw, sizeof(mw));
-  mw[1] := cd0[1]; putd('C1D0  ', mw, sizeof(mw));
-  mw[1] := cd1[1]; putd('C1D1  ', mw, sizeof(mw));
-  mw[1] := cd2[1]; putd('C1D2  ', mw, sizeof(mw));
-  writeln('REGISTRY CREATED EXN=',RT_W( BDERRN))
-   end ;
-end;
-
-procedure ChunkNew;
-begin
-   begin 
-  if Number <> 2 then Err(76)
-  else begin
-    gi := Info41(16, ckz[2]);
-    PASACD(gi);
-    gi := 135168 + ckz[2];
-    PASSETAR(gi);
-    gi := Info41(cln[2], caz[2]);
-    newd('SCL2  ', gi);
-    opend('SCL2  ');
-    mw[1] := cln[2]; putd('C2LEN ', mw, sizeof(mw));
-    mw[1] := cof[2]; putd('C2OFF ', mw, sizeof(mw));
-    mw[1] := cd0[2]; putd('C2D0  ', mw, sizeof(mw));
-    mw[1] := cd1[2]; putd('C2D1  ', mw, sizeof(mw));
-    mw[1] := cd2[2]; putd('C2D2  ', mw, sizeof(mw));
-    writeln('CHUNK 2 CREATED EXN=',RT_W( BDERRN))
-  end
-   end ;
-end;
-
-procedure RegGet(var kb2,zn2,ln2:integer; var nm2:alfa);
-var w:word;
-begin
-   begin 
-  getd('RC2KB ', mw, sizeof(mw)); ckz[2] := mw[1] - 135168;
-  getd('RC2ZN ', mw, sizeof(mw)); caz[2] := mw[1];
-  getd('RC2LN ', mw, sizeof(mw)); cln[2] := mw[1];
-  getd('RC2NM ', nm2, sizeof(alfa));
-  kb2 := ckz[2]; zn2 := caz[2]; ln2 := cln[2]
-   end ;
-end;
-
-procedure RegOpen;
-begin
-   begin 
-  gi := 135168 + ckz[1];
-  PASSETAR(gi);
-  opend('REGIST')
-   end ;
-end;
-
-procedure ChunkOpen(kob:integer);
-begin
-   begin 
-  gi := 135168 + kob;
-  PASSETAR(gi);
-  opend(cnm[2])
-   end ;
-end;
-
-procedure Assemble(var d:RecT);
-var total,csum,kb2,zn2,ln2:integer; nm2:alfa;
-begin
-   begin 
-  RegOpen;
-  getd('RGLEN ', mw, sizeof(mw)); total := mw[1];
-  getd('RGNCHK', mw, sizeof(mw)); mw[1] := mw[1];
-  writeln('REGISTRY FULL_LEN=',RT_W( total), ' NCHUNKS=',RT_W( mw[1]),
-          ' OPEN EXN=',RT_W( BDERRN));
-  RegGet(kb2, zn2, ln2, nm2);
-  getd('C1LEN ', mw, sizeof(mw));
-  writeln('CHUNK 1 LEN=',RT_W( mw[1]), ' EXN=',RT_W( BDERRN));
-  getd('C1OFF ', mw, sizeof(mw));
-  getd('C1D0  ', mw, sizeof(mw)); csum := mw[1];
-  getd('C1D1  ', mw, sizeof(mw)); csum := csum + mw[1];
-  getd('C1D2  ', mw, sizeof(mw)); csum := csum + mw[1];
-  ChunkOpen(kb2);
-  getd('C2LEN ', mw, sizeof(mw));
-  writeln('CHUNK 2 LEN=',RT_W( mw[1]), ' OPEN EXN=',RT_W( BDERRN));
-  getd('C2OFF ', mw, sizeof(mw));
-  getd('C2D0  ', mw, sizeof(mw)); csum := csum + mw[1];
-  getd('C2D1  ', mw, sizeof(mw)); csum := csum + mw[1];
-  getd('C2D2  ', mw, sizeof(mw)); csum := csum + mw[1];
-  writeln('LOGICAL_LENGTH=',RT_W( total));
-  writeln('CHECKSUM=',RT_W( csum));
-  writeln('ASSEMBLY FINAL EXN=',RT_W( BDERRN));
-  d[2] := total
-   end ;
-end;
-
-procedure AsmOp;
-var nm:alfa;
-begin
-   begin 
-  kw2 := Tok;
-  if kw2 <> 'ОБЛАСТ' then Err(78)
-  else begin
-    GetName(nm);
-    if nm = '      ' then Err(78)
-    else if Kfind(nm) then Err(80)
-    else begin
-      InitLayout;
-      ncode := ncode + 1;
-      Kadd(nm);
-      UstOBL(r, 1750, 1);
-      r[1] := ncode;
-      ades[ncnt] := r;
-      k := nm;
-      writeln('LOGICAL AREA N=',RT_W( ncode), ' LEN=',RT_W( r[2]));
-      Assemble(r);
-      PutRec(nm, r)
-    end
-  end
-   end ;
-end;
 
 (* Parameters of CREATE/CHANGE AREA. *)
 procedure Params(var d:RecT; var l:integer);
@@ -925,9 +719,6 @@ begin
       else if (kw = 'ОСВАБД') then Osvabd
       else if (kw = 'ЖУРНАЛ') then Journal
       else if (kw = 'УБРАТЬ') then Ubrat
-      else if (kw = 'РЕГИСТ') then RegCreate
-      else if (kw = 'КУСОК ') then ChunkNew
-      else if (kw = 'СОБРАТ') then AsmOp
       else if (kw = 'В     ') then p := 73
       else if (kw = 'КОНЕЦ ') or (kw = 'КОНЕЦ.') then p := 73
       else if k2 <> '      ' then begin
@@ -994,7 +785,7 @@ begin
   newd('ADA   ', i);
   ClrErr;
   opend('ADA   ');
-  for j := 1 to 72 do ur[j] := 0;
+  for j := 1 to 11 do ur[j] := 0;
   ur[1] := 1;
   ur[2] := 1;
   modd('ADMIN ', ur, sizeof(ur));
@@ -1014,7 +805,6 @@ begin MarsBind(@bdvect, @bderrn);
   MarsCreate := true;  (* servis makes the database *)
   MarsBegin;  (* the whole run is one transaction *)
   Init;
-  InitLayout;
   ncode := 0;
   ncnt := 0;
   LoadAreas;
