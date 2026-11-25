@@ -82,16 +82,16 @@ servis < areas.srv
 ```
 
 ```
-SERVIS PROCESSOR 15.1
-ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
-New Area N =          1
-New Area N =          2
-New Area N =          3
-New Area N =          4
-EXN=         0
+Servis 15.1
+Пользователь ADMIN зарегистрирован
+Создана область СХ-ДИС
+Создана область ЖУ-ДИС
+Создана область ИН-ДИС
+Создана область ДА-ДИС
+Ошибок: 0
 ```
 
-One line per area; `EXN= 0` means no errors. The file `cd.db` now exists.
+One line per area. An error is reported as `Ошибка n: …`, and the last line counts them. The file `cd.db` now exists.
 
 ## 5. The schema: `ttc`
 

@@ -17,6 +17,8 @@ function RT_W(x: double): string;
 function RT_W(x: boolean): string;
 function RT_W(c: WideChar): AnsiString;
 function RT_W(const a: array of WideChar): AnsiString;
+{ a char array without trailing blanks, for messages }
+function RT_T(const a: array of WideChar): AnsiString;
 { write(a) of a char array (predt wraps the arguments it may be) }
 function RT_S(const a: array of WideChar): AnsiString;
 function RT_S(c: WideChar): AnsiString;
@@ -103,6 +105,14 @@ end;
 function RT_S(const a: array of WideChar): AnsiString;
 begin
   if length(a) = 0 then RT_S := '' else RT_S := BufU(@a[0], length(a))
+end;
+
+function RT_T(const a: array of WideChar): AnsiString;
+var n: integer;
+begin
+  n := length(a);
+  while (n > 0) and (a[n - 1] = ' ') do dec(n);
+  if n = 0 then RT_T := '' else RT_T := BufU(@a[0], n)
 end;
 
 function RT_S(c: WideChar): AnsiString;

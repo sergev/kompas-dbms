@@ -1,11 +1,11 @@
 == servis areas.srv
-SERVIS PROCESSOR 15.1
-ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН
-New Area N =          1
-New Area N =          2
-New Area N =          3
-New Area N =          4
-EXN=         0
+Servis 15.1
+Пользователь ADMIN зарегистрирован
+Создана область СХ-ДИС
+Создана область ЖУ-ДИС
+Создана область ИН-ДИС
+Создана область ДА-ДИС
+Ошибок: 0
 == ttc words.ddl
 TTC15
 === TYPES          0 ===

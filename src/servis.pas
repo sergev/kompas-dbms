@@ -13,7 +13,7 @@ var
   ln: LinT;
   r, ur: RecT;
   k, k2, kw, kw2: alfa;
-  p, ncode, ncnt, dl, cur, lasterr: integer;
+  p, ncode, ncnt, dl, cur, lasterr, nerrs: integer;
   nms: XT1;
   ades: array [1..24] of RecT;
   unms, rnms, robj, rtyp: XT4;
@@ -26,11 +26,6 @@ var
 
 
 
-function EXN:integer;
-begin
-  EXN := MErr
-end;
-
 procedure ClrErr;
 begin
    begin 
@@ -42,44 +37,45 @@ procedure Err(n:integer);
 begin
    begin 
   lasterr := n;
-  write('ОШИБКА ',RT_W( n), ': ');
+  nerrs := nerrs + 1;
+  write('Ошибка ', n:1, ': ');
   case n of
-    3: writeln('ОБЛАСТЬ НЕ ОПРЕДЕЛЕНА');
-    4: writeln('УЖЕ ЕСТЬ АДМИНИСТРАТОР');
-    5: writeln('НЕСУЩЕСТВУЮЩЕЕ ПРАВО');
-    6: writeln('НЕТ ПРАВ ДОСТУПА');
-    7: writeln('ПЕРЕПОЛНЕНА ADA');
-    11: writeln('ЕСТЬ ВАРИАНТЫ');
-    50: writeln('НЕТ ПРАВА ДЛЯ-МО');
-    51: writeln('ОБЪЕКТ ПРАВА НЕ НАЙДЕН');
-    52: writeln('ГОЛОВНАЯ ОБЛАСТЬ НЕ НАЙДЕНА');
-    53: writeln('ОШИБКА В ОПРЕДЕЛЕНИИ ДУБЛЯ');
-    54: writeln('ОБЛАСТЬ НЕ ЯВЛЯЕТСЯ ДУБЛЕМ');
-    55: writeln('ОБЛАСТЬ НЕ ИМЕЕТ ДУБЛЕЙ');
-    56: writeln('ОТСУТСТВУЕТ СЛОВО НА');
-    57: writeln('ОБЛАСТИ НЕ ЯВЛЯЮТСЯ ДУБЛЯМИ');
-    58: writeln('ДЛИНА ДУБЛЯ БОЛЬШЕ ГОЛОВНОЙ');
-    60: writeln('УБИРАЕМАЯ ОБЛАСТЬ ИМЕЕТ ДУБЛИ');
-    61: writeln('ПРОСТРАНСТВО НЕ ПУСТО');
-    62: writeln('ОБЛАСТЬ СВЯЗАНА СО СХЕМОЙ');
-    63: writeln('ОБЛАСТЬ СВЯЗАНА С ПОДСХЕМОЙ');
-    64: writeln('НЕТ ДВОЕТОЧИЯ ИЛИ ;');
-    65: writeln('ДЛИНА ВАРИАНТА БОЛЬШЕ ГОЛОВНОЙ');
-    66: writeln('ДЛИНА ДУБЛЯ БОЛЬШЕ ГОЛОВНОЙ');
-    67: writeln('ОБЛАСТЬ НЕ ОБЪЯВЛЕНА ЖУРНАЛОМ');
-    68: writeln('ЖУРНАЛ ЗАХВАЧЕН ПРОЦЕССОМ');
-    69: writeln('СБРОС ПОСЛЕ ЗАКРЕПЛЕНИЯ');
-    70: writeln('НЕТ ОБЛАСТИ ЖУРНАЛА');
-    71: writeln('НЕТ ПАРАМЕТРОВ ЗАМЕНЫ');
-    72: writeln('ЗАМЕНЯЕМЫЙ ОБЪЕКТ НЕ НАЙДЕН');
-    74: writeln('НЕ АДМИНИСТРАТОР');
-    76: writeln('НЕДОПУСТИМОЕ СЛОВО');
-    77: writeln('НЕДОПУСТИМОЕ СЛОВО ПОСЛЕ ЗАМЕНЫ');
-    78: writeln('НЕ УКАЗАН ОБЪЕКТ');
-    80: writeln('ОБЪЕКТ УЖЕ ЕСТЬ');
-    83: writeln('НЕ УКАЗАНО СБРОСИ ИЛИ ЗАКРЕПИ');
-    84: writeln('НЕПРАВИЛЬНОЕ ПЕРВОЕ СЛОВО');
-    87: writeln('НЕ МОЖЕТ БЫТЬ ПОСТАВЛЕН');
+    3: writeln('область не определена');
+    4: writeln('уже есть администратор');
+    5: writeln('несуществующее право');
+    6: writeln('нет прав доступа');
+    7: writeln('переполнена ADA');
+    11: writeln('есть варианты');
+    50: writeln('нет права ДЛЯ-МО');
+    51: writeln('объект права не найден');
+    52: writeln('головная область не найдена');
+    53: writeln('ошибка в определении дубля');
+    54: writeln('область не является дублем');
+    55: writeln('область не имеет дублей');
+    56: writeln('отсутствует слово НА');
+    57: writeln('области не являются дублями');
+    58: writeln('длина дубля больше головной');
+    60: writeln('убираемая область имеет дубли');
+    61: writeln('пространство не пусто');
+    62: writeln('область связана со схемой');
+    63: writeln('область связана с подсхемой');
+    64: writeln('нет двоеточия или ;');
+    65: writeln('длина варианта больше головной');
+    66: writeln('длина дубля больше головной');
+    67: writeln('область не объявлена журналом');
+    68: writeln('журнал захвачен процессом');
+    69: writeln('сброс после закрепления');
+    70: writeln('нет области журнала');
+    71: writeln('нет параметров замены');
+    72: writeln('заменяемый объект не найден');
+    74: writeln('не администратор');
+    76: writeln('недопустимое слово');
+    77: writeln('недопустимое слово после замены');
+    78: writeln('не указан объект');
+    80: writeln('объект уже есть');
+    83: writeln('не указано СБРОСИ или ЗАКРЕПИ');
+    84: writeln('неправильное первое слово');
+    87: writeln('не может быть поставлен');
   end
    end ;
 end;
@@ -259,7 +255,7 @@ begin
     ClrErr;
     ades[ncnt] := d;
     k := nm;
-    writeln('New Area N = ',RT_W( ncode))
+    writeln('Создана область ', RT_T(nm))
   end
    end ;
 end;
@@ -270,8 +266,7 @@ begin
   if GetRec(nm, r) then begin
     cleard(nm);
     ClrErr;
-    write(RT_W(nm), ' ');
-    writeln('ОЧИЩЕНА')
+    writeln('Область ', RT_T(nm), ' очищена')
   end else Err(3)
    end ;
 end;
@@ -282,8 +277,7 @@ begin
   if GetRec(nm, r) then begin
     r[3] := 0;
     PutRec(nm, r);
-    write(RT_W(nm), ' ');
-    writeln('ОСВОБОЖДЕНА')
+    writeln('Область ', RT_T(nm), ' освобождена')
   end else Err(3)
    end ;
 end;
@@ -295,7 +289,7 @@ var j,n,t:integer; found:boolean;
 begin
    begin 
   if GetRec(nm, r) then begin
-    writeln('ВОССТАНОВЛЕНИЕ ',RT_W( nm));
+    writeln('Восстановление ', RT_T(nm));
     found := false;
     t := 0;
     for j := 1 to ncnt do
@@ -309,8 +303,8 @@ begin
     ClrErr;
     if not found then Err(70)
     else begin
-      writeln('ЗАПИСЕЙ ',RT_W( t));
-      writeln('ВОССТАНОВЛЕНО')
+      writeln('Записей: ', t:1);
+      writeln('Восстановлено')
     end
   end else Err(3)
    end ;
@@ -321,7 +315,7 @@ begin
    begin 
   if GetRec(nm, r) then begin
     PutRec(nm, r);
-    writeln('ОБНОВЛЕНО ',RT_W( nm))
+    writeln('Обновлено ', RT_T(nm))
   end else Err(3)
    end ;
 end;
@@ -348,7 +342,7 @@ begin
       r[4] := 4;
       r[5] := c4;
       PutRec(nms[cur], r);
-      writeln('ДУБЛЬ ',RT_W( nms[cur]), ' НА ',RT_W( n4))
+      writeln('Дубль ', RT_T(nms[cur]), ' на ', RT_T(n4))
     end
   end else if kw2 = 'С     ' then begin
     GetName(n4);
@@ -358,7 +352,7 @@ begin
     else begin
       if ur[2] > r[2] then Err(58)
       else begin
-        writeln('ДУБЛЬ С ',RT_W( n4), ' ВЫПОЛНЕН')
+        writeln('Дубль с ', RT_T(n4), ' выполнен')
       end
     end
   end else begin
@@ -379,7 +373,7 @@ begin
             r[5] := c3;
             PutRec(n3, r)
           end;
-          writeln('ДУБЛЬ ',RT_W( n3), ' СОЗДАН')
+          writeln('Дубль ', RT_T(n3), ' создан')
         end
       end
     end
@@ -396,7 +390,7 @@ begin
       PutRec(nms[cur], r);
       j := j + 1
     end;
-  writeln('ОСВАБД: ЗАПИСАНО ОБЛАСТЕЙ ',RT_W( j))
+  writeln('Записано областей: ', j:1)
    end ;
 end;
 
@@ -417,14 +411,14 @@ begin
           PutRec(nm, r);
           cleard(nm);
           ClrErr;
-          writeln('ЖУРНАЛ ',RT_W( nm), ' СБРОШЕН')
+          writeln('Журнал ', RT_T(nm), ' сброшен')
         end
       end else if kw2 = 'ЗАКРЕП' then begin
         if r[3] <> 0 then Err(68)
         else begin
           r[6] := 2;
           PutRec(nm, r);
-          writeln('ЖУРНАЛ ',RT_W( nm), ' ЗАКРЕПЛЕН')
+          writeln('Журнал ', RT_T(nm), ' закреплен')
         end
       end else Err(83)
     end
@@ -453,7 +447,7 @@ begin
         Kdel(nm);
         dropd(nm);
         ClrErr;
-        writeln('ОБЛАСТЬ ',RT_W( nm), ' УБРАНА')
+        writeln('Область ', RT_T(nm), ' убрана')
       end
     end
   end
@@ -550,7 +544,7 @@ begin
         Params(r, nd);
         r[2] := nd;
         PutRec(nm, r);
-        writeln('ОБЛАСТЬ ',RT_W( nm), ' ИЗМЕНЕНА')
+        writeln('Область ', RT_T(nm), ' изменена')
       end
     end
   end
@@ -573,7 +567,7 @@ begin
       kw2 := Tok;
       if kw2 = 'ПАРОЛЬ' then pw := Tok
     end;
-    writeln('ПОЛЬЗОВАТЕЛЬ ',RT_W( nm), ' СОЗДАН')
+    writeln('Пользователь ', RT_T(nm), ' создан')
   end
    end ;
 end;
@@ -604,7 +598,7 @@ begin
       rnms[rn] := us;
       robj[rn] := ob;
       rtyp[rn] := rt;
-      writeln('ПРАВО ',RT_W( rt), ' ',RT_W( us), ' НА ',RT_W( ob), ' ДАНО')
+      writeln('Право ', RT_T(rt), ' ', RT_T(us), ' на ', RT_T(ob), ' дано')
     end
   end
    end ;
@@ -738,9 +732,10 @@ begin
   Init;
   ncode := 0;
   ncnt := 0;
+  nerrs := 0;
   LoadAreas;
-  writeln('SERVIS PROCESSOR 15.1');
-  writeln('ADMIN: ПОЛЬЗОВАТЕЛЬ ADMIN ЗАРЕГИСТРИРОВАН');
+  writeln('Servis 15.1');
+  writeln('Пользователь ADMIN зарегистрирован');
   while not eof(input) do begin
     RT_ReadLn(ln);
     RT_Fold(ln);
@@ -755,7 +750,7 @@ begin
       end
     until p > 72
   end;
-  writeln('EXN=',RT_W( EXN));
+  writeln('Ошибок: ', nerrs:1);
   SaveAreas;
   MarsCommit
 end.
