@@ -1,4 +1,5 @@
 PROGRAM WORD(INPUT,OUTPUT);
+(* KOMPAS Pascal folds Latin look-alikes: CЛOBO.ИMЯ is СЛОВО.ИМЯ *)
 && ПОДСХЕ СХ-ДИС &&
 VAR K: PACKED ARRAY[1..12] OF CHAR;
     I: INTEGER;

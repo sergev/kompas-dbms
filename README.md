@@ -21,7 +21,7 @@ A database is one file, given by `MARS_DB`: a B+tree holding named areas of reco
 
 All text is UTF-8: decks, queries, programs, input and output, whatever the locale. The original worked in the 8-bit GOST code, with upper case only; here data are kept exactly as written, in any alphabet and case, and ordered sets go by Unicode code points. A `char` in a KOMPAS Pascal program holds one letter of any alphabet.
 
-Names and keywords are matched as in the original: case does not matter, and Latin and Cyrillic letters that look alike are one letter (`SY-АРТ` with a Latin or a Cyrillic `А`).
+Names and keywords are matched without regard to case. A Latin and a Cyrillic letter are different letters, however alike they look, except in KOMPAS Pascal programs: there, as on the original machine, `CЛOBO` typed partly in Latin is `СЛОВО`.
 
 The tools write their messages in Russian, in sentence case: `Ошибка в строке 3: нет набора X`, `gen: строка 7, формат ДИСК: дубликат ключа`.
 

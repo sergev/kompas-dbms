@@ -340,11 +340,11 @@ WRITE(OUTPUT,'КАР - ВХОД В БЛОК РЕГИСТРАЦИИ КАРТ/',
 MENU end ;
 
   if 'КАР'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
-              KYДA:='SКLСАR';EXIT end  end else if 
+              KYДA:='SKLCAR';EXIT end  end else if 
   'ОТЧ'=ДИP then begin IF NOT ЗAKPЫTO THEN begin 
-              KYДA:='SКLОТС';EXIT end  end else if 
+              KYДA:='SKLOTC';EXIT end  end else if 
   'ОТД'=ДИP then begin IF NOT HEЛЬЗЯ AND NOT ЗAKPЫTO THEN begin 
-              KYДA:='SКLОТD';EXIT end  end else if 
+              KYДA:='SKLOTD';EXIT end  end else if 
   'СИС'=ДИP then begin БЛOKCИC end else if 
   'ЗАК'=ДИP then begin ЖYPHAЛ('ЗАК',ПPEДЗAK) end else if 
   'СБР'=ДИP then begin ЖYPHAЛ('СБР',ПPEДЗAK) end else if 

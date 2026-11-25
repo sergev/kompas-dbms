@@ -1,7 +1,6 @@
 { Text of KOMPAS: UTF-8 outside, UTF-16 (WideChar) inside programs and
   the database.  Names (keywords, schema names) are folded: upper case,
-  Ё as Е, and Latin letters that look Cyrillic (A B C E H K M O P T X Y)
-  as Cyrillic.  Data are never folded.  Text files and standard streams
+  Ё as Е.  Data are never folded.  Text files and standard streams
   are UTF-8 whatever the locale. }
 unit kutf;
 
@@ -53,20 +52,6 @@ begin
   if (u >= ord('a')) and (u <= ord('z')) then dec(u, 32)
   else if (u >= $430) and (u <= $44F) then dec(u, 32)
   else if (u = $401) or (u = $451) then u := $415;
-  case u of
-    ord('A'): u := $410;
-    ord('B'): u := $412;
-    ord('C'): u := $421;
-    ord('E'): u := $415;
-    ord('H'): u := $41D;
-    ord('K'): u := $41A;
-    ord('M'): u := $41C;
-    ord('O'): u := $41E;
-    ord('P'): u := $420;
-    ord('T'): u := $422;
-    ord('X'): u := $425;
-    ord('Y'): u := $423;
-  end;
   Result := WideChar(u);
 end;
 

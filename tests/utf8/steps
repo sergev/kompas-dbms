@@ -1,4 +1,5 @@
-# UTF-8 transparency: data as written, names folded
+# UTF-8 transparency: data as written, names folded by case
+# (and in KOMPAS Pascal by Latin look-alikes too)
 servis areas.srv
 ttc words.ddl
 gen load.gen

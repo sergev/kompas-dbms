@@ -244,11 +244,11 @@ WRITE(OUTPUT,'КОФ - ВХОД В БЛОК РЕГИСТРАЦИИ КОЭФФИ�
           'ОБЩ - ВХОД В БЛОК РЕГИСТРАЦИИ ОБЩИХ ЗАТРАТ/');
 MENU;
 
-  if 'КОФ'=ДИP then begin  begin KYДA:='ZАТСОF';EXIT end  end else if 
-  'ОТД'=ДИP then begin  begin KYДA:='ZАТОТD';EXIT end  end else if 
-  'ТЕМ'=ДИP then begin  begin KYДA:='ZАТRТЕ';EXIT end  end else if 
-  'ФАК'=ДИP then begin  begin KYДA:='ZАТZАТ';EXIT end  end else if 
-  'ОБЩ'=ДИP then begin  begin KYДA:='ZАТNАК';EXIT end  end else if 
+  if 'КОФ'=ДИP then begin  begin KYДA:='ZATCOF';EXIT end  end else if 
+  'ОТД'=ДИP then begin  begin KYДA:='ZATOTD';EXIT end  end else if 
+  'ТЕМ'=ДИP then begin  begin KYДA:='ZATRTE';EXIT end  end else if 
+  'ФАК'=ДИP then begin  begin KYДA:='ZATZAT';EXIT end  end else if 
+  'ОБЩ'=ДИP then begin  begin KYДA:='ZATNAK';EXIT end  end else if 
   'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end  end else if 
   'ВЫХ'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end   end   end ;
 END;
@@ -259,13 +259,13 @@ END;
 PROCEDURE БЛOKOTЧ;
 BEGIN
 IF ЗAKPЫTO THEN begin KYДA:='НАРУЖУ';EXIT end ;
-IF KYДA='ZАТТАВ' THEN ECTЬ;
+IF KYДA='ZATTAB' THEN ECTЬ;
 WHILE TRUE DO begin 
 WRITE(OUTPUT,'      ...ВЫ В БЛОКЕ ВЫДАЧИ ОТЧЕТОВ...  ');PUTT;
 WRITE(OUTPUT,'ПОС - ВЫДАЧА ОТЧЕТА ПО ПОСЛЕДНЕМУ МЕСЯЦУ/');
 MENU;
 
-  if 'ПОС'=ДИP then begin  begin YCTПEЧ;YCTMOД;KYДA:='ZАТТАВ';EXIT end  end else if 
+  if 'ПОС'=ДИP then begin  begin YCTПEЧ;YCTMOД;KYДA:='ZATTAB';EXIT end  end else if 
   'КОН'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end  end else if 
   'ВЫХ'=ДИP then begin  begin KYДA:='НАРУЖУ';EXIT end   end   end ;
 END;
@@ -336,8 +336,8 @@ IF ПYCTO THEN begin
     &&ЗABEPШ&&;KYДA:='ЭТОВСЕ';EXIT end ;
   ПPABA end  end else if 
 (**)
-  (KYQ0414_A='ZАТТАВ') then begin БЛOKOTЧ end else if 
-  (KYQ0414_A='ZАТZАТ') or (KYQ0414_A='ZАТNАК') or (KYQ0414_A='ZАТRТЕ') or (KYQ0414_A='ZАТСОF') or (KYQ0414_A='ZАТОТD') then begin БЛOKPEГ  end  ;
+  (KYQ0414_A='ZATTAB') then begin БЛOKOTЧ end else if 
+  (KYQ0414_A='ZATZAT') or (KYQ0414_A='ZATNAK') or (KYQ0414_A='ZATRTE') or (KYQ0414_A='ZATCOF') or (KYQ0414_A='ZATOTD') then begin БЛOKPEГ  end  ;
 (**)
 IF (KYДA<>'НАРУЖУ') AND (KYДA<>'НАЧАЛО') THEN EXIT;
 (**)

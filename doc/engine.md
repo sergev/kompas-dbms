@@ -117,7 +117,7 @@ A program is Free Pascal with Russian names and DML between `&&` and `&&`. `pred
 
 - `&&ПОДСХЕ X&&` reads the schema from `$MARS_DB` and declares a variable for each record type, the status `СОСТ`, and code that copies fields between the variables and the engine. So the database must exist when a program is compiled.
 - Each DML statement becomes calls of `kdb` (`KFINDKEY`, `KSTORE`, …) followed by `СОСТ := KSTAT`.
-- Russian names become ASCII names. Case does not matter, and Latin and Cyrillic letters that look alike (`C`/`С`) give the same name, as on the original machine, where they were one code.
+- Russian names become ASCII names. Case does not matter, and Latin and Cyrillic letters that look alike (`C`/`С`) give the same name, as on the original machine, where they were one code. Only programs fold look-alikes: `predt` looks schema names up the same way (`LFold`), while schemas, decks, queries and the engine take `C` and `С` as different letters.
 - A `char` is a 16-bit character, so one element of a char array holds one letter of any alphabet. Strings and files are UTF-8. Writing and reading char arrays goes through `RT_S`/`RT_Rd` of `krt`.
 - Without its own `{$mode}` a program is compiled as Turbo Pascal, with 64-bit `integer`.
 
@@ -144,13 +144,13 @@ All DML forms of the 1988 texts are supported: every `НАЙТИ`, `ВЗЯТЬ`,
 | `gold-am0` | the 1988 depreciation system: loader deck 7 |
 | `gold-zt0` | the 1988 cost system: loader deck 11, and query deck 9 prints its data back |
 | `servis-maint` | a second `servis` run, journaled changes, clearing, replay twice; the data after replay equal the data before |
-| `utf8` | data in many alphabets and cases; names typed with Latin look-alikes |
+| `utf8` | data in many alphabets and cases; names in any case; a program with names typed with Latin look-alikes |
 | `mars-api` | every MARS call and error |
 | `mars-tree` | 135 000 random operations on the tree, compared with a simple sorted list |
 | `mars-txn`, `mars-lock` | nested and aborted transactions; several processes writing and reading at once |
 | `mars-crash`, `engine-crash` | a commit killed at every write: always the old or the new state, chains sound |
 
-The decks were typed in from texts in the old code, where Latin `A` and Cyrillic `А` were one letter, and mix the two at random. Their data were folded once into one form (Cyrillic, upper case), as the old system saw them. Their Pascal parts were converted once to Free Pascal (`_(` `_)` → `BEGIN` `END`, `&` → `AND`, and so on).
+The decks were typed in from texts in the old code, where Latin `A` and Cyrillic `А` were one letter, and mixed the two at random. Their data were folded once into one form (Cyrillic, upper case), as the old system saw them. Later their words were put into one alphabet each: a look-alike takes the alphabet of the other letters of its word (`HOMEP` → `НОМЕР`, `SУSТЕМ` → `SYSTEM`), and a word of look-alikes only is Cyrillic where it is a Russian word. Words that need letters of both alphabets stay as written: the data keys `ZКСС`, `NМЕС` and the like, which the sessions type in, and `ФS`/`ФF` of a Pascal part. The programs in `tests/severov` keep their identifiers as typed, mixed; only names of programs in their strings were put into Latin. Their Pascal parts were converted once to Free Pascal (`_(` `_)` → `BEGIN` `END`, `&` → `AND`, and so on).
 
 Two things the decks need, beyond the obvious:
 - `ВЫБОР ТЕ-ИСП ИСПОЛЬЗ ЦЕЛ.ЗН` (deck 10) must choose the owner by key; otherwise the co-executors of deck 11 do not get into `ИС-ИСП`, and deck 9 does not print them.

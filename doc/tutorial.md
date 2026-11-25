@@ -158,7 +158,7 @@ ttc < cd.ddl
 Ошибок: 0
 ```
 
-Check the counts at the top of each part: `Типы: 2`, `Записи: 3`, `Наборы: 4`. Set names are printed with a Cyrillic `У`, `SУ-АРТ` (section 10).
+Check the counts at the top of each part: `Типы: 2`, `Записи: 3`, `Наборы: 4`.
 
 ## 6. Loading data: `gen`
 
@@ -409,20 +409,20 @@ The `servis` statements for existing areas:
 
 All text is UTF-8: schemas, decks, queries, programs, input and output. The original KOMPAS had upper case only, and a Latin `A` and a Cyrillic `А` were one code. Here names and data follow different rules.
 
-**Names and keywords are folded, as in the original.** Case does not matter, `Ё` is `Е`, and Latin letters that look like Cyrillic ones (`A B C E H K M O P T X Y`) are those Cyrillic letters. These are one name:
+**Names and keywords do not depend on case**, and `Ё` is `Е`. These are one name:
 
 ```
-СЛОВО.ИМЯ    слово.имя    CЛOBO.ИMЯ
+СЛОВО.ИМЯ    слово.имя    Слово.Имя
 ```
 
-The last one is typed partly in Latin, as old texts often are. KOMPAS prints a name in one form, upper case with Cyrillic look-alikes: `SY-АРТ` is printed `SУ-АРТ`.
+A Latin letter is never a Cyrillic one, however alike they look: in `SY-АРТ` the `SY` is Latin and `АРТ` Cyrillic, and `SУ-АРТ` would be another name. Write each word in one alphabet. Programs are the exception: the original machine had one code for `A` and `А`, and old programs mix the two at random, so KOMPAS Pascal still takes look-alikes as one letter. There `CЛOBO.ИMЯ`, typed partly in Latin, is `СЛОВО.ИМЯ`.
 
 **Data are kept exactly as written**, in any alphabet and case. `tests/utf8` loads these words:
 
 ```
-ФОРМАТ CЛOBO
-CЛOBO.ИMЯ_cлoвo.ЗHAЧ_СЛОВО.БУКВА*
-ПАСКАЛ "&&ПОСТАВ CЛOBO&&"
+ФОРМАТ СЛОВО
+СЛОВО.имя_слово.ЗНАЧ_СЛОВО.БУКВА*
+ПАСКАЛ "&&ПОСТАВ СЛОВО&&"
 КОНЕЦ
 СЛОВО [ёлка_новогодняя ель_ё*
         Ёж_колючий зверь_Ё*
@@ -474,11 +474,11 @@ The tests hold the schemas, loader decks and queries of an accounting system of 
 - Areas have a size, `ДЛИНА`, in zones of 1024 words of the BESM-6. It is accepted and ignored:
 
   ```
-  ОБЛАСТЬ CХ-CK0:ДЛИНА 2 ВАРИАНТ SSCXEM,
-  ОБЛАСТЬ ЖУ-CK0:ДЛИНА 6 ВИД ЖУРНАЛ,
+  ОБЛАСТЬ СХ-СК0:ДЛИНА 2 ВАРИАНТ SSCXEM,
+  ОБЛАСТЬ ЖУ-СК0:ДЛИНА 6 ВИД ЖУРНАЛ,
   ```
 
-- Names mix the alphabets: `CХ-CK0` starts with a Latin `C` (section 10).
+- The programs mix the alphabets inside names (`HOMEP` for `НОМЕР`), as typed on the old machine; KOMPAS Pascal reads them as one (section 10). The schemas, decks and queries were rewritten so that each word is in one alphabet.
 - A loader deck is a whole job. After the formats come job cards (`*…`, skipped) and the `servis` statements that clear the areas and the journal before the reload (section 9):
 
   ```

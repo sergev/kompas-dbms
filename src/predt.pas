@@ -36,9 +36,46 @@ var
   lineNo: integer = 1;
   isExpr: boolean;
 
+{ names in KOMPAS Pascal are folded as on the original machine, where a
+  Latin letter and its Cyrillic look-alike were one code; the schema is
+  searched the same way }
+function LFold(const s: string): string;
+const LAT = 'ABCEHKMOPTXY';
+var w, cyr: UnicodeString; i, j: integer;
+begin
+  cyr := U2W('АВСЕНКМОРТХУ');
+  w := U2W(Name6(s));
+  for i := 1 to length(w) do begin
+    j := Pos(AnsiChar(ord(w[i])), LAT);
+    if (ord(w[i]) < 128) and (j > 0) then w[i] := cyr[j];
+  end;
+  Result := W2U(w);
+end;
+
 function KW(const s: string): string;
 begin
-  Result := Name6(s);
+  Result := LFold(s);
+end;
+
+function PRecNo(const name: string): integer;
+var i: integer;
+begin
+  for i := 1 to KRecCount do if LFold(KRecName(i)) = LFold(name) then exit(i);
+  Result := 0;
+end;
+
+function PSetNo(const name: string): integer;
+var i: integer;
+begin
+  for i := 1 to KSetCount do if LFold(KSetName(i)) = LFold(name) then exit(i);
+  Result := 0;
+end;
+
+function PFieldNo(r: integer; const name: string): integer;
+var i: integer;
+begin
+  for i := 1 to KFieldCount(r) do if LFold(KFieldName(r, i)) = LFold(name) then exit(i);
+  Result := 0;
 end;
 
 procedure Error(const msg: string);
@@ -138,7 +175,7 @@ var i, n: integer; c: char;
     toks[high(toks)].kind := kind;
     toks[high(toks)].a := a;
     toks[high(toks)].b := b;
-    if kind = 'w' then toks[high(toks)].k := Name6(toks[high(toks)].s)
+    if kind = 'w' then toks[high(toks)].k := LFold(toks[high(toks)].s)
     else toks[high(toks)].k := toks[high(toks)].s;
   end;
 var a: integer;
@@ -190,14 +227,14 @@ procedure Skip; begin inc(tp); end;
 
 function SetNo: integer;
 begin
-  Result := KSetNo(Tok.k);
+  Result := PSetNo(Tok.k);
   if Result = 0 then Error('нет набора ' + Tok.s);
   Skip;
 end;
 
 function RecNo: integer;
 begin
-  Result := KRecNo(Tok.k);
+  Result := PRecNo(Tok.k);
   if Result = 0 then Error('нет записи ' + Tok.s);
   Skip;
 end;
@@ -233,7 +270,7 @@ end;
 
 function FieldRef(r: integer; const name: string; var fi: integer): boolean;
 begin
-  fi := KFieldNo(r, name);
+  fi := PFieldNo(r, name);
   Result := fi > 0;
   if not Result then Error('нет поля ' + name);
 end;
@@ -288,9 +325,9 @@ begin
       Skip; f := Tok.s; Skip;
       Result := 'case KCURTYPE of ';
       for r := 1 to KRecCount do
-        if (RecVar(r) <> '') and (KFieldNo(r, f) > 0) then
+        if (RecVar(r) <> '') and (PFieldNo(r, f) > 0) then
           Result := Result + IntToStr(r) + ': begin KBEGINGET(0); KGETF(' +
-            IntToStr(KFieldNo(r, f)) + ', ' + RecVar(r) + '.' + f + ') end; ';
+            IntToStr(PFieldNo(r, f)) + ', ' + RecVar(r) + '.' + f + ') end; ';
       Result := Result + 'end';
     end else if AtEnd then
       Result := 'ZZGETRU'
@@ -935,7 +972,7 @@ begin
         outs := outs + e;
         { a statement carries its own terminator, except before ELSE }
         if not isExpr and (e <> '') and (Copy(NextWord(i), 1, 1) <> ';') and
-           (NextWord(i) <> FoldName('ELSE')) then outs := outs + ';';
+           (LFold(NextWord(i)) <> LFold('ELSE')) then outs := outs + ';';
       end;
       continue;
     end;

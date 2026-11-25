@@ -189,7 +189,7 @@ COLUMN=(
         VФPEЗ   ,
         VФMП    ,
         VФHTCP  ); const XEN_COLUMN: array[COLUMN] of string[8] = ('ZТЕМА','ZМЕС','ZОТД','ZNОТД','ZЭТАП','ZВЫП','ZОЗАРП','ZДЗАРП','VЗАРП','VСТРАХ','ZМАТЕР','ZКОМАН','ZСПЕЦ','ZАМОР','ZСТОР','VПРОЧ','VНАКЛ','VЗАРН','VСБС','VЭФЗ','ZПОСН','ZПТРЕС','ZПРБК','VРАСЧ','ZОВЫШ','ZОГОС','ZНЕПЛ','VОСТ','VФРЕЗ','VФМП','VФНТСР'); type
-TYPPAR=(CEL,DEY,ALF,STR,LOG,DAT,MES,KVA); const XEN_TYPPAR: array[TYPPAR] of string[8] = ('СЕL','DЕУ','АLF','SТR','LОG','DАТ','МЕS','КVА'); type
+TYPPAR=(CEL,DEY,ALF,STR,LOG,DAT,MES,KVA); const XEN_TYPPAR: array[TYPPAR] of string[8] = ('CEL','DEY','ALF','STR','LOG','DAT','MES','KVA'); type
 CELL=PACKED RECORD FRM:CHAR;CON:^CONTENT end ;
 CONTENT=RECORD CASE TYP:TYPPAR OF
                    CEL,DAT,MES,KVA:(Ц:^ATCЦEЛ);
