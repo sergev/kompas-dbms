@@ -158,7 +158,7 @@ var j: integer; w: UnicodeString;
 begin
   if not parsed then begin
     Parse;
-    counts := TStringList.Create;
+    counts := TStringList.Create; counts.UseLocale := false;
     hard0 := KHARD;
   end;
   Report;
@@ -249,7 +249,7 @@ var j: integer;
 begin
   Report;
   if inTxn then begin MarsCommit; inTxn := false; end;
-  if counts = nil then counts := TStringList.Create;
+  if counts = nil then begin counts := TStringList.Create; counts.UseLocale := false; end;
   for j := 0 to counts.Count - 1 do
     writeln(counts.Names[j], ' ', counts.ValueFromIndex[j]:6);
   Say('Ошибок: ' + IntToStr(errs));

@@ -846,9 +846,9 @@ var i, j, d: integer; tmp: string;
 begin
   Result := s;
   t := PTokens(s);
-  types := TStringList.Create;
-  names := TStringList.Create;
-  files := TStringList.Create;
+  types := TStringList.Create; types.UseLocale := false;
+  names := TStringList.Create; names.UseLocale := false;
+  files := TStringList.Create; files.UseLocale := false;
   files.Add('INPUT');
   types.Add('ALFA');
   for i := 0 to high(t) do

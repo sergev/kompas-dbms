@@ -438,9 +438,9 @@ begin
     writeln('mad: нет схемы в ', MarsPath, ' (сначала servis и ttc)');
     halt(2);
   end;
-  labels := TStringList.Create;
-  fixups := TStringList.Create;
-  vars := TStringList.Create;
+  labels := TStringList.Create; labels.UseLocale := false;
+  fixups := TStringList.Create; fixups.UseLocale := false;
+  vars := TStringList.Create; vars.UseLocale := false;
   Lex(text);
   tp := 0;
   ParseStmts('');
