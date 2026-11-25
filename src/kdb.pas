@@ -1532,14 +1532,14 @@ function KStatusText(st: int64): string;
 begin
   case st of
     kOk: Result := 'OK';
-    kEnd: Result := 'КОНЕЦ НАБОРА';
-    kNotFound: Result := 'НЕТ ЗАПИСИ';
-    kDup: Result := 'ДУБЛИКАТ КЛЮЧА';
-    kNoCur: Result := 'НЕТ ТЕКУЩЕЙ';
-    kMember: Result := 'ОШИБКА ЧЛЕНСТВА';
-    kBad: Result := 'НЕВЕРНОЕ ИМЯ';
-    kStorage: Result := 'ОШИБКА ПАМЯТИ';
-    kNoSchema: Result := 'НЕТ СХЕМЫ';
+    kEnd: Result := 'конец набора';
+    kNotFound: Result := 'нет записи';
+    kDup: Result := 'дубликат ключа';
+    kNoCur: Result := 'нет текущей';
+    kMember: Result := 'ошибка членства';
+    kBad: Result := 'неверное имя';
+    kStorage: Result := 'ошибка памяти';
+    kNoSchema: Result := 'нет схемы';
   else
     Result := '?';
   end;

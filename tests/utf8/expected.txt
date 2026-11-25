@@ -24,7 +24,7 @@ SAVED=         2 MARSERR=         0
 EXN=         0
 == gen load.gen
 СЛОВО      11
-ОШИБОК: 0
+Ошибок: 0
 == mad list.mad
 ABB         |латиница, похожая       |A|
 Zebra       |латиница                |Z|

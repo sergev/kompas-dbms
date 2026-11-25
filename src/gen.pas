@@ -38,7 +38,7 @@ var
 
 procedure Error(const msg: string);
 begin
-  writeln('ГЕН: СТРОКА ', line, ': ', msg);
+  writeln('gen: строка ', line, ': ', msg);
   inc(errors);
 end;
 
@@ -361,7 +361,7 @@ begin
     write(acc);
     p.WaitOnExit;
     if p.ExitStatus <> 0 then begin
-      writeln('ГЕН: ЗАГРУЗЧИК ЗАВЕРШИЛСЯ С КОДОМ ', p.ExitStatus);
+      writeln('gen: загрузчик завершился с кодом ', p.ExitStatus);
       errors := 1;
     end;
   finally
@@ -383,7 +383,7 @@ begin
   text := f.Text;
   n := length(text); i := 1; line := 1;
   if not KSchemaOk then begin
-    writeln('ГЕН: НЕТ СХЕМЫ (servis и ttc) В ', MarsPath);
+    writeln('gen: нет схемы в ', MarsPath, ' (сначала servis и ttc)');
     halt(2);
   end;
   procs := ''; vars := ''; loader := 'ZG'; schema := '';
@@ -398,17 +398,17 @@ begin
      not Step('/bin/sh', ['-c', 'fpc -O1 -v0e -l- -Fu' + home + '/lib -FU' + work +
        ' -o' + work + '/loader ' + work + '/loader_fpc.pas > ' + work +
        '/fpc.log 2>&1 || { grep -v "^Free Pascal\|^Copyright" ' + work + '/fpc.log >&2; exit 1; }']) then begin
-    writeln('ГЕН: ЗАГРУЗЧИК НЕ СОБРАН, СМ. ', work);
+    writeln('gen: загрузчик не собран, см. ', work);
     halt(1);
   end;
   if svc <> '' then begin
     Save(work + '/servis.srv', svc + 'КОНЕЦ.'#10);
     Flush(output);
     if not Step('/bin/sh', ['-c', '"' + home + '/bin/servis" < "' + work + '/servis.srv"']) then
-      writeln('ГЕН: SERVIS ЗАВЕРШИЛСЯ С ОШИБКОЙ');
+      writeln('gen: servis завершился с ошибкой');
   end;
   RunLoader(work + '/loader', work + '/data.txt');
-  if keep then writeln('ГЕН: ФАЙЛЫ В ', work)
+  if keep then writeln('gen: файлы в ', work)
   else begin
     for src in ['loader.pas', 'loader_fpc.pas', 'loader', 'loader.o', 'data.txt',
                 'fpc.log', 'servis.srv'] do

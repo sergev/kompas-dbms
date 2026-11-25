@@ -109,7 +109,7 @@ begin
       continue;
     end;
     if (i > n) or (text[i] <> '[') then begin
-      Say('ГЕН: ПРОПУЩЕНО В СТРОКЕ ' + IntToStr(line) + ': ' + name);
+      Say('gen: строка ' + IntToStr(line) + ': пропущено ' + name);
       while (i <= n) and (text[i] <> #10) do inc(i);
       continue;
     end;
@@ -146,8 +146,8 @@ begin
   { an error of the previous record }
   if (cur >= 0) and (cur <= high(data)) and (KHARD <> hard0) then begin
     inc(errs);
-    ln := 'ГЕН: ОШИБКА ' + KStatusText(KLASTHARD) + ': ' + TrimRight(data[cur].fmt) +
-      ' СТРОКА ' + IntToStr(data[cur].line);
+    ln := 'gen: строка ' + IntToStr(data[cur].line) + ', формат ' +
+      TrimRight(data[cur].fmt) + ': ' + KStatusText(KLASTHARD);
     Say(ln);
   end;
   hard0 := KHARD;
@@ -196,8 +196,8 @@ begin
   s := Val0(i);
   val(s, Result, e);
   if e <> 0 then begin
-    if s <> '' then Say('ГЕН: НЕ ЧИСЛО "' + s + '" СТРОКА ' +
-      IntToStr(data[cur].line));
+    if s <> '' then Say('gen: строка ' + IntToStr(data[cur].line) +
+      ': не число "' + s + '"');
     Result := 0;
   end;
 end;
@@ -241,7 +241,7 @@ end;
 procedure GUNKNOWN(var fmt: alfa);
 begin
   inc(errs);
-  Say('ГЕН: НЕТ ФОРМАТА ' + TrimRight(BufU(@fmt[1], 6)) + ' СТРОКА ' + IntToStr(data[cur].line));
+  Say('gen: строка ' + IntToStr(data[cur].line) + ': нет формата ' + TrimRight(BufU(@fmt[1], 6)));
 end;
 
 procedure GDONE;
@@ -252,7 +252,7 @@ begin
   if counts = nil then counts := TStringList.Create;
   for j := 0 to counts.Count - 1 do
     writeln(counts.Names[j], ' ', counts.ValueFromIndex[j]:6);
-  Say('ОШИБОК: ' + IntToStr(errs));
+  Say('Ошибок: ' + IntToStr(errs));
 end;
 
 end.

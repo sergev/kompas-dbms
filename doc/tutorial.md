@@ -202,10 +202,10 @@ gen < load.gen
 АРТИСТ      2
 ДИСК        3
 ТРЕК        8
-ОШИБОК: 0
+Ошибок: 0
 ```
 
-One line per format, with its count of data lines. `gen` writes a loader program, compiles it and runs it, as the original GEN did, so it takes a few seconds; `gen -k` keeps the program and prints where. A bad line is reported as `ГЕН: ОШИБКА <reason>: <format> СТРОКА <n>`, and the other lines are stored. So after errors, fix the deck, remove `cd.db` and repeat sections 4-6, or the good lines are stored twice.
+One line per format, with its count of data lines. `gen` writes a loader program, compiles it and runs it, as the original GEN did, so it takes a few seconds; `gen -k` keeps the program and prints where. A bad line is reported as `gen: строка <n>, формат <format>: <reason>`, and the other lines are stored. So after errors, fix the deck, remove `cd.db` and repeat sections 4-6, or the good lines are stored twice.
 
 ## 7. Queries: `mad`
 
@@ -493,11 +493,11 @@ The tests hold the schemas, loader decks and queries of an accounting system of 
 | Symptom | Cause |
 |---|---|
 | `СОСТ` or `СОС` is not 0 | 1 end of set (not an error), 2 no such record, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema |
-| `ГЕН: ОШИБКА ДУБЛИКАТ КЛЮЧА` | the key is already in an ordered set without `ДУБЛИК РАЗРЕШ` |
-| `ГЕН: ОШИБКА НЕТ ТЕКУЩЕЙ` | no current owner for a set: load the owner first |
-| `НЕТ СХЕМЫ` | `servis` and `ttc` were not run on this `MARS_DB`: the file printed does not exist, or has no schema |
+| `gen: …: дубликат ключа` | the key is already in an ordered set without `ДУБЛИК РАЗРЕШ` |
+| `gen: …: нет текущей` | no current owner for a set: load the owner first |
+| `нет схемы` | `servis` and `ttc` were not run on this `MARS_DB`: the file printed does not exist, or has no schema |
 | The database is empty in a later step | `MARS_DB` names another file, or is not set in this shell |
-| `ОШИБКА ПАМЯТИ` | the area named in the schema was not made by `servis` |
+| `ошибка памяти` | the area named in the schema was not made by `servis` |
 | `predt: нет набора X` | the name is not in the schema; names are cut to 6 characters |
 | `…: page N damaged` | the disk spoiled the file: restore a backup (section 9) |
 | `mars: … areas of the old format` | `MARS_DIR` names a database of an older version (one file per area): rebuild it |
