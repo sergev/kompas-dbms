@@ -32,8 +32,10 @@ Free Pascal 3.2 (`fpc`) is required; the tests also need Python 3.
 ```sh
 make          # tools into build/bin, units for programs into build/lib
 make test     # tests/: tool cases and the Severov programs
-export PATH=$PWD/build/bin:$PATH
+make install  # tools into ~/.local/bin, units into ~/.local/lib/kompas
 ```
+
+`make install PREFIX=/usr/local` installs elsewhere; `make uninstall` removes it. Without installing, put `build/bin` on your `PATH`. `kpc` and `gen` need `fpc` at run time too: they compile programs.
 
 ## Layout
 

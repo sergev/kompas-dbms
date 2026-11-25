@@ -10,6 +10,7 @@ Needs `fpc` 3.2 and Python 3.
 
 ```sh
 make                          # tools -> build/bin, units for user programs -> build/lib
+make install                  # -> $PREFIX/bin and $PREFIX/lib/kompas (PREFIX=~/.local)
 make test                     # = python3 tests/run.py
 python3 tests/run.py -v cd    # one case, print diff on failure
 python3 tests/run.py -u NAME  # rewrite expected output (review the git diff)
@@ -29,7 +30,7 @@ python3 tests/run.py SKLMON   # one Severov program
 - `src/kutf.pas` — text is UTF-8 outside and `WideChar` inside (program chars, char fields stored as UTF-16, schema rows). Names and keywords are folded (upper case, Latin look-alikes as Cyrillic, `Ё` as `Е`); data never. MARS keys are bytes: names as UTF-8, DB-keys binary.
 - `src/rt/krt.pas` — runtime for KOMPAS Pascal programs (`integer` is 64-bit, `alfa`, write formats; `RT_T` gives a name without trailing blanks, for messages).
 - `src/predt.pas` — front end of "KOMPAS Pascal": Free Pascal plus Russian identifiers and `&&…&&` DML. Translates to plain FPC: `&&ПОДСХЕ X&&` generates record types/vars from the schema in `$MARS_DB` (so the database must exist at compile time); non-ASCII names map to ASCII with Latin/Cyrillic homoglyphs and case folded together; `char` becomes `WideChar`, `string[n]` `UnicodeString`, literals stay UTF-8 under `{$codepage utf8}`; write/read of char arrays go through `RT_S`/`RT_Rd`; `packed array[1..N] of char` becomes named type `ZZC<N>`; default mode `{$mode tp}{$H-}{$R-}{$Z4}{$packset 4}` and `uses krt, kio, kdb`.
-- `src/kpc` — shell script: `predt` then `fpc` against `build/lib`.
+- `src/kpc` — shell script: `predt` then `fpc` against the units in `../lib/kompas` (installed) or `../lib` (build tree), relative to its own directory; `gen` finds them the same way.
 - `src/servis.pas`, `src/ttc.pas` are themselves KOMPAS Pascal: the Makefile builds them through `predt` (so `predt` and the units must build first). `servis` keeps its area descriptors in the MARS area `SERVIS`; `ОЧИСТИ` = `cleard`, `ВОССТА` = `KREPLAY` of the after-image journal that `kdb` writes in `WriteW`/`DeleteW` once `KOPEN` names a journal.
 - `src/gen.pas` + `src/kgenrt.pas` — `gen` generates a loader program from a deck (formats become procedures), runs it through `predt`/`fpc`, then executes it; `-k` keeps the work dir. `servis` statements before the data run through `servis` first; `ЖУРНАЛ x СБРОСИ` among them makes the load journaled into `x`.
 - `src/mad.pas` — query interpreter; `ВЫДАТЬ` prints in GEN's data format so an unload can be reloaded (gold tests check loader/unload round-trips).

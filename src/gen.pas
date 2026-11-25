@@ -372,7 +372,7 @@ end;
 var
   f: TStringList;
   k: integer;
-  src, home, work: string;
+  src, home, libdir, work: string;
 begin
   src := '';
   for k := 1 to ParamCount do
@@ -390,12 +390,15 @@ begin
   Definitions;
   if errors > 0 then halt(1);
   home := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..');
+  { units: installed in lib/kompas, in the build tree in lib }
+  libdir := home + '/lib/kompas';
+  if not DirectoryExists(libdir) then libdir := home + '/lib';
   work := IncludeTrailingPathDelimiter(GetTempDir) + 'kompas-gen-' + IntToStr(GetProcessID);
   ForceDirectories(work);
   Save(work + '/loader.pas', Program1);
   Save(work + '/data.txt', data);
   if not Step(home + '/bin/predt', [work + '/loader.pas', work + '/loader_fpc.pas']) or
-     not Step('/bin/sh', ['-c', 'fpc -O1 -v0e -l- -Fu' + home + '/lib -FU' + work +
+     not Step('/bin/sh', ['-c', 'fpc -O1 -v0e -l- -Fu' + libdir + ' -FU' + work +
        ' -o' + work + '/loader ' + work + '/loader_fpc.pas > ' + work +
        '/fpc.log 2>&1 || { grep -v "^Free Pascal\|^Copyright" ' + work + '/fpc.log >&2; exit 1; }']) then begin
     writeln('gen: загрузчик не собран, см. ', work);

@@ -10,12 +10,14 @@ KOMPAS is a network DBMS (the CODASYL model): records are linked into chains cal
 
 ## 2. Setting up
 
-Free Pascal 3.2 (`fpc`) must be installed. Build the tools once and put them on your `PATH`:
+Free Pascal 3.2 (`fpc`) must be installed; `gen` and `kpc` use it to compile programs. Build and install the tools once:
 
 ```sh
 make
-export PATH=$PWD/build/bin:$PATH
+make install          # into ~/.local/bin; PREFIX=/usr/local for another place
 ```
+
+`~/.local/bin` must be on your `PATH`. Without installing, use `export PATH=$PWD/build/bin:$PATH`.
 
 | Tool | Reads | Does |
 |---|---|---|

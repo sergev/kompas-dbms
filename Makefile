@@ -1,9 +1,12 @@
 # KOMPAS DBMS: command line tools in Free Pascal.
 #   make        build build/bin (tools) and build/lib (units for programs)
 #   make test   run tests/ (needs python3)
+#   make install [PREFIX=~/.local]   tools into PREFIX/bin, units into PREFIX/lib/kompas
+#   make uninstall
 #   make clean
 
 FPC     ?= fpc
+PREFIX  ?= $(HOME)/.local
 B       := build
 BIN     := $(B)/bin
 LIB     := $(B)/lib
@@ -49,7 +52,17 @@ $(OBJ):
 test: all
 	python3 tests/run.py
 
+# kpc and gen find the units in ../lib/kompas from their own directory
+install: all
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/lib/kompas
+	cp $(addprefix $(BIN)/,$(NATIVE) $(CONVERT) kpc) $(DESTDIR)$(PREFIX)/bin/
+	cp $(LIB)/*.ppu $(LIB)/*.o $(DESTDIR)$(PREFIX)/lib/kompas/
+
+uninstall:
+	rm -f $(addprefix $(DESTDIR)$(PREFIX)/bin/,$(NATIVE) $(CONVERT) kpc)
+	rm -rf $(DESTDIR)$(PREFIX)/lib/kompas
+
 clean:
 	rm -rf $(B)
 
-.PHONY: all test clean
+.PHONY: all test install uninstall clean
