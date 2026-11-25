@@ -136,7 +136,7 @@ begin
   modd(key, d, sizeof(d));
   if MErr <> 0 then begin
     nerr := nerr+1;
-    writeln('MARS ERR ',RT_W( MErr), ' KEY=',RT_W( key))
+    writeln('ttc: ошибка MARS ', MErr:1, ', ключ ', RT_T(key))
   end;
   MErr := 0
 end;
@@ -267,20 +267,22 @@ end;
 procedure PrintAll;
 var z:Num8;
 begin
-  writeln('=== TYPES ',RT_W( tcnt), ' ===');
+  writeln('Типы: ', tcnt:1);
   for i:=1 to tcnt do
-    writeln(' ',RT_W( tn[i]), ' BASE=',RT_W( tb[i]), ' SZ=',RT_W( ts[i]));
-  writeln('=== RECORDS ',RT_W( rnum), ' ===');
+    if IsBlank(ts[i]) then writeln(' ', RT_T(tn[i]), ': ', RT_T(tb[i]))
+    else writeln(' ', RT_T(tn[i]), ': ', RT_T(tb[i]), ' ', RT_T(ts[i]));
+  writeln('Записи: ', rnum:1);
   for i:=1 to rnum do begin
-    writeln(' ',RT_W( rn[i]), ' FIELDS=',RT_W( rcnt[i]));
+    writeln(' ', RT_T(rn[i]), ', элементов: ', rcnt[i]:1);
     for j:=1 to rcnt[i] do
       writeln('   ',RT_W( rf[(i-1)*25+j]), ' ',RT_W( rt[(i-1)*25+j]),
               ' ',RT_W( rs[(i-1)*25+j]), ' ',RT_W( rm[(i-1)*25+j]))
   end;
-  writeln('=== SETS ',RT_W( snum), ' ===');
+  writeln('Наборы: ', snum:1);
   for i:=1 to snum do begin
-    writeln(' ',RT_W( sn[i]), ' MEMBER=',RT_W( sm[i]), ' OWNER=',RT_W( so[i]),
-            ' ATT=',RT_W( scnt[i]));
+    if IsBlank(so[i]) then write(' ', RT_T(sn[i]), ', владелец: система')
+    else write(' ', RT_T(sn[i]), ', владелец: ', RT_T(so[i]));
+    writeln(', порядок: ', RT_T(sm[i]));
     for j:=1 to scnt[i] do begin
       writeln('   ',RT_W( sa[(i-1)*25+j]), ' ',RT_W( sv[(i-1)*25+j]));
       z := bv[(i-1)*25+j];
@@ -294,7 +296,7 @@ begin
   InitMars;
   tcnt := 0; rnum := 0; snum := 0; cur := 0; nerr := 0;
   done := false; pol := 'ПОЛЕ  '; Clr(curar);
-  writeln('TTC15');
+  writeln('Ttc 15');
   while not eof(input) and not done do begin
     for j:=1 to 72 do ln[j] := ' ';
     RT_ReadLn(ln);
@@ -322,7 +324,7 @@ begin
   end;
   StoreAll;
   PrintAll;
-  writeln('SAVED=',RT_W( tcnt+rnum+snum), ' MARSERR=',RT_W( nerr));
-  writeln('EXN=',RT_W( MErr));
+  writeln('Сохранено объектов: ', tcnt+rnum+snum:1);
+  writeln('Ошибок: ', nerr:1);
   MarsCommit
 end.

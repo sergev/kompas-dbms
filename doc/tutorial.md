@@ -152,11 +152,11 @@ ttc < cd.ddl
 `ttc` prints the schema as it understood it and ends with:
 
 ```
-SAVED=         9 MARSERR=         0
-EXN=         0
+Сохранено объектов: 9
+Ошибок: 0
 ```
 
-Check the counts at the top of each part: `TYPES 2`, `RECORDS 3`, `SETS 4`. Set names are printed with a Cyrillic `У`, `SУ-АРТ` (section 10).
+Check the counts at the top of each part: `Типы: 2`, `Записи: 3`, `Наборы: 4`. Set names are printed with a Cyrillic `У`, `SУ-АРТ` (section 10).
 
 ## 6. Loading data: `gen`
 
