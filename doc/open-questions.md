@@ -1,78 +1,40 @@
-# Hypotheses and open questions
+# Guesses
 
-The engine and the tools are written anew; the original sources are lost. Each statement below is marked:
-- **FACT**: observed in the materials;
-- **HYPOTHESIS**: chosen to make the materials consistent;
-- **UNKNOWN**.
-
-A new guess goes here first and is checked afterwards.
+Where the surviving materials do not fix the behaviour of the original, this re-implementation made a choice. Each choice is listed here with its basis, so it can be checked if a manual or an old printout turns up. A new guess goes here.
 
 ## Engine
 
-- **HYPOTHESIS**: status codes `СОСТ`:
-  - 0 success, 1 end of set, 2 no record, 3 duplicate key;
-  - 4 no current record, 5 membership error, 6 bad name, 7 storage error, 8 no schema.
-
-  The original codes of KOMPAS are not known. The Severov programs test only `СОСТ=0`, `МОЖНО`, `ПУСТО`.
-- **HYPOTHESIS**: `РАЗМЕР` is a digit pattern: nines are integer digits, trailing zeros are decimals (`99900` is 999.00).
-  - For `ЦЕЛОЕ` the decimal digits are a scale: `ИНВНОМ ЦЕЛОЕ РАЗМЕР 99999000` stores 2004000 and prints `2004.000`.
-  - Basis, from deck 6 (`tests/gold-ck0`): `ВЕЩЬ.НОМЕР:=ROUND(CYMMA.ЦЕНА*1000)` with data `2004.000`; prices `0.20` and `44.00`; stock `67.000`.
-  - The unload by deck 3 reproduces the data of deck 6.
-- **HYPOTHESIS**: `НАЙТИ ПО-КЛЮ` in a set with duplicates finds the last of the equal records. Basis: deck 7, format `ПРИБОР`, finds by key and then walks `ПРЕДЫД`.
-- **HYPOTHESIS**: `УБРАТЬ` of an owner disconnects its members without erasing them. The Severov programs erase the members beforehand with `УНАР(&&НАБ …&&)`.
-- **HYPOTHESIS**: `ПРОИЗВ`, and no `УПОРЯД`, mean insertion at the end.
-- **HYPOTHESIS**: `НАЙТИ ПЕРВУЮ В s` from a record of the owner type takes the occurrence it owns, and `НАЙТИ СЛЕДУЮ` from a member takes the next member. For the recursive set `ИС-ИСП` this gives the tree walk of deck 9.
-- **FACT**: `ВЫБОР TE-ИСП ИСПОЛЬЗ ЦЕЛ.ЗН` (deck 10) needs the owner to be chosen by key. Without it the co-executors of deck 11 do not get into `ИС-ИСП` and deck 9 does not print them (`tests/gold-zt0`).
-- **FACT**: a set stored into an element `ЦЕЛОЕ` is kept as 32 bits (`ЗАМЕНИ ЦЕЛ.ЗН НА ФЛАГИ`, deck 11; `SYSTEM.РЕЖИМЫ:=ФЛАГИ`, deck 6).
-- **UNKNOWN**:
-  - the meaning of a subschema (`ПОДСХЕ`): the engine works with the whole schema;
-  - the journal format and recovery from it;
-  - the meaning of `КОНСИМ`, taken as a plain string.
-- **HYPOTHESIS**: the original ordered keys by the bytes of the GOST internal code, where Cyrillic look-alikes of Latin letters sorted with Latin (`С` before `З`). We order by Unicode code points (`З` before `С`), so ordered sets and the answers of the Severov sessions that follow them differ from 1988.
-
-## Output formats of programs
-
-- **FACT**: default `write` widths: integer 10, `real` 14, `boolean` 8.
-  - A real without width prints as `    1.4000Е-01`: field 14, 4 decimals, two-digit exponent.
-  - An enumeration value prints as its name, right-justified in 8.
-  - These are the formats of the 1988 programs, kept in `krt` as `RT_W`/`RT_EnW` for `tests/severov`. New programs use the formats of Free Pascal.
-- **UNKNOWN**: the report format `X:9:22` prints 22 decimals; what it meant in 1988 is not known.
-
-## Severov's programs (`tests/severov`)
-
-- **HYPOTHESIS**: the lost library modules are rebuilt from how the programs use them.
-  - `ROTД` reads a department name and finds it in `SY-ОТД`; otherwise `ИСК` in `SKLOTD` removes the wrong department.
-  - `FCOPY(F,OUT)` moves the unfinished output line into the scratch file `F`, and `ШАПКА` centres the title by it. `FWRITE(OUT)` ends the line.
-  - `ЖУРНАЛ(A,P)` and `КОНЕЦ(P)` receive the procedure `ПРЕДЗАК` and call it.
-  - `КУДА` starts as `НАЧАЛО`; in 1988 the calling program set it.
-- **HYPOTHESIS**: the module `LIST` (parameter cards of `ZATZAT`, `ZATNAK`, `ZATRTE`) takes its list from the database.
-  - The `ПАР` of a list (`СП-ЗАТ`, `СП-НАК`, `СП-ТЕМ`, deck 11) owns its parameters through `ПА-ПАР`. A parameter has a `ТИП` and attributes `АТР`.
-  - `ПЕРЕД t Н question`: ask the question before the parameter, and on the answer `НЕТ` go to `t`. `ПОСЛЕ`: the same after it. `УХОД t`: after it go to `t`.
-  - A name outside the list (`ЭТОВСЕ`) is the end.
-  - Column 8 of the value (`Н`) is taken as the answer that leads to the jump.
-  - This gives the order of the questions of `ZATRTE` for deck 11: executor, co-executors, sub-executors, stages with repetition.
-- **HYPOTHESIS**: in `CONTENT` of `LIST` the fields `Ц` and `Д` hold one number.
-  - `ZATNAK` reads `Ц!` of parameters of type `ДЕЙ` in `ПОСТАВ` (`ПРОЧ:=Ц!`), so the fraction is lost there: 1500.50 is stored as 1500.
-  - In 1988 `Ц` and `Д` were probably variants of one pointer, and such a read would give garbage.
-- **HYPOTHESIS**: a month (`МЕС`) is stored as YYMM (`ЧИСМЕС`) and printed `MM.YY` (`WMEC`; the heading of `ZATTAB`: `XX.XX`). So months in the sets `ПО-ЭЛЕ MEC` are in time order.
-  - A quarter is YYQ (`ЧИСКВА`, `WKBA`).
-  - `WREAL(X,N)` prints N decimals.
-- **HYPOTHESIS**: `OUT` in 1988 was a line buffer, and `PUTT` printed it. Here `sevlib` keeps the unfinished output line (`ZZTLEN`, `ZZTCH`, `ZZTCLR`):
-  - `REWRITE(OUT)` drops it, and `FCOPY(F,OUT)` moves it into a file.
-  - `TPUT` prints it as a table row: cells up to `!`, `^` breaks a line inside a cell, widths come from `TABLE[j].S`, `ВСЕ` is the end.
-  - The alignment `TABLE[j].F` is not known. It was chosen by the look of the table: `Ц` centre, `П` right (the line `ИТОГО`), otherwise left.
-  - `REWRITE(INP);WRITE(INP,X);INPUTCON` (`ZATZAT`) is replaced by `INPUTCON(X)`, because the input line is not modelled as a buffer.
-- **FACT**: in `ZATTAB`, `BЫЧKOЭФ` calls `ЗАМЕНИ` of the record `ДЕЙ` without assigning it the value of parameter `I` (`PДEЙ`). So the coefficients `ZKПРОЧ`, `ZKНАКЛ` and `ZKЗАРН` stay 0.0 from deck 11.
-- **FACT**: in `ZATCOF`, `НОВ` stores the record `АЛФ` of the list `ИМ-КОЭ` without assigning `АЛФ.ЗН:=ПАР.ИМЯ` (deck 11 assigns it, format `ПА--АЛ`). So the new coefficient is listed under a blank name, and `ИСК` does not find it in `ПА-АЛФ`: its `УБРАТЬ` then erases the current record, the `ПАР` `ИМ-КОЭ`, and the list is lost.
-- **FACT**: `SKLCAR` checks the unit of measure by writing the units to `OUT`, then `RESET(OUT)` and `READ(OUT,ЕДИЗМ)`. It is converted like `ШАПКА` of `SKLOTC`: the line goes to a scratch file by `FCOPY`.
-- **HYPOTHESIS**: `FCBЯ(S1,S2,R)` (`SKLCAR`, module lost) finds among the members of the current occurrence of `S1` the one whose owner in `S2` is the current record of type `R`, makes it current and sets `СОСТ=0`; otherwise `СОСТ<>0`. Basis: its calls `FCBЯ(МА-СУМ,ОТ-СУМ,ОТДЕЛ)` and `FCBЯ(ВЕ-ВЗЯ,СУ-ВЗЯ,СУММА)`, followed by `IF МОЖНО THEN ВЗЯТЬ ВЗЯЛ` and `ПОСТАВИТЬ ВЗЯЛ`.
-- **FACT**: `ZATTAB` prints a trace of its calculation, because `INITTAB` sets `PRINTCALC:=TRUE`. Two parts of the trace depend on the rebuilt modules: the format `R:0:23`, and `CLF` as a line break in `HEADING`.
+- **Status codes** `СОСТ`: 0 success, 1 end of set, 2 no record, 3 duplicate key, 4 no current record, 5 membership error, 6 bad name, 7 storage error, 8 no schema. Invented: the programs test only `СОСТ=0`, `МОЖНО`, `ПУСТО`.
+- **`РАЗМЕР`** is a digit pattern: nines are integer digits, trailing zeros decimals (`99900` is 999.00). For `ЦЕЛОЕ` the decimals are a scale: `РАЗМЕР 99999000` stores 2004000 and prints `2004.000`. Basis: deck 6 sets `ВЕЩЬ.НОМЕР:=ROUND(CYMMA.ЦЕНА*1000)` for data `2004.000`, and query deck 3 prints the data of deck 6 back.
+- **`НАЙТИ ПО-КЛЮ`** with duplicate keys finds the last of the equal members. Basis: deck 7, format `ПРИБОР`, finds by key and then walks `ПРЕДЫД`.
+- **`УБРАТЬ` of an owner** disconnects its members, does not erase them. Basis: the programs erase the members first (`УНАР(&&НАБ …&&)`).
+- **`ПРОИЗВ`**, or no `УПОРЯД`, inserts at the end.
+- **Currency in a set.** `НАЙТИ ПЕРВУЮ В s` from a record of the owner type takes the members it owns; `НАЙТИ СЛЕДУЮ` from a member takes the next member. For the recursive set `ИС-ИСП` this gives the tree walk of deck 9.
+- **Key order.** The original compared keys by bytes of the GOST code, where Cyrillic look-alikes of Latin letters sorted with Latin (`С` before `З`). Here keys are in Unicode order (`З` before `С`), so some ordered sets, and the Severov sessions that walk them, differ from 1988.
 
 ## Tools
 
-- **FACT**: the original `servis` and `ttc` erased the MARS catalogue at start (`PASACD`). Here there are no catalogues: all areas are in one name space, and neither tool erases anything at start.
-- **UNKNOWN**: how the original `servis` found the areas of an earlier run. Here their descriptions are kept in the MARS area `SERVIS`.
-- **HYPOTHESIS**: `ОСВОБО` releases an area (clears the flag `servis` requires before `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`); it does not erase data. Basis: the reload decks 6, 7, 11 give `ОСВОБО` of all areas, then `ОЧИСТИ` of the same areas, then `ЖУРНАЛ … СБРОСИ`.
-- **HYPOTHESIS**: `ОЧИСТИ` erases the data of an area; `ЖУРНАЛ … СБРОСИ` empties the journal. `ОЧИСТИ` does not require `ОСВОБО` before it, although the decks always give it.
-- **HYPOTHESIS**: the `servis` statements in a GEN deck (between the job cards `*С` and `*CALL`) were a job step of their own before the loader; `gen` runs them. A load after `ЖУРНАЛ x СБРОСИ` writes journal `x`, so that the journal covers the areas from empty.
-- **HYPOTHESIS**: `ВОССТА` rolls the areas forward from the journal. Here the journal holds after-images of records (not the 1988 format, which is not known), and `ВОССТА` replays those of the areas named.
+- **`ОСВОБО`** releases an area (a flag that `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ` require) and keeps its data. Basis: the reload decks 6, 7, 11 give `ОСВОБО`, then `ОЧИСТИ` of the same areas, then `ЖУРНАЛ … СБРОСИ`.
+- **`ОЧИСТИ`** erases the data of an area, without needing `ОСВОБО` first; `ЖУРНАЛ … СБРОСИ` empties a journal.
+- **`servis` statements in a GEN deck** (between the job cards `*С` and `*CALL`) were a job step before the loader; `gen` runs them. A load after `ЖУРНАЛ x СБРОСИ` is journaled into `x`, so the journal covers the areas from empty.
+- **`ВОССТА`** rolls areas forward from the journals. The 1988 journal format is not known; here a journal holds after-images of records.
+
+## Severov's programs
+
+- **Lost library modules** are rebuilt from how the programs call them:
+  - `ROTД` reads a department name and finds it in `SY-ОТД` (otherwise `ИСК` of `SKLOTD` removes the wrong department).
+  - `FCOPY(F,OUT)` moves the unfinished output line into file `F` (`ШАПКА` centres a title by it); `FWRITE(OUT)` ends the line.
+  - `ЖУРНАЛ(A,P)` and `КОНЕЦ(P)` call the procedure `ПРЕДЗАК` they receive.
+  - `КУДА` starts as `НАЧАЛО`; in 1988 the calling program set it.
+  - `FCBЯ(S1,S2,R)` finds among the members of the current occurrence of `S1` the one whose owner in `S2` is the current `R`, and makes it current (`СОСТ=0`), else `СОСТ<>0`. Basis: its calls in `SKLCAR`, followed by `IF МОЖНО THEN ВЗЯТЬ ВЗЯЛ` and `ПОСТАВИТЬ ВЗЯЛ`.
+- **`LIST`** (parameter cards of `ZATZAT`, `ZATNAK`, `ZATRTE`) takes its list from the database: the `ПАР` of a list (`СП-ЗАТ`, `СП-НАК`, `СП-ТЕМ`, deck 11) owns its parameters through `ПА-ПАР`, each with a `ТИП` and attributes `АТР`.
+  - `ПЕРЕД t Н question`: ask before the parameter, and on the answer `НЕТ` go to `t`; `ПОСЛЕ`: the same after it; `УХОД t`: afterwards go to `t`. Column 8 of the value (`Н`) is the answer that jumps.
+  - A name outside the list (`ЭТОВСЕ`) ends it.
+  - This gives the order of questions of `ZATRTE` for deck 11: executor, co-executors, sub-executors, stages with repetition.
+- **`Ц` and `Д`** in `CONTENT` of `LIST` hold one number. `ZATNAK` reads `Ц!` of a `ДЕЙ` parameter, so 1500.50 is stored as 1500; in 1988 this probably gave garbage.
+- **Months** (`МЕС`) are stored as YYMM (`ЧИСМЕС`) and printed `MM.YY` (`WMEC`), so sets ordered by month are in time order. A quarter is YYQ (`ЧИСКВА`, `WKBA`). `WREAL(X,N)` prints N decimals.
+- **`OUT` was a line buffer** printed by `PUTT`. Here `sevlib` keeps the unfinished output line:
+  - `REWRITE(OUT)` drops it; `FCOPY(F,OUT)` moves it into a file.
+  - `TPUT` prints it as a table row: cells up to `!`, `^` breaks a line inside a cell, widths from `TABLE[j].S`, `ВСЕ` ends the row.
+  - The alignment `TABLE[j].F` was chosen by the look of the table: `Ц` centre, `П` right, else left.
+  - `REWRITE(INP);WRITE(INP,X);INPUTCON` (`ZATZAT`) became `INPUTCON(X)`.

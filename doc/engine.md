@@ -152,15 +152,27 @@ All DML forms of the 1988 texts are supported: every `НАЙТИ`, `ВЗЯТЬ`,
 
 The decks were typed in from texts in the old code, where Latin `A` and Cyrillic `А` were one letter, and mix the two at random. Their data were folded once into one form (Cyrillic, upper case), as the old system saw them. Their Pascal parts were converted once to Free Pascal (`_(` `_)` → `BEGIN` `END`, `&` → `AND`, and so on).
 
+Two things the decks need, beyond the obvious:
+- `ВЫБОР ТЕ-ИСП ИСПОЛЬЗ ЦЕЛ.ЗН` (deck 10) must choose the owner by key; otherwise the co-executors of deck 11 do not get into `ИС-ИСП`, and deck 9 does not print them.
+- A Pascal set stored into an element `ЦЕЛОЕ` is kept as 32 bits (`ЗАМЕНИ ЦЕЛ.ЗН НА ФЛАГИ` in deck 11, `SYSTEM.РЕЖИМЫ:=ФЛАГИ` in deck 6).
+
 ## 7. Severov's programs
 
 `tests/severov` holds 16 application programs of 1988-89: warehouse (`SKL*`), depreciation (`AMO*`), costs (`ZAT*`). They were converted once to KOMPAS Pascal, with their DML unchanged. Their lost library modules were rebuilt from how the programs call them; most are inlined in the programs, the rest is `src/sevlib.pas`.
 
 Each program runs a session: answers from `<PROG>.in` against the database of its `gold-*` case, output compared with `<PROG>.out`. Some sessions first need data made by others (`SETUP` in `tests/run.py`). `python3 tests/run.py severov` runs them all.
 
+Notes for reading their output:
+- `write` without a width uses the formats of 1988: integer in 10 columns, real in 14 (`    1.4000Е-01`), boolean in 8, an enumeration as its name in 8 (`RT_W`, `RT_EnW` in `krt`). New programs use the formats of Free Pascal.
+- Two bugs of 1988 show. `ZATTAB` changes the record `ДЕЙ` without assigning it the value of the parameter, so the coefficients `ZKПРОЧ`, `ZKНАКЛ`, `ZKЗАРН` stay 0.0. `ZATCOF` stores a new coefficient without its name, so it is listed blank, and `ИСК` then erases the list itself.
+- `ZATTAB` prints a trace of its calculation: its source sets `PRINTCALC:=TRUE`.
+- `SKLCAR` checks a unit of measure by writing it to `OUT` and reading it back; it goes through a scratch file (`FCOPY`), as `ШАПКА` of `SKLOTC` does.
+- The guesses behind the rebuilt library modules are in `doc/open-questions.md`.
+
 ## 8. Not done
 
 - Query deck 8 needs the subschema `CXE-AM`, which did not survive.
 - The write format `X:9:22` prints 22 decimals; what it meant in 1988 is not known.
+- `КОНСИМ` of a text element is taken as a plain string; its meaning is not known.
 - A `gen` load that does not empty a journal is not journaled, so `ВОССТА` cannot repeat it.
 - Only Linux was tested; macOS should work (the build needs only `fpc` and `/bin/sh`).
