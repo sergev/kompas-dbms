@@ -159,9 +159,58 @@ All 16 build, and each has a session. The sessions `tests/severov/*.in` run on a
 
 ## 6a. MARS storage
 
-The original MARS is lost; this one keeps the names of its calls (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `cleard`, `dropd`), with `firstd`, `lastd`, `nextd`, `prevd` for scans and `MErr` for the error of the last call. There are no catalogues, info words, `BDVECT` microprograms or entry handles of the BESM-6 MARS. It is built on a design like LMDB, cut down:
+The original MARS is lost; this one keeps the names of its calls (`newd`, `opend`, `putd`, `getd`, `modd`, `deld`, `cleard`, `dropd`), with `firstd`, `lastd`, `nextd`, `prevd` for scans and `MErr` for the error of the last call. There are no catalogues, info words, `BDVECT` microprograms or entry handles of the BESM-6 MARS. It is built on a design like LMDB, cut down.
 
-- **One file**, `$MARS_DB` (without it `$MARS_DIR/mars.db`, the name of earlier versions, else `mars.db`), pages of 4 KB. All areas are key ranges of one B+tree: `#0 name` is an area, `#1 area-id key` an entry of it. So one transaction can change several areas.
+### The file
+
+A database is one file: `$MARS_DB`, without it `$MARS_DIR/mars.db` (the name of earlier versions), else `mars.db`. It is a sequence of 4 KB pages; page N starts at byte N × 4096. Integers in pages are in the byte order of the machine (little-endian on x86-64 and ARM64); keys are compared as bytes.
+
+Every page starts with a header of 20 bytes:
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 4 | CRC-32 of bytes 4…4095 |
+| 4 | 2 | type: 1 meta, 2 branch, 3 leaf, 4 overflow, 5 freelist |
+| 6 | 2 | count: cells, bytes or page numbers, by type |
+| 8 | 4 | the page's own number |
+| 12 | 4 | next: the leftmost child (branch) or the next page of a chain (overflow, freelist) |
+| 16 | 4 | spare |
+
+- **Pages 0 and 1** are the meta pages: after the header, magic `KMARS1`, format version, page size, `txnid` (8 bytes), the root page of the tree, the first freelist page, the number of pages in the file. Commits write them in turn; the valid one with the higher `txnid` is current.
+- **Branch and leaf pages** hold the B+tree (`mtree.pas`). After the header come 2-byte offsets of the cells in key order; the cells are packed from the end of the page. A leaf cell is key length (1 byte), flag (1 byte), value length (4 bytes), key, then the value, or the first overflow page when the flag is 1. A branch cell is key length, child page, key: the child holds the keys from this key up to the next cell's.
+- **Overflow pages** hold a value longer than 1024 bytes, as a chain.
+- **Freelist pages** list free page numbers (4 bytes each), as a chain.
+
+Where a page lies in the file says nothing: copy-on-write gives every changed page a new number, and freed pages are reused. The pages of all areas are mixed.
+
+### The tree
+
+Keys are at most 255 bytes. The first byte says what a key is:
+
+| Key | Value | |
+|---|---|---|
+| `#0` name | area id: 4 bytes, big-endian | an area (`newd`) |
+| `#1` id key | the datum | an entry of area id |
+| `#2` | the next area id: 4 bytes, big-endian | |
+
+The id is big-endian, so the entries of an area are one run of keys in key order. `cleard` deletes that run, `dropd` also the `#0` key, and `firstd` … `prevd` walk it. An area has no size: `ДЛИНА` of `servis` is only kept in the area's descriptor. As all areas are in one tree, one transaction can change several of them.
+
+### A KOMPAS database
+
+| Area | Written by | Entries |
+|---|---|---|
+| `ADA` | `servis` | `ADMIN`: the administrator |
+| `SERVIS` | `servis` | `#NCNT` (count of areas, last code), `#NMS` (their names), one descriptor (11 words) per area |
+| `CXHD`, `CXFL`, `CXAT` | `ttc` | the schema: `NUM`, `Tnnn`, `Rnnn`, `Snnn`; `Frrrff`; `Asssaa`. Each is 48 characters |
+| data areas (`ОБЛАСТЬ` of `servis`, named by the records of the schema) | `kdb` | records |
+| journal areas (`ВИД ЖУРНАЛ`) | `kdb` | after-images |
+
+- **Records.** A DB-key is `area index × 2⁴⁰ + sequence number`. The area index is the order in which the records of the schema first name the areas (from 0); a record without an area goes to the first one. The sequence number comes from one counter for the whole database. In the tree, a record's key is 6 bytes: area index + 1, then the sequence number in 5 bytes, big-endian; its value is the record's words (8 bytes each): type, next and prior in the chain of its type, first and last of each set it owns, next, prior and owner of each set it is a member of, then the fields (`СИМВОЛ n` as n UTF-16 characters, padded to words).
+- **The anchor** is DB-key 1, in area 0: the next sequence number, the DB-key of the record `SYSTEM`, first and last of every singular set and of the chain of every record type.
+- **Journal entries.** Key `J` + sequence number (5 bytes, big-endian), so key order is the order of writing. Value: `W` (written) or `D` (erased), length and name of the area (UTF-8), length and bytes of the tree key of the record, datum length (4 bytes), datum.
+
+### Transactions and checks
+
 - **Copy-on-write.** A transaction never writes over a page the last commit can reach; changed pages get new numbers. Commit: write the pages, `fsync`, write the other of the two meta pages (`txnid`, root, freelist), `fsync`. The valid meta page with the higher `txnid` is current, so a crash at any point leaves the last commit. Every page has a CRC: a damaged page is reported (`page N damaged`), never used.
 - **Freelist.** Pages freed by a commit are reused by the next transactions, so the file stops growing when the data stop growing.
 - **Locking.** `flock` on the file, per transaction: shared for reading, exclusive for writing. Readers and the writer exclude each other, so freed pages can be reused at once; a reader re-reads the meta pages and drops its cache when another process has committed.
