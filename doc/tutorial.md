@@ -1,280 +1,55 @@
 # KOMPAS: a tutorial
 
-## 1. What it is
+This tutorial builds a small database from scratch, a collection of music CDs, and uses it to show every part of KOMPAS. All its files are in `tests/cd`, with their output in `tests/cd/expected.txt`.
 
-KOMPAS is a database management system (DBMS). It was built at the Computing Centre of the USSR Academy of Sciences in the 1980s. This is a re-implementation of it as command line tools for Linux and macOS.
+## 1. What KOMPAS is
 
-A DBMS stores information and finds it on request. Example: a warehouse. There are departments, materials, and issues of materials to departments. You want to know what is in stock, who took what, and for how much.
+KOMPAS is a database management system built at the Computing Centre of the USSR Academy of Sciences in the 1980s. This is a re-implementation of it as command line tools for Linux and macOS. The original programs are lost; the tools were rebuilt from schemas, decks, queries and programs of 1988-89 that survived (section 11).
 
-KOMPAS is a network DBMS (the CODASYL model). Data are records linked into chains called sets. From a record you can move to the records linked to it.
+KOMPAS is a network DBMS (the CODASYL model): records are linked into chains called sets, and a program moves from record to record along them. Its languages are Russian: keywords and names are Russian words. The examples keep them, with an explanation in English.
 
-The language of KOMPAS is Russian: commands, keywords and names are Russian words. Examples below keep them as they are, with an English explanation.
+## 2. Setting up
 
-## 2. Basic notions
-
-| Notion | Meaning | Warehouse example |
-|---|---|---|
-| Record | one card of data | the material "nails" |
-| Record type | a kind of card | `ВЕЩЬ` (item), `ОТДЕЛ` (department), `МАТЕР` (material group) |
-| Element | a field of a card | `НАЗВ` (name), `ЦЕНА` (price), `ОСТАТ` (in stock) |
-| Set | an owner - members link | a department owns its issues |
-| Key | the value you search by | item number |
-| Schema | description of all record types and sets | schema `CX-CK0` of the warehouse |
-| Area | a place on disk for data | `ДА-CK0`, warehouse data |
-| Journal | a log of changes, for recovery | `ЖУ-CK0` |
-| DB-key | internal address of a record | a number such as `3072` |
-
-The set is the central idea. Set `SY-ОТД` holds all departments in alphabetic order. Set `ОТ-СУМ` links a department with its amounts. A set is ordered by a key, so you can walk it forward and backward.
-
-## 3. How it is organized
-
-```
-   your program            MAD query
-         |                     |
-   DML (commands to find and change data)
-         |
-       KOMPAS (schema, sets, current records)
-         |
-       MARS (stores records by key)
-         |
-   files on disk
-```
-
-Tools:
-
-| Tool | Purpose |
-|---|---|
-| SERVIS | create, clear, release areas; journals; recovery |
-| TTC | load a schema written in the data description language (DDL) |
-| GEN | load data by formats |
-| MAD | query the database without programming |
-| DML in Pascal | your own Free Pascal programs that read and change the database |
-
-## 4. How to run
-
-Every tool is a command line program. It reads statements from standard input and prints results to standard output.
-
-| Command | Input | Does |
-|---|---|---|
-| `servis` | SERVIS statements | creates, clears, releases areas; journals; recovery |
-| `ttc` | a schema in DDL | loads the schema into the database |
-| `gen` | formats and data | loads data |
-| `mad` | a MAD query | queries and reports |
-| `predt` | Pascal with `&&...&&` DML | turns it into plain Free Pascal |
-| `kpc` | Pascal with `&&...&&` DML | `predt`, then `fpc`: makes a program |
-
-Free Pascal (`fpc`) must be installed. Build the tools once and put them on your `PATH`:
+Free Pascal 3.2 (`fpc`) must be installed. Build the tools once and put them on your `PATH`:
 
 ```sh
 make
 export PATH=$PWD/build/bin:$PATH
 ```
 
-The database is one file, given by `MARS_DB` (without it: `mars.db` in the current directory). `servis` creates it (step 1); the other tools do not create a missing file, they report `НЕТ СХЕМЫ` (no schema) with its name. All tools work on the same database, also at the same time:
-
-```sh
-export MARS_DB=~/store/store.db
-servis < areas.srv
-```
-
-To back up a database, copy the file.
-
-The examples of sections 5 and 6 are in `tests/` (`gold-ck0`, `cd`), with their output; `make test` runs them all.
-
-## 5. Step by step: a warehouse database
-
-The example comes from a real accounting system of 1988-89 by Pavel Severov (`tests/gold-ck0`).
-
-### Step 1. Allocate areas (SERVIS)
-
-A database needs room: an area for the schema, for the journal, for indexes, for data. Put the statements in a file `areas.srv` and run `servis < areas.srv`.
-
-```
-ОБЛАСТЬ CХ-CK0:ДЛИНА 2 ВАРИАНТ SSCXEM,
-ОБЛАСТЬ ЖУ-CK0:ДЛИНА 6 ВИД ЖУРНАЛ,
-ОБЛАСТЬ ИН-CK0:ДЛИНА 14 РЕЖИМ 0,
-ОБЛАСТЬ ДА-CK0:ДЛИНА 14 РЕЖИМ 0;
-КОНЕЦ.
-```
-
-- `ОБЛАСТЬ` - area; `ДЛИНА` - size in zones.
-- `ВАРИАНТ SSCXEM` - an area for the schema.
-- `ВИД ЖУРНАЛ` - a journal.
-- `КОНЕЦ.` - end.
-
-SERVIS answers with a line per area, for example `NEW AREA N = 1`.
-
-### Step 2. Describe the schema (TTC)
-
-The schema says which records exist and how they are linked. Put it in `store.ddl` and run `ttc < store.ddl`.
-
-```
-ЗАМЕНИ СХЕМА CX-CK0:РЕЖИМ 0;
-ОБЛАСТЬ ДА-CK0;
-
-ТИП СТРОКА СИМВОЛ 84;
-
-ЗАПИСЬ ОТДЕЛ:
-       ЭЛ НАЗВ  СИМВОЛ 6;
-
-ЗАПИСЬ ВЕЩЬ:
-       ЭЛ НАЗВ  СТРОКА КОНСИМ,
-       ЭЛ НОМЕР ЦЕЛОЕ,
-       ЭЛ ЕД    СИМВОЛ 6,
-       ЭЛ ЦЕНА  ДЕЙСТВ РАЗМЕР 99900,
-       ЭЛ ОСТАТ ДЕЙСТВ РАЗМЕР 99999000;
-
-НАБОР SY-ОТД:
-       ЧЛЕН ОТДЕЛ, ПРИВЯЗ ИН-CK0,
-       УПОРЯД ПО-ЭЛЕ НАЗВ;
-
-НАБОР SY-ВЕЩ:
-       ЧЛЕН ВЕЩЬ, ПРИВЯЗ ИН-CK0,
-       УПОРЯД ПО-ЭЛЕ НОМЕР;
-
-КОНЕЦ.
-```
-
-How to read it:
-
-- `ЗАПИСЬ ВЕЩЬ` - record type "item" with five elements (`ЭЛ`): name, number, unit, price, stock.
-- Element types: `СИМВОЛ 6` - 6 characters, `ЦЕЛОЕ` - integer, `ДЕЙСТВ` - real; `ТИП` defines your own type.
-- `НАБОР SY-ВЕЩ` - set of all items; `ЧЛЕН` - member record; `УПОРЯД ПО-ЭЛЕ НОМЕР` - ordered by number.
-- A set with no owner (`ВЛАДЕЛ`) belongs to the system: it is an entry point into the database.
-- `НАБОР ВЕ-ВЗЯ: ВЛАДЕЛ ВЕЩЬ, ЧЛЕН ВЗЯЛ` would link an item (owner) with its issues (members).
-
-TTC prints the parsed schema: types, records, sets.
-
-### Step 3. Load data (GEN)
-
-Formats and data go into one file, `load.gen`; run `gen < load.gen`. First a format: which fields are in a data line and what to do with them.
-
-```
-ФОРМАТ ОТДЕЛ
-  ОТДЕЛ.НАЗВ*
-  ПАСКАЛ "&&ПОСТАВ ОТДЕЛ&&"
-```
-
-Then the data, one record between `[` and `*`:
-
-```
-ОТДЕЛ [ ОТД-1*
-        ОТД-2*
-        СКЛАД*]
-```
-
-`ПОСТАВ` (store) writes a new record into the database. `_` separates fields, `*` ends a record.
-
-### Step 4. Query the database (MAD)
-
-MAD is a query language. Put the query in a file and run `mad < report.mad`. Example: print all departments, then all items.
-
-```
-РЕЖИМ 2;ЖУРНАЛ ЖУ-CK0;ПОДСХЕ CX-CK0;
-
-НАЙТИ ПЕРВУЮ В SY-ОТД;
-Б:ВЗЯТЬ;ВЫДАТЬ .НАЗВ,'*';НАЙТИ СЛЕДУЮ;ЕСЛИ СОС=0 ТО НА Б;
-
-НАЙТИ ПЕРВУЮ В SY-ВЕЩ;
-А:ВЗЯТЬ;
-  ВЫДАТЬ .НОМЕР,'_',.ЕД,'_',.ЦЕНА,'_',.ОСТАТ;
-  НАЙТИ СЛЕДУЮ В SY-ВЕЩ;ЕСЛИ СОС=0 ТО НА А;
-СБРОСИ;ЗАВЕРШ;КОНЕЦ
-```
-
-How to read it:
-
-- `НАЙТИ ПЕРВУЮ В SY-ОТД` - find the first department.
-- `ВЗЯТЬ` - get (read) the record.
-- `ВЫДАТЬ .НАЗВ` - print the field.
-- `НАЙТИ СЛЕДУЮ` - find the next one.
-- `СОС` - status: `0` means found, otherwise the set has ended.
-- `ЕСЛИ СОС=0 ТО НА Б` - if found, go to label `Б` again.
-- `СБРОСИ;ЗАВЕРШ` - finish the work with the database.
-
-More MAD commands:
-
-| Command | Meaning |
-|---|---|
-| `НАЙТИ ПО-КЛЮ 'АС0001' В SY-ТЕМ` | find a record by key |
-| `НАЙТИ ПРЕДЫД`, `НАЙТИ ПОСЛЕД` | previous record, last record |
-| `НАЙТИ ВЛАДЕЛ В ВЕ-ВЗЯ` | go to the owner in a set |
-| `ВЗЯТЬ БД-КЛЮ`, `ЗАМЕНИ БД-КЛЮ` | read or change the DB-key |
-
-### Step 5. Your own program (DML in Pascal)
-
-DML commands are written right inside a Free Pascal program, between `&&` and `&&`. Names in the program may be Russian, like the names of the schema; `predt` turns them into ASCII names and the DML into calls of the engine. A `CHAR` holds any letter, Russian or not; strings and text are UTF-8. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `INTEGER`:
-
-```
-&&НАЙТИ ПО-КЛЮ В SY-ОТД&&
-WHILE (COCT=0) AND NOT НАШЛИ DO BEGIN
-  &&ВЗЯТЬ&&
-  IF НАЗВ=НН THEN НАШЛИ:=TRUE;
-  &&НАЙТИ СЛЕДУЮ В SY-ОТД&&
-END;
-```
-
-Main DML commands (the number is the KOMPAS operation code):
-
-| Code | Command | Meaning |
+| Tool | Reads | Does |
 |---|---|---|
-| 01 | `ПОСТАВ` | store a new record |
-| 02 | `НАЙТИ ПО-КЛЮ` | find by key |
-| 04 | `НАЙТИ ПЕРВУЮ` | first in a set |
-| 05 | `НАЙТИ ВЛАДЕЛ` | owner in a set |
-| 06 | `ВКЛЮЧИ` | connect a record into a set |
-| 07 | `УБРАТЬ` | erase a record |
-| 08 | `ИСКЛЮЧИ` | disconnect from a set |
-| 11 | `НАЙТИ ПОСЛЕД` | last in a set |
-| 12 | `НАЙТИ СЛЕДУЮ` | next |
-| 13 | `НАЙТИ ПРЕДЫД` | previous |
-| 15 | `ЗАМЕНИ` | modify a record |
-| 16 | `ВЗЯТЬ` | get a record |
+| `servis` | area statements | creates the database and its areas; clears, recovers (sections 4, 9) |
+| `ttc` | a schema in DDL | stores the schema (section 5) |
+| `gen` | a loader deck: formats and data | loads data (section 6) |
+| `mad` | a query | prints reports, without programming (section 7) |
+| `kpc` | a Pascal program with DML | compiles it (section 8) |
 
-After each command check the status `СОСТ`: `0` means success. Section 6, step 5, shows how to build and run such a program.
+Each tool reads standard input and writes standard output. All of them work on one database: the file named by `MARS_DB` (without it, `mars.db` in the current directory). Only `servis` creates the file; the others report a missing one. Several tools may work on the same file at the same time.
 
-### Step 6. Maintenance (SERVIS)
-
-These statements are also fed to `servis`.
-
-| Statement | Meaning |
-|---|---|
-| `ОСВОБО ДА-CK0;` | release an area for maintenance (needed before `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`) |
-| `ОЧИСТИ ДА-CK0;` | erase the data of an area, keep the area |
-| `ЖУРНАЛ ЖУ-CK0 СБРОСИ.` | empty a journal and start it again |
-| `ВОССТА ИНД-CK,ДАН-CK;` | replay the journal into areas |
-
-In the 1988 decks these statements stand before the data of a GEN deck, to clear the areas before a reload: `ОСВОБО` and `ОЧИСТИ` of all areas, then `ЖУРНАЛ … СБРОСИ`. `gen` gives them to `servis` before the load, as the 1988 job did. A deck that resets a journal (`ЖУРНАЛ … СБРОСИ`) also has its load written to that journal. `servis` keeps the description of its areas in the database, so they work in any later run. See section 6, step 6.
-
-## 6. Example: a CD collection
-
-Here we build a new database from scratch: a home collection of music CDs. We keep artists, their discs, and the tracks of each disc. All files of this example are in `tests/cd/`.
-
-Make a working directory and point `MARS_DB` at a database file in it:
+For this tutorial:
 
 ```sh
 mkdir -p ~/cd && cd ~/cd
 export MARS_DB=~/cd/cd.db
 ```
 
-Every step is one input file and one command.
+## 3. The design
 
-### The design
+A database holds **records**. Records of one **type** have the same **elements** (fields). We need three types:
 
-Three record types:
-
-| Record | Elements |
+| Record type | Elements |
 |---|---|
 | `АРТИСТ` (artist) | `ИМЯ` name, `СТРАНА` country |
 | `ДИСК` (disc) | `НОМЕР` catalogue number, `НАЗВ` title, `ГОД` year, `ЦЕНА` price |
 | `ТРЕК` (track) | `НОМЕР` track number, `НАЗВ` title, `ДЛИТ` length in seconds |
 
-Four sets:
+Records are linked by **sets**. A set links an **owner** record with its **member** records, kept in the order of a **key** element, so they can be walked forward and backward. A set whose owner is the system (`SY-…`) holds all records of a type: it is where a search starts. We need four sets:
 
 | Set | Owner | Member | Order | Used for |
 |---|---|---|---|---|
-| `SY-АРТ` | system | `АРТИСТ` | by name | list of all artists |
-| `SY-ДИС` | system | `ДИСК` | by number | list of discs, find a disc by number |
+| `SY-АРТ` | system | `АРТИСТ` | by name | the list of artists |
+| `SY-ДИС` | system | `ДИСК` | by number | the list of discs, a disc by its number |
 | `АР-ДИС` | `АРТИСТ` | `ДИСК` | by year | the discs of an artist |
 | `ДИ-ТРЕ` | `ДИСК` | `ТРЕК` | by number | the tracks of a disc |
 
@@ -284,29 +59,27 @@ SY-АРТ ──> АРТИСТ ──АР-ДИС──> ДИСК ──ДИ-ТР
 SY-ДИС ─────────────────────────┘
 ```
 
-Four areas: `СХ-ДИС` (schema), `ЖУ-ДИС` (journal), `ИН-ДИС` (indexes), `ДА-ДИС` (data). The records go into the area named by `ОБЛАСТЬ` in the schema.
+The **schema** describes the types and sets. Records live in **areas**, named parts of the database: we use `ДА-ДИС` for the records, `ИН-ДИС` for the sets, `СХ-ДИС` for the schema and `ЖУ-ДИС` for the **journal**, a log of changes used for recovery.
 
-Names of records, elements and areas have at most 6 characters. A set name has the form `XX-XXX`.
+Names of records, elements and areas have at most 6 characters; a longer name is cut. A set name has the form `XX-XXX`.
 
-### Step 1. Allocate areas
+## 4. Areas: `servis`
 
 File `areas.srv`:
 
 ```
-ОБЛАСТЬ СХ-ДИС:ДЛИНА 2 ВАРИАНТ SSCXEM,
-ОБЛАСТЬ ЖУ-ДИС:ДЛИНА 4 ВИД ЖУРНАЛ,
-ОБЛАСТЬ ИН-ДИС:ДЛИНА 4 РЕЖИМ 0,
-ОБЛАСТЬ ДА-ДИС:ДЛИНА 8 РЕЖИМ 0;
+ОБЛАСТЬ СХ-ДИС:ВАРИАНТ SSCXEM,
+ОБЛАСТЬ ЖУ-ДИС:ВИД ЖУРНАЛ,
+ОБЛАСТЬ ИН-ДИС:РЕЖИМ 0,
+ОБЛАСТЬ ДА-ДИС:РЕЖИМ 0;
 КОНЕЦ.
 ```
 
-`ДЛИНА` was the size in zones of 1024 words. It is checked and kept, but an area grows as needed.
+`ОБЛАСТЬ` (area) names an area; `ВИД ЖУРНАЛ` makes it a journal. Statements are separated by `,` or `;`, and `КОНЕЦ.` ends the input. An area has no size: it grows as needed.
 
 ```sh
 servis < areas.srv
 ```
-
-Output:
 
 ```
 SERVIS PROCESSOR 15.1
@@ -318,9 +91,9 @@ New Area N =          4
 EXN=         0
 ```
 
-One line per area; `EXN= 0` means no errors. In names, Latin and Cyrillic letters that look alike are one letter for KOMPAS, so names are printed in one form: `SУ-АРТ` has a Cyrillic `У`.
+One line per area; `EXN= 0` means no errors. The file `cd.db` now exists.
 
-### Step 2. Describe the schema
+## 5. The schema: `ttc`
 
 File `cd.ddl`:
 
@@ -365,47 +138,27 @@ File `cd.ddl`:
 КОНЕЦ.
 ```
 
-Notes:
-
-- `ТИП` - your own types: a text of 40 characters, a number of seconds up to 9999.
-- `РАЗМЕР` gives the digits of a number: nines are integer digits, trailing zeros are decimals. `ЦЕНА ДЕЙСТВ РАЗМЕР 99900` is printed as `14.00`.
-- `?*...*` - a comment.
-- `ДУБЛИК РАЗРЕШ` - duplicates allowed: an artist may release two discs in one year. Without it a second record with the same key is refused.
-- A set with `ВЛАДЕЛ` links an owner with its members. A new member joins automatically: a new `ТРЕК` goes into the `ДИ-ТРЕ` of the current `ДИСК`. With `ВКЛЮЧЕ ВРУЧНУ` you connect members yourself with `ВКЛЮЧИ`.
-- `ВЫБОР s ИСПОЛЬЗ R.F` (not used here) picks the owner for `ВКЛЮЧИ` by the key in `R.F`, looked up in set `s`.
+- `ЗАМЕНИ СХЕМА` (replace the schema): you may run `ttc` again after a fix. `ОБЛАСТЬ ДА-ДИС` is the area of the records that follow.
+- `ЗАПИСЬ` is a record type, `ЭЛ` an element. Element types: `СИМВОЛ n` (n characters), `ЦЕЛОЕ` (integer), `ДЕЙСТВ` (real). `ТИП` defines a type of your own.
+- `РАЗМЕР` gives the digits of a number: nines are integer digits, trailing zeros are decimals. `ДЕЙСТВ РАЗМЕР 99900` is printed as `14.00`.
+- `НАБОР` is a set: `ВЛАДЕЛ` its owner (none: the system), `ЧЛЕН` its member, `УПОРЯД ПО-ЭЛЕ` its key. `ДУБЛИК РАЗРЕШ` allows two members with one key (two discs of one year); without it a second one is refused.
+- A new member joins its sets by itself, under the current owner: a new `ТРЕК` goes into the `ДИ-ТРЕ` of the current `ДИСК`. With `ВКЛЮЧЕ ВРУЧНУ` in a set you connect members yourself (`ВКЛЮЧИ`, section 8), and `ВЫБОР s ИСПОЛЬЗ R.F` picks the owner by the key in `R.F`, looked up in set `s`.
+- `?*…*` is a comment.
 
 ```sh
 ttc < cd.ddl
 ```
 
-Output (shortened):
+`ttc` prints the schema as it understood it and ends with:
 
 ```
-TTC15
-=== TYPES          2 ===
- СТРОКА BASE=СИМВОЛ SZ=
- СЕКУНД BASE=ЦЕЛОЕ  SZ=9999
-=== RECORDS          3 ===
- АРТИСТ FIELDS=         2
-   ИМЯ    СТРОКА        КОНСИМ
-   СТРАНА СИМВОЛ
- ДИСК   FIELDS=         4
- ...
-=== SETS          4 ===
- ...
- ДИ-ТРЕ MEMBER=ПО-ЭЛЕ OWNER=ДИСК   ATT=         5
-   ВЛАДЕЛ ДИСК
-   ЧЛЕН   ТРЕК
-   ПРИВЯЗ ИН-ДИС
-   УПОРЯД ПО-ЭЛЕ
-   ПОЛЕ   НОМЕР
 SAVED=         9 MARSERR=         0
 EXN=         0
 ```
 
-Check the counts: 2 types, 3 records, 4 sets. `ЗАМЕНИ СХЕМА` replaces the old schema, so you may run `ttc` again after a fix.
+Check the counts at the top of each part: `TYPES 2`, `RECORDS 3`, `SETS 4`. Set names are printed with a Cyrillic `У`, `SУ-АРТ` (section 10).
 
-### Step 3. Load data
+## 6. Loading data: `gen`
 
 File `load.gen` has formats, `КОНЕЦ`, then the data:
 
@@ -435,19 +188,15 @@ File `load.gen` has formats, `КОНЕЦ`, then the data:
         2_205_Твердый знак*]
 ```
 
-How to read it:
-
-- `ФОРМАТ ДИСК` - a format named `ДИСК`; then the fields of a data line, in order. `_` separates fields, `*` ends a line.
-- `ПАСКАЛ "..."` - what to do with each line: Pascal text with DML. Here: store a new record. A format may also set variables, call procedures, find owners first (see `tests/gold-ck0/deck6.gen`).
-- `ДИСК [ ... ]` - data lines for the format `ДИСК`. Line breaks inside a block are blanks.
-- The order matters. A disc goes under the last artist, a track under the last disc: they are the current owners of `АР-ДИС` and `ДИ-ТРЕ`.
+- `ФОРМАТ ДИСК` lists the elements of a data line in order; `_` separates them and `*` ends the line.
+- `ПАСКАЛ "…"` is what to do with each line: Pascal with DML (section 8). Here `ПОСТАВ` stores a new record. A format may also set variables, call procedures and find owners first.
+- `ДИСК [ … ]` is a block of data lines for format `ДИСК`; a line break inside it is a blank.
+- The order matters: a disc goes under the last artist, a track under the last disc, the current owners (section 5).
 - The track lengths are sample values.
 
 ```sh
 gen < load.gen
 ```
-
-As the original GEN did, `gen` writes a loader program, passes it through `predt` and `fpc`, and runs it on the data. This takes a few seconds. Output:
 
 ```
 АРТИСТ      2
@@ -456,13 +205,11 @@ As the original GEN did, `gen` writes a loader program, passes it through `predt
 ОШИБОК: 0
 ```
 
-One line per format: the number of data lines. A failed line is reported as `ГЕН: ОШИБКА <reason>: <format> СТРОКА <n>`, for example `ДУБЛИКАТ КЛЮЧА`. `gen -k` keeps the loader in a work directory and prints its name.
+One line per format, with its count of data lines. `gen` writes a loader program, compiles it and runs it, as the original GEN did, so it takes a few seconds; `gen -k` keeps the program and prints where. A bad line is reported as `ГЕН: ОШИБКА <reason>: <format> СТРОКА <n>`, and the other lines are stored. So after errors, fix the deck, remove `cd.db` and repeat sections 4-6, or the good lines are stored twice.
 
-If `gen` stops with errors, delete the database and repeat steps 1-3: otherwise the good lines are stored twice.
+## 7. Queries: `mad`
 
-### Step 4. Query the database
-
-A list of all discs. File `discs.mad`:
+File `discs.mad`, all discs:
 
 ```
 РЕЖИМ 2;ЖУРНАЛ ЖУ-ДИС;ПОДСХЕ СХ-ДИС;
@@ -477,34 +224,30 @@ A list of all discs. File `discs.mad`:
 mad < discs.mad
 ```
 
-Output:
-
 ```
 1001 1988 12.50 Группа крови
 1002 1989 14.00 Звезда по имени Солнце
 1003 1983 10.00 Радио Африка
 ```
 
-- `ВЫДАТЬ` prints one line: `'text'`, `.FIELD` of the current record, `REC.FIELD` of the current record of type `REC`, and `/` for a line break.
-- `РЕЖИМ`, `ЖУРНАЛ`, `ПОДСХЕ`, `СБРОСИ`, `ЗАВЕРШ` are accepted; the database is the one in `MARS_DB`.
+- `НАЙТИ ПЕРВУЮ В SY-ДИС` finds the first disc of the set; `НАЙТИ СЛЕДУЮ` the next one.
+- `ВЗЯТЬ` reads the record found.
+- `ВЫДАТЬ` prints one line: `'text'`, `.ЭЛ` (an element of the record read), `REC.ЭЛ` (of the current record of type `REC`), `/` (a line break). A text element is printed at its full width.
+- `СОС` is the status of the last statement: `0` found, otherwise the set has ended. `ЕСЛИ СОС=0 ТО НА А` goes back to label `А`.
+- The first line and `СБРОСИ;ЗАВЕРШ` open and close the work as in the original; they may be left out.
 
-One disc with its artist and tracks. File `tracks.mad`:
+File `tracks.mad`, one disc with its artist and tracks:
 
 ```
+РЕЖИМ 2;ЖУРНАЛ ЖУ-ДИС;ПОДСХЕ СХ-ДИС;
 НАЙТИ ПО-КЛЮ 1002 В SY-ДИС;
 ВЗЯТЬ;ВЫДАТЬ .НАЗВ;
 НАЙТИ ВЛАДЕЛ В АР-ДИС;ВЗЯТЬ;ВЫДАТЬ .ИМЯ;
 НАЙТИ ПЕРВУЮ В ДИ-ТРЕ;
 Т:ВЗЯТЬ;ВЫДАТЬ .НОМЕР,' ',.ДЛИТ,' ',.НАЗВ;
   НАЙТИ СЛЕДУЮ В ДИ-ТРЕ;ЕСЛИ СОС=0 ТО НА Т;
-КОНЕЦ
+СБРОСИ;ЗАВЕРШ;КОНЕЦ
 ```
-
-- `НАЙТИ ПО-КЛЮ 1002 В SY-ДИС` - find the disc by its number.
-- `НАЙТИ ВЛАДЕЛ В АР-ДИС` - go up to the artist who owns the disc.
-- `НАЙТИ ПЕРВУЮ В ДИ-ТРЕ` - the first track of the disc. KOMPAS remembers the current record of each set, so the disc is still current in `ДИ-ТРЕ`.
-
-Output of `mad < tracks.mad`:
 
 ```
 Звезда по имени Солнце
@@ -514,7 +257,11 @@ Output of `mad < tracks.mad`:
 3 268 Пачка сигарет
 ```
 
-Nested walks and branches. File `artists.mad`:
+- `НАЙТИ ПО-КЛЮ 1002 В SY-ДИС` finds a disc by its key.
+- `НАЙТИ ВЛАДЕЛ В АР-ДИС` goes up to its owner, the artist.
+- `НАЙТИ ПЕРВУЮ В ДИ-ТРЕ` finds the first track of the disc. KOMPAS keeps a current record for each set, so the disc is still current in `ДИ-ТРЕ` after the move to the artist.
+
+File `artists.mad`, nested walks and a branch:
 
 ```
 ?* ВСЕ ИСПОЛНИТЕЛИ И ИХ ДИСКИ ПО ГОДАМ *
@@ -529,8 +276,6 @@ Nested walks and branches. File `artists.mad`:
 КОНЕЦ
 ```
 
-Output:
-
 ```
 Аквариум                                 (Россия)
    1983 Радио Африка
@@ -539,11 +284,11 @@ Output:
    1989 Звезда по имени Солнце
 ```
 
-`ЕСЛИ СОС=0 ТО_( ... _)ИНАЧЕ ...` - a branch; `СОС` is the status of the last `НАЙТИ`. A text field is printed at its full width. A mistake in the query is reported as `ОШИБКА В СТРОКЕ n: ...` and nothing is run.
+`ЕСЛИ … ТО_( … _)ИНАЧЕ …` is a branch with a block. `НАЙТИ ПОСЛЕД` (last) and `НАЙТИ ПРЕДЫД` (previous) walk a set backward. A mistake in a query is reported as `ОШИБКА В СТРОКЕ n: …`, and nothing is run.
 
-### Step 5. Write a program
+## 8. Programs: DML in Pascal
 
-MAD is enough for reports. For computations and dialogs, write a Pascal program with DML. File `cdtime.pas`: read a disc number, print the artist, the title and the total playing time.
+For computing and dialog, write a Free Pascal program with DML statements between `&&` and `&&`. File `cdtime.pas` reads a disc number and prints the artist, the title and the total playing time:
 
 ```
 PROGRAM CDTIME(INPUT,OUTPUT);
@@ -572,26 +317,17 @@ BEGIN
 END.
 ```
 
-- `&& ПОДСХЕ СХ-ДИС &&` - declares the records of the schema as Pascal variables `АРТИСТ`, `ДИСК`, `ТРЕК` (types `ZZАРТИСТ` ...), and the status `СОСТ`.
+- `&& ПОДСХЕ СХ-ДИС &&` declares a variable for each record type of the schema (`АРТИСТ`, `ДИСК`, `ТРЕК`) and the status `СОСТ`.
 - `ВЗЯТЬ` copies the current record into its variable; `ПОСТАВ` and `ЗАМЕНИ` copy the variable into the database.
-- To find by key, put the key into the record variable (`ДИСК.НОМЕР := N`) and call `НАЙТИ ПО-КЛЮ`. Or give the key: `НАЙТИ ПО-КЛЮ N В SY-ДИС`.
-- `СОСТ` - status of the last DML statement, `0` means success.
-
-Build and run it:
+- To find by key, put the key into the variable (`ДИСК.НОМЕР := N`) and call `НАЙТИ ПО-КЛЮ`, or give the key: `НАЙТИ ПО-КЛЮ N В SY-ДИС`.
+- `ЖУРНАЛ ЖУ-ДИС` writes the changes of the program to the journal (section 9).
+- `СОСТ` is the status of the last DML statement, `0` on success (the codes are in section 12).
+- Names may be Russian, like those of the schema. Without a `{$mode}` directive the program is compiled in Turbo Pascal mode, with 64-bit `INTEGER`.
 
 ```sh
 kpc cdtime.pas
 echo 1002 | ./cdtime
 ```
-
-`kpc` is a short way to run the two steps (`$KOMPAS` is the directory of this repository):
-
-```sh
-predt cdtime.pas cdtime_fpc.pas         # DML and Russian names -> plain Free Pascal
-fpc -Fu$KOMPAS/build/lib -ocdtime cdtime_fpc.pas
-```
-
-`predt` reads the schema from `MARS_DB`, so the database must exist. Output:
 
 ```
 Кино
@@ -599,9 +335,11 @@ fpc -Fu$KOMPAS/build/lib -ocdtime cdtime_fpc.pas
 ВСЕГО 12 МИН 3 СЕК
 ```
 
-With a wrong number, `echo 1777 | ./cdtime` prints `НЕТ ДИСКА 1777`.
+With a number not in the database, `echo 1777 | ./cdtime` prints `НЕТ ДИСКА 1777`.
 
-Adding a track to disc 1002:
+`kpc` runs `predt`, which turns the DML and the Russian names into plain Free Pascal, then `fpc`. `predt` reads the schema from `MARS_DB`, so the database must exist when you compile.
+
+To add a track to disc 1002:
 
 ```
 ДИСК.НОМЕР := 1002;
@@ -611,20 +349,40 @@ Adding a track to disc 1002:
 IF СОСТ <> 0 THEN WRITELN('ОШИБКА ', СОСТ:1);
 ```
 
-The disc found by key is the current owner, so the new track joins its `ДИ-ТРЕ` in order of `НОМЕР`. Changes are written to the journal named by `ЖУРНАЛ`.
+The disc found is the current owner of `ДИ-ТРЕ`, so the track joins it, in order of `НОМЕР`.
 
-### Step 6. Maintenance
+The DML statements, with their KOMPAS operation codes:
 
-The database is the file `MARS_DB`. Each statement that changes data is committed whole, so a crash or a power failure leaves the database as after the last statement (a `gen` load: its last 1000 records). Back up and restore it as files, when no tool is running:
+| Code | Statement | Does |
+|---|---|---|
+| 01 | `ПОСТАВ R` | store a new record of type R |
+| 02 | `НАЙТИ ПО-КЛЮ В s` | find by key |
+| 04 | `НАЙТИ ПЕРВУЮ В s` | first member of a set |
+| 05 | `НАЙТИ ВЛАДЕЛ В s` | owner in a set |
+| 06 | `ВКЛЮЧИ В s` | connect the current record into a set |
+| 07 | `УБРАТЬ` | erase the current record; its members are disconnected |
+| 08 | `ИСКЛЮЧ ИЗ s` | disconnect from a set |
+| 11 | `НАЙТИ ПОСЛЕД В s` | last member |
+| 12 | `НАЙТИ СЛЕДУЮ` | next member |
+| 13 | `НАЙТИ ПРЕДЫД` | previous member |
+| 15 | `ЗАМЕНИ R`, `ЗАМЕНИ R.ЭЛ НА v` | change the current record; its sets are reordered if a key changed |
+| 16 | `ВЗЯТЬ` | read the current record |
+| | `ВЗЯТЬ БД-КЛЮ R НА K`, `ЗАМЕНИ БД-КЛЮ R НА K` | keep the address (DB-key) of the current record in `K`; make it current again later |
+
+## 9. Keeping the database
+
+**Safety.** Each statement that changes data is done whole or not at all, so a crash, even a power failure, leaves the database as after the last statement. A `gen` load commits every 1000 records and at the end. A disk that spoils the file is reported as `page N damaged`.
+
+**Backup.** Copy the file while no tool is running:
 
 ```sh
 cp ~/cd/cd.db ~/cd-$(date +%F).db     # back up
 cp ~/cd-2026-11-20.db ~/cd/cd.db      # restore
 ```
 
-To reload from scratch: remove the file and repeat steps 1-3. To change the schema (for example a new element `ЖАНР`): unload the data with a MAD query in GEN format (as `tests/gold-zt0/deck9.mad` does), fix `cd.ddl`, and reload.
+**Reload and schema changes.** To start again, remove the file and repeat sections 4-6. To change the schema (say, a new element `ЖАНР`), unload the data with a query that prints them in the format of a loader deck (as `tests/gold-zt0/deck9.mad` does), fix `cd.ddl`, and reload.
 
-The journal (`ЖУРНАЛ` in a program or query) keeps the new image of every record that a statement writes or erases. `ВОССТА` replays these images into the areas named, in the order written, so `ОЧИСТИ` then `ВОССТА` rebuilds an area as it was at the end of the journal:
+**The journal.** A program or query that names a journal (`ЖУРНАЛ ЖУ-ДИС`) writes there the new image of every record it changes. `servis` can replay the journal into areas:
 
 ```
 ОСВОБО ИН-ДИС,ДА-ДИС;
@@ -633,62 +391,31 @@ The journal (`ЖУРНАЛ` in a program or query) keeps the new image of every 
 КОНЕЦ.
 ```
 
-This is exact only when the journal covers everything since the areas were empty: empty the journal (`ЖУРНАЛ ЖУ-ДИС СБРОСИ.`) right after `ОЧИСТИ`, before any change, and make all changes through programs or queries that name the journal.
+This rebuilds the areas only if the journal holds everything since they were empty. So clear the journal (`ЖУРНАЛ ЖУ-ДИС СБРОСИ.`) right after clearing the areas, and make every later change through programs and queries that name it. A loader deck can do that itself: put `ОСВОБО`, `ОЧИСТИ` and `ЖУРНАЛ … СБРОСИ` before the data, as the decks of section 11 do, and `gen` runs them through `servis` and journals the load. A deck without them, like `load.gen`, is not journaled, so keep the deck and a backup.
 
-A full reload is done that way by its deck: put `ОСВОБО` and `ОЧИСТИ` of all areas and `ЖУРНАЛ ЖУ-ДИС СБРОСИ.` before the data (as the 1988 decks do), and `gen` runs them and journals the load. A deck that only adds data (like `load.gen` here) is not journaled: after it, `ВОССТА` cannot restore the areas, so keep the decks and a backup.
+The `servis` statements for existing areas:
 
-A simple routine:
-
-| When | What |
+| Statement | Does |
 |---|---|
-| after each load or big change | `mad < discs.mad` to check |
-| weekly | back up the file |
-| after a failure of the disk (`page N damaged`) | restore the last backup, repeat the changes since |
-| data built only by journaled programs, an area spoiled | `ОСВОБО`, `ОЧИСТИ`, `ВОССТА` of the area |
+| `ОСВОБО ДА-ДИС;` | release an area (required by `УБРАТЬ ОБЛАСТЬ` and `ЖУРНАЛ … ЗАКРЕПИ`) |
+| `ОЧИСТИ ДА-ДИС;` | erase the records of an area, keep the area |
+| `ЖУРНАЛ ЖУ-ДИС СБРОСИ.` | empty a journal |
+| `ВОССТА ИН-ДИС,ДА-ДИС;` | replay the journals into the areas |
+| `УБРАТЬ ОБЛАСТЬ ДА-ДИС;` | delete an area |
 
-### Step 7. Typical tasks
+## 10. Letters and case
 
-| Task | Tool | How |
-|---|---|---|
-| Add an artist with discs | `gen` | a `load.gen` with the formats and only the new data blocks |
-| Add one track | program | `НАЙТИ ПО-КЛЮ` the disc, `ПОСТАВ ТРЕК` (step 5) |
-| List the discs of an artist | `mad` | `НАЙТИ ПО-КЛЮ 'Кино' В SY-АРТ;` (the case of a key matters), then walk `АР-ДИС` |
-| List all artists | `mad` | walk `SY-АРТ`: they come in order of `ИМЯ` |
-| Change a price | program | `НАЙТИ ПО-КЛЮ`, `ЗАМЕНИ ДИСК.ЦЕНА НА 15.00` |
-| Renumber a disc | program | `ВЗЯТЬ`, change `ДИСК.НОМЕР`, `ЗАМЕНИ ДИСК`: `SY-ДИС` is reordered |
-| Delete a disc | program | erase its tracks (`УБРАТЬ` each), then `УБРАТЬ ДИСК`; members left are disconnected |
-| Move a disc to another artist | program | `ИСКЛЮЧ ИЗ АР-ДИС`, find the new artist, `ВКЛЮЧИ В АР-ДИС` |
-| Total time of a disc | program | `cdtime` (step 5) |
-| Remember a place and come back | program | `ВЗЯТЬ БД-КЛЮ ДИСК НА K`, later `ЗАМЕНИ БД-КЛЮ ДИСК НА K` |
+All text is UTF-8: schemas, decks, queries, programs, input and output. The original KOMPAS had upper case only, and a Latin `A` and a Cyrillic `А` were one code. Here names and data follow different rules.
 
-## 7. Typical tasks
-
-| Task | What to do |
-|---|---|
-| Create a new database | steps 1, 2, 3 with the same `MARS_DB` |
-| Get a report | a MAD query (step 4) |
-| Find one record | `НАЙТИ ПО-КЛЮ` |
-| Walk linked records | `НАЙТИ ПЕРВУЮ В <set>`, then `НАЙТИ СЛЕДУЮ` |
-| Find who owns a record | `НАЙТИ ВЛАДЕЛ В <set>` |
-| Change a field | `ВЗЯТЬ`, change the field, `ЗАМЕНИ` |
-| Delete a record | `НАЙТИ ...`, then `УБРАТЬ` |
-| `...: page N damaged` | the disk spoiled the file: restore the backup of `MARS_DB` (section 6, step 6) |
-
-## 8. Text: UTF-8 and mixed case
-
-All text of KOMPAS is UTF-8: schemas, decks, queries, programs, input and output. The terminal locale does not matter.
-
-The original KOMPAS worked in the 8-bit GOST code. It had upper case only, and a Latin `A` and a Cyrillic `А` were one code. Here the rules are split in two.
-
-**Names and keywords are folded, as in the original.** Case does not matter, `Ё` is `Е`, and Latin letters that look like Cyrillic ones (`A B C E H K M O P T X Y`) are those Cyrillic letters. So all these are the same name:
+**Names and keywords are folded, as in the original.** Case does not matter, `Ё` is `Е`, and Latin letters that look like Cyrillic ones (`A B C E H K M O P T X Y`) are those Cyrillic letters. These are one name:
 
 ```
 СЛОВО.ИМЯ    слово.имя    CЛOBO.ИMЯ
 ```
 
-The last one is typed partly in Latin. Old texts often mix the two alphabets like this, and they still work. KOMPAS prints a name in one form: upper case, look-alikes as Cyrillic. A name is cut to 6 characters.
+The last one is typed partly in Latin, as old texts often are. KOMPAS prints a name in one form, upper case with Cyrillic look-alikes: `SY-АРТ` is printed `SУ-АРТ`.
 
-**Data are kept exactly as written**, in any alphabet and case. The example `tests/utf8` loads these words with GEN:
+**Data are kept exactly as written**, in any alphabet and case. `tests/utf8` loads these words:
 
 ```
 ФОРМАТ CЛOBO
@@ -708,7 +435,7 @@ CЛOBO.ИMЯ_cлoвo.ЗHAЧ_СЛОВО.БУКВА*
         ABB_латиница, похожая_A*]
 ```
 
-A MAD query walks the set `SY-СЛО`, ordered by `ИМЯ`, and then looks for two keys:
+A query walks the set ordered by `ИМЯ`, then looks for the keys `Ёж` and `ёж`:
 
 ```
 ABB         |латиница, похожая       |A|
@@ -726,13 +453,11 @@ apple       |яблоко                  |a|
 НЕТ ёж
 ```
 
-What it shows:
-
-- **Order.** A set is ordered by the codes of the letters (Unicode): Latin upper case, Latin lower case, other alphabets, then Cyrillic. In Cyrillic, upper case comes before lower case, `Ё` before `А`, and `ё` after `я`. `ABB` (Latin) and `АБВ` (Cyrillic) are different keys.
+- **Order** is by Unicode code: Latin upper case, Latin lower case, other alphabets, Cyrillic. In Cyrillic, upper case comes before lower case, `Ё` before `А`, and `ё` after `я`. `ABB` (Latin) and `АБВ` (Cyrillic) are different keys.
 - **Keys are exact.** `НАЙТИ ПО-КЛЮ 'Ёж'` finds the record, `'ёж'` does not. To find a key whatever its case, store it in one case.
-- **Length counts letters.** `СИМВОЛ 12` holds 12 letters of any alphabet, and the columns line up.
+- **Length counts letters.** `СИМВОЛ 12` holds 12 letters of any alphabet, and columns line up.
 
-**In a program**, a `CHAR` holds one letter of any alphabet, and so does each element of a `PACKED ARRAY OF CHAR`. Literals may be in any case. `READ` and `WRITELN` of such arrays work as usual:
+In a program a `CHAR` holds one letter of any alphabet, and so does each element of a `PACKED ARRAY OF CHAR`; `READ` and `WRITELN` work as usual, and `ORD` gives the Unicode code (`ORD('ü')` is 252):
 
 ```
 IF СЛОВО.БУКВА = 'ж' THEN WRITELN('СТРОЧНАЯ ж')
@@ -740,27 +465,46 @@ ELSE IF СЛОВО.БУКВА = 'Ж' THEN WRITELN('ПРОПИСНАЯ Ж')
 ELSE WRITELN('БУКВА ', СЛОВО.БУКВА, ' КОД ', ORD(СЛОВО.БУКВА):1);
 ```
 
-`ORD` gives the Unicode code of a letter: `ORD('ü')` is 252.
+## 11. The decks of 1988
 
-## 9. When something goes wrong
+The tests hold the schemas, loader decks and queries of an accounting system of 1988-89 by Pavel Severov: a warehouse (`tests/gold-ck0`), depreciation (`tests/gold-am0`) and the costs of research topics (`tests/gold-zt0`); its application programs, converted to Free Pascal, are in `tests/severov`. They run unchanged and read like the example, with a few things of their time:
+
+- Areas have a size, `ДЛИНА`, in zones of 1024 words of the BESM-6. It is accepted and ignored:
+
+  ```
+  ОБЛАСТЬ CХ-CK0:ДЛИНА 2 ВАРИАНТ SSCXEM,
+  ОБЛАСТЬ ЖУ-CK0:ДЛИНА 6 ВИД ЖУРНАЛ,
+  ```
+
+- Names mix the alphabets: `CХ-CK0` starts with a Latin `C` (section 10).
+- A loader deck is a whole job. After the formats come job cards (`*…`, skipped) and the `servis` statements that clear the areas and the journal before the reload (section 9):
+
+  ```
+  *С
+  ОСВОБО ЖУ-СК0,ИН-СК0,ДА-СК0,ВР-СК0;
+  ОЧИСТИ ЖУ-СК0,ИН-СК0,ДА-СК0,ВР-СК0;
+  ЖУРНАЛ ЖУ-СК0 СБРОСИ.
+  ```
+
+- Formats call procedures of the deck (`ПРОЦЕДУРЫ "…"`) and find owners before `ПОСТАВ` (`tests/gold-ck0/deck6.gen`).
+
+## 12. When something goes wrong
 
 | Symptom | Cause |
 |---|---|
-| `СОСТ` is not 0 | 1 end of set, 2 no such record, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema |
+| `СОСТ` or `СОС` is not 0 | 1 end of set (not an error), 2 no such record, 3 duplicate key, 4 no current record, 5 already (not) in the set, 6 bad name, 7 storage error, 8 no schema |
 | `ГЕН: ОШИБКА ДУБЛИКАТ КЛЮЧА` | the key is already in an ordered set without `ДУБЛИК РАЗРЕШ` |
-| `ГЕН: ОШИБКА НЕТ ТЕКУЩЕЙ` | no current owner for an automatic set: load the owner first |
-| `НЕТ СХЕМЫ` | no `servis` and `ttc` run on this `MARS_DB`: the file printed does not exist, or has no schema |
-| `ОШИБКА ПАМЯТИ` | the area named in the schema was not made by `servis` (step 1) |
-| `predt: нет набора X` | the name is not in the schema; a name is cut to 6 characters |
-| `СОС` is not 0 after `НАЙТИ СЛЕДУЮ` | end of the set, not an error |
-| The database is empty in a later step | `MARS_DB` names another file (or is not set in this shell) |
-| `mars: ... areas of the old format` | `MARS_DIR` names a database of an older version (one file per area): rebuild it with steps 1-3 |
-| Loading is slow | each commit waits for the disk twice; for a scratch database `export MARS_SYNC=0` (safe if a program is killed, not on power failure) |
+| `ГЕН: ОШИБКА НЕТ ТЕКУЩЕЙ` | no current owner for a set: load the owner first |
+| `НЕТ СХЕМЫ` | `servis` and `ttc` were not run on this `MARS_DB`: the file printed does not exist, or has no schema |
+| The database is empty in a later step | `MARS_DB` names another file, or is not set in this shell |
+| `ОШИБКА ПАМЯТИ` | the area named in the schema was not made by `servis` |
+| `predt: нет набора X` | the name is not in the schema; names are cut to 6 characters |
+| `…: page N damaged` | the disk spoiled the file: restore a backup (section 9) |
+| `mars: … areas of the old format` | `MARS_DIR` names a database of an older version (one file per area): rebuild it |
+| Loading is slow | each commit waits for the disk; for a scratch database, `export MARS_SYNC=0` (safe if a program is killed, not on a power failure) |
 
-See section 8 on letters and case.
+## 13. Further reading
 
-## 10. Further reading
-
-- `doc/engine.md` - the engine and the tools; what is a guess.
-- `doc/open-questions.md` - hypotheses and open questions.
-- `tests/` - the examples with their output, including the original 1988 decks and the application programs of Pavel Severov (`tests/severov`).
+- `doc/engine.md`: how the engine and the tools work, and what in them is a guess.
+- `doc/open-questions.md`: what is not known about the original.
+- `tests/`: every example with its output.
