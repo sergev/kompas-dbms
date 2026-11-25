@@ -22,6 +22,9 @@ STAMP   := $(LIB)/.units
 
 all: $(addprefix $(BIN)/,$(NATIVE) $(CONVERT) kpc)
 
+# each tool links in its own obj dir: parallel ld runs into one dir can
+# fail with EEXIST on macOS
+
 # units for programs (and for the tools)
 $(STAMP): $(SRC) | $(LIB)
 	@for u in $(UNITS); do \
@@ -31,13 +34,15 @@ $(STAMP): $(SRC) | $(LIB)
 	@touch $@
 
 $(BIN)/%: src/%.pas $(STAMP) | $(BIN) $(OBJ)
-	$(FPC) $(FFLAGS) -Fu$(LIB) -FU$(OBJ)/$* -o$@ $<
+	$(FPC) $(FFLAGS) -Fu$(LIB) -FU$(OBJ)/$* -o$(OBJ)/$*/$* $<
+	mv $(OBJ)/$*/$* $@
 
 # servis and ttc are KOMPAS Pascal: through predt like any program
 $(BIN)/servis $(BIN)/ttc: $(BIN)/%: src/%.pas $(BIN)/predt $(STAMP) | $(OBJ)
 	@mkdir -p $(OBJ)/$*
 	$(BIN)/predt $< $(OBJ)/$*/$*.pas
-	$(FPC) -O1 -v0e -l- -Fu$(LIB) -FU$(OBJ)/$* -o$@ $(OBJ)/$*/$*.pas
+	$(FPC) -O1 -v0e -l- -Fu$(LIB) -FU$(OBJ)/$* -o$(OBJ)/$*/$* $(OBJ)/$*/$*.pas
+	mv $(OBJ)/$*/$* $@
 
 $(BIN)/kpc: src/kpc | $(BIN)
 	cp $< $@

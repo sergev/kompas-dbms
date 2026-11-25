@@ -161,10 +161,10 @@ procedure WriteRaw(p: TPgno; buf: PByte);
 begin
   Hook;
   if MarsIoCount = MarsTearAt then begin
-    fpPWrite(fd, buf^, PageSize div 2, int64(p) * PageSize);
+    fpPWrite(fd, PChar(buf), PageSize div 2, int64(p) * PageSize);
     fpKill(fpGetPid, SIGKILL);
   end;
-  if fpPWrite(fd, buf^, PageSize, int64(p) * PageSize) <> PageSize then
+  if fpPWrite(fd, PChar(buf), PageSize, int64(p) * PageSize) <> PageSize then
     Fail(Format('write of page %d failed', [p]));
 end;
 
@@ -217,7 +217,7 @@ begin
   Grow(p);
   if cache[p] = nil then begin
     buf := GetMem(PageSize);
-    if (fpPRead(fd, buf^, PageSize, int64(p) * PageSize) <> PageSize) or
+    if (fpPRead(fd, PChar(buf), PageSize, int64(p) * PageSize) <> PageSize) or
        not Sealed(p, buf) then begin
       FreeMem(buf);
       Fail(Format('page %d damaged', [p]));
@@ -274,7 +274,7 @@ procedure LoadMeta;
 var buf: array[0..2 * PageSize - 1] of byte; t0, t1: qword;
     r0, r1, f0, f1, n0, n1: TPgno; ok0, ok1: boolean;
 begin
-  if fpPRead(fd, buf, 2 * PageSize, 0) <> 2 * PageSize then Fail('no valid meta page');
+  if fpPRead(fd, PChar(@buf[0]), 2 * PageSize, 0) <> 2 * PageSize then Fail('no valid meta page');
   if headOk and CompareMem(@buf[0], @lastHead[0], MetaHead) and
      CompareMem(@buf[PageSize], @lastHead[1], MetaHead) then exit;
   headOk := false;
